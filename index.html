@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSX — 8ビットの標準と黄金律 | msx.btron.pro</title>
+    <title>MSX — 8ビットの黄金律 | msx.btron.pro</title>
     <meta name="description"
         content="MSX は 1983 年に提唱された統一 8 ビットパーソナルコンピュータ規格です。Z80 CPU、TMS9918A / V9938 / V9958 VDP、スロット機構、および MSX-BIOS を基盤とし、家庭用から放送局用 AV 編集機まで展開されました。シリコンレジスタ仕様、開発環境、エミュレータ、遊戯タイトルを展示・保管する学術資料館。">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +38,7 @@
     <header>
         <div class="hero-content">
             <p class="hero-kicker">ASCII · Microsoft · 1983–1993 · 8-bit Silicon Standard</p>
-            <h1 class="jp-title">8ビットの標準と黄金律。</h1>
+            <h1 class="jp-title">8ビットの黄金律。</h1>
             <div class="hero-rule"></div>
             <p class="hero-lede">
                 1983 年、アスキーとマイクロソフトによって提唱された MSX は、メーカーの垣根を越えてハードウェアとソフトウェアの完全な互換性を実現した、歴史上類を見ない 8 ビット統一コンピュータ規格です。Z80 CPU、テキサス・インスツルメンツ社製 VDP（TMS9918A から V9938、V9958 へ進化）、ゼネラル・インスツルメント社製 PSG 音源、そして洗練されたスロット拡張機構が、単一の論理空間のもとに統合されました。ソニー、松下電器、日本ビクター、日立、ヤマハらが競い、入門機から音楽スタジオ専用機、放送局用リアルタイム映像編集ワークステーションに至る多様な機械群を生み出しました。本アーカイブは、その全シリコンレジスタ仕様、システム構造、開発環境、および遊戯ソフトウェアの工学的遺産を恒久的に記録・展示するものです。
@@ -78,7 +78,8 @@ MSX の中核を成すのは、64 KiB の Z80 アドレス空間を 16 KiB 単�
                 <div class="showcase">
                     <div class="plate-column">
                         <figure class="plate">
-                            <div class="field" style="padding: 2rem; background: var(--plate);">
+                            <div class="field" style="padding: 1.5rem; background: var(--plate); display: block; overflow-x: auto;">
+                                <div class="market-table-wrap" style="margin: 0; box-shadow: none; border: none; min-width: 480px;">
                                 <table class="market-table">
                                     <thead>
                                         <tr>
@@ -110,6 +111,7 @@ MSX の中核を成すのは、64 KiB の Z80 アドレス空間を 16 KiB 単�
                                         </tr>
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                             <figcaption>
                                 <span><b>MSX Canonical Memory Map</b> — 16 KiB Bank Segmentation</span>
@@ -278,7 +280,7 @@ MSX の遊戯ソフトウェアは、ハードウェアの限界を突破する�
 
                 <div class="library">
                     <div class="library-head">
-                        <h4 class="jp-title">実機描画キャプチャ — 十の札、真正フレームバッファ抽出</h4>
+                        <h4 class="jp-title">実機描画キャプチャ — 八の札、真正フレームバッファ抽出</h4>
                         <span>PUBLISH Standard · Unadorned Pixel Frames · RGBA8888</span>
                     </div>
                     <div class="msx-grid">
@@ -303,20 +305,7 @@ MSX の遊戯ソフトウェアは、ハードウェアの限界を突破する�
                             </div>
                             <figcaption><b>c0man</b>MSX1 · Pacman engine</figcaption>
                         </figure>
-                        <figure>
-                            <div class="field">
-                                <img src="assets/screens/MSX_LodeRunner.png" width="538" height="543" class="authentic-frame"
-                                    alt="Lode Runner — MSX1 名作アクション">
-                            </div>
-                            <figcaption><b>Lode Runner</b>MSX1 · Compile port</figcaption>
-                        </figure>
-                        <figure>
-                            <div class="field">
-                                <img src="assets/screens/MSX_LodeRunner2.png" width="538" height="543" class="authentic-frame"
-                                    alt="Lode Runner II — カートリッジ実行画面">
-                            </div>
-                            <figcaption><b>Lode Runner II</b>MSX1 · 32KB ROM</figcaption>
-                        </figure>
+
                         <figure>
                             <div class="field">
                                 <img src="assets/screens/MSX_Bullrush.png" width="538" height="543" class="authentic-frame"
