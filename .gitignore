@@ -1,0 +1,12 @@
+# Build outputs
+build/
+*.rel
+*.ihx
+*.rom
+*.asm
+*.sym
+*.lst
+*.map
+*.ppm
+.DS_Store
+

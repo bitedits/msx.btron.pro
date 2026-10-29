@@ -3,6 +3,7 @@
  */
 
 #include "window.h"
+#include "compositor.h"
 #include "../msxgl/vdp.h"
 #include "../font/font_latin.h"
 #include <stddef.h>
@@ -73,6 +74,17 @@ Window *wm_get_window(ID id)
 Window *wm_get_active_window(void)
 {
     return wm_get_window(s_active_window_id);
+}
+
+UH wm_get_window_count(void)
+{
+    return s_window_count;
+}
+
+Window *wm_get_window_by_index(UH index)
+{
+    if (index < s_window_count) return &s_windows[index];
+    return NULL;
 }
 
 void wm_set_active_window(ID id)
@@ -146,8 +158,58 @@ void wm_draw_all(void)
     }
 }
 
-bool wm_handle_click(uint16_t x, uint16_t y)
+void wm_cascade_windows(void)
 {
+    Window *w1 = wm_get_window(1);
+    Window *w2 = wm_get_window(2);
+    Window *w3 = wm_get_window(3);
+    Window *w4 = wm_get_window(4);
+
+    if (w1) { w1->state = WIN_STATE_NORMAL; w1->x = 10; w1->y = 16; w1->w = 330; w1->h = 170; }
+    if (w2) { w2->state = WIN_STATE_NORMAL; w2->x = 40; w2->y = 28; w2->w = 330; w2->h = 160; }
+    if (w3) { w3->state = WIN_STATE_NORMAL; w3->x = 70; w3->y = 40; w3->w = 330; w3->h = 150; }
+    if (w4) { w4->state = WIN_STATE_NORMAL; w4->x = 100; w4->y = 52; w4->w = 330; w4->h = 140; }
+
+    wm_set_active_window(1);
+    wm_draw_all();
+}
+
+void wm_tile_windows(void)
+{
+    Window *w1 = wm_get_window(1);
+    Window *w2 = wm_get_window(2);
+    Window *w3 = wm_get_window(3);
+    Window *w4 = wm_get_window(4);
+
+    if (w1) { w1->state = WIN_STATE_NORMAL; w1->x = 2;   w1->y = 14;  w1->w = 252; w1->h = 96; }
+    if (w2) { w2->state = WIN_STATE_NORMAL; w2->x = 258; w2->y = 14;  w2->w = 252; w2->h = 96; }
+    if (w3) { w3->state = WIN_STATE_NORMAL; w3->x = 2;   w3->y = 113; w3->w = 252; w3->h = 96; }
+    if (w4) { w4->state = WIN_STATE_NORMAL; w4->x = 258; w4->y = 113; w4->w = 252; w4->h = 96; }
+
+    wm_set_active_window(1);
+    wm_draw_all();
+}
+
+void wm_restore_default(void)
+{
+    Window *w1 = wm_get_window(1);
+    Window *w2 = wm_get_window(2);
+    Window *w3 = wm_get_window(3);
+    Window *w4 = wm_get_window(4);
+
+    if (w1) { w1->state = WIN_STATE_NORMAL; w1->x = w1->orig_x; w1->y = w1->orig_y; w1->w = w1->orig_w; w1->h = w1->orig_h; }
+    if (w2) { w2->state = WIN_STATE_NORMAL; w2->x = w2->orig_x; w2->y = w2->orig_y; w2->w = w2->orig_w; w2->h = w2->orig_h; }
+    if (w3) { w3->state = WIN_STATE_NORMAL; w3->x = w3->orig_x; w3->y = w3->orig_y; w3->w = w3->orig_w; w3->h = w3->orig_h; }
+    if (w4) { w4->state = WIN_STATE_CLOSED; w4->x = w4->orig_x; w4->y = w4->orig_y; w4->w = w4->orig_w; w4->h = w4->orig_h; }
+
+    wm_set_active_window(2);
+    wm_draw_all();
+}
+
+bool wm_handle_click(uint16_t x, uint16_t y, ID *out_drag_win_id)
+{
+    if (out_drag_win_id) *out_drag_win_id = 0;
+
     /* Check from topmost (active) down to bottommost */
     for (int16_t i = (int16_t)s_window_count - 1; i >= 0; i--) {
         Window *win = &s_windows[i];
@@ -158,19 +220,23 @@ bool wm_handle_click(uint16_t x, uint16_t y)
         if (x >= win->x && x < win->x + win->w &&
             y >= win->y && y < win->y + win->h) {
 
-            wm_set_active_window(win->win_id);
+            bool was_active = win->is_active;
+            if (!was_active) {
+                comp_activate_window(win);
+            }
 
             /* Check Close button [X] */
             uint16_t btn_close_x = win->x + win->w - 14;
             if (x >= btn_close_x && x <= btn_close_x + 10 && y >= win->y + 2 && y <= win->y + 12) {
                 win->state = WIN_STATE_CLOSED;
-                wm_draw_all();
+                comp_repair_rect(win->x, win->y, win->w, win->h);
                 return true;
             }
 
             /* Check Zoom button [+] */
             uint16_t btn_zoom_x = win->x + win->w - 26;
             if (x >= btn_zoom_x && x <= btn_zoom_x + 10 && y >= win->y + 2 && y <= win->y + 12) {
+                uint16_t old_x = win->x, old_y = win->y, old_w = win->w, old_h = win->h;
                 if (win->state == WIN_STATE_NORMAL) {
                     win->state = WIN_STATE_ZOOMED;
                     win->x = 2; win->y = 14; win->w = 508; win->h = 194;
@@ -179,7 +245,16 @@ bool wm_handle_click(uint16_t x, uint16_t y)
                     win->x = win->orig_x; win->y = win->orig_y;
                     win->w = win->orig_w; win->h = win->orig_h;
                 }
-                wm_draw_all();
+                comp_repair_rect(old_x, old_y, old_w, old_h);
+                wm_draw_window(win);
+                return true;
+            }
+
+            /* Title bar click (outside buttons): start dragging! */
+            if (y >= win->y && y < win->y + 14) {
+                if (out_drag_win_id && win->state == WIN_STATE_NORMAL) {
+                    *out_drag_win_id = win->win_id;
+                }
                 return true;
             }
 
@@ -188,7 +263,6 @@ bool wm_handle_click(uint16_t x, uint16_t y)
                 win->on_click(win, x - (win->x + 2), y - (win->y + 14));
             }
 
-            wm_draw_all();
             return true;
         }
     }

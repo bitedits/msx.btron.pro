@@ -29,6 +29,7 @@ typedef struct {
     bool enter;
     bool esc;
     bool tab;
+    bool bs;
     char ascii_char;        /* Last typed ASCII key if any */
 } KeyState;
 

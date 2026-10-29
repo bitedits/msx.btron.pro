@@ -26,7 +26,7 @@ void app_browser_paint(Window *win)
     vdp_fill_rect(content_x, content_y, content_w, content_h, BTRON_COL_WHITE);
 
     font_draw_string(content_x + 8, content_y + 6,
-                     "BTRON Hypermedia Object Network:", BTRON_COL_TITLE_BLUE, BTRON_COL_WHITE);
+                     "Hypermedia Network:", BTRON_COL_TITLE_BLUE, BTRON_COL_WHITE);
     vdp_draw_hline(content_x + 8, content_y + 18, content_w - 16, BTRON_COL_MED_GRAY);
 
     UH count = bmsx_get_real_body_count();
@@ -41,19 +41,21 @@ void app_browser_paint(Window *win)
         vdp_draw_bevel_box(content_x + 8, item_y, content_w - 16, 16,
                            BTRON_COL_WHITE, BTRON_COL_DARK_GRAY, BTRON_COL_LIGHT_GRAY);
 
-        /* Icon: "[doc]" or "[exe]" */
-        const char *icon = (b->type == BODY_TYPE_TAD) ? "[TAD]" : "[APP]";
-        font_draw_string(content_x + 12, item_y + 4, icon, BTRON_COL_TITLE_BLUE, BTRON_COL_LIGHT_GRAY);
+        /* Icon: "[T]" for TAD document, "[A]" for Application */
+        const char *badge = (b->type == BODY_TYPE_TAD) ? "[T]" : "[A]";
+        font_draw_string(content_x + 12, item_y + 4, badge, BTRON_COL_TITLE_BLUE, BTRON_COL_LIGHT_GRAY);
 
-        /* Title */
-        font_draw_string(content_x + 48, item_y + 4, b->title, BTRON_COL_BLACK, BTRON_COL_LIGHT_GRAY);
-
-        /* Size / ID indicator on right */
-        char info[16];
-        info[0] = '#';
-        info[1] = '0' + (char)(b->body_id);
-        info[2] = '\0';
-        font_draw_string(content_x + content_w - 40, item_y + 4, info, BTRON_COL_DARK_GRAY, BTRON_COL_LIGHT_GRAY);
+        /* Truncated clean title */
+        char label[22];
+        label[0] = '#';
+        label[1] = '0' + (char)(b->body_id);
+        label[2] = ' ';
+        uint8_t p = 3;
+        for (uint8_t k = 0; b->title[k] != '\0' && p < 18; k++) {
+            label[p++] = b->title[k];
+        }
+        label[p] = '\0';
+        font_draw_string(content_x + 36, item_y + 4, label, BTRON_COL_BLACK, BTRON_COL_LIGHT_GRAY);
     }
 }
 

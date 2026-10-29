@@ -67,17 +67,10 @@ void msx_set_cpu_mode(uint8_t mode)
     if (!msx_is_turbo_r()) {
         return;
     }
-    /*
-     * CHGCPU BIOS routine at 0x0180 (called via CALSLT 0x001C or inter-slot call):
-     * A = 0x00 (Z80), 0x81 (R800 DRAM), 0x82 (R800 ROM)
-     */
     (void)mode;
     __asm
-    push af
-    ld   iy, #0x0000        ;; Slot 0 (Main BIOS)
-    ld   ix, #0x0180        ;; CHGCPU entry
-    call 0x001C             ;; CALSLT
-    pop  af
+    ld   a, #0x82
+    call 0x0180             ;; CHGCPU direct entry in Page 0
     __endasm;
 }
 
@@ -94,20 +87,38 @@ void msx_delay(uint16_t cycles)
     }
 }
 
+void msx_reboot(void) __naked
+{
+#ifndef __SDCC
+    return;
+#else
+    __asm
+    di
+    jp   0x0000
+    __endasm;
+#endif
+}
+
 void msx_wait_vblank(void)
 {
-    /* Read VDP Status Register 0 (bit 7 is VBLANK interrupt flag) */
-    /* Set VDP register pointer to S#0: write 0 to reg 15 */
-    msx_out(PORT_VDP_REG, 0x00);
+    /* Wait for VBlank using V9938 Status Register 2, Bit 6 (Vertical Retrace = ST_VR: 0x40) */
+    msx_out(PORT_VDP_REG, 0x02);
     msx_out(PORT_VDP_REG, 0x80 | 15);
 
-    /* Wait until bit 7 is set */
-    uint16_t timeout = 50000;
+    /* 1. If currently in VBlank, wait for active display */
+    uint16_t timeout = 2500;
     while (timeout--) {
-        uint8_t s0 = msx_in(PORT_VDP_REG);
-        if (s0 & 0x80) {
-            break;
-        }
+        if (!(msx_in(PORT_VDP_REG) & 0x40)) break;
     }
+
+    /* 2. Wait until VBlank starts */
+    timeout = 2500;
+    while (timeout--) {
+        if (msx_in(PORT_VDP_REG) & 0x40) break;
+    }
+
+    /* Reset VDP status register pointer back to S#0 */
+    msx_out(PORT_VDP_REG, 0x00);
+    msx_out(PORT_VDP_REG, 0x80 | 15);
 }
 

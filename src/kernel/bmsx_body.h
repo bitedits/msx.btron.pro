@@ -40,6 +40,7 @@ ER   bmsx_register_real_body(ID id, BodyType type, UB bank, const UB *data, UH s
 const BMSX_RealBody *bmsx_get_real_body(ID id);
 UH   bmsx_get_real_body_count(void);
 const BMSX_RealBody *bmsx_get_body_by_index(UH index);
+const BMSX_RealBody *bmsx_find_body_by_title(const char *title);
 
 #ifdef __cplusplus
 }

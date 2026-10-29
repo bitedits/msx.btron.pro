@@ -70,6 +70,11 @@ int main(int argc, char **argv)
         if (rectype == 0x00) {
             /* Data record */
             uint32_t full_addr = ext_addr + addr16;
+            /* In MSX 64KB CPU space: 0x4000..0xBFFF is ROM (Page 1 & 2),
+             * 0xC000..0xFFFF is system RAM. Ignore records targeting RAM. */
+            if (ext_addr == 0 && full_addr >= 0xC000u) {
+                continue;
+            }
             /* If compiled with base 0x4000, map to offset 0 */
             uint32_t offset = full_addr;
             if (offset >= ROM_BASE_ADDR && ext_addr == 0) {

@@ -43,9 +43,14 @@ Window *wm_create_window(ID id, const char *title, uint16_t x, uint16_t y, uint1
 Window *wm_get_window(ID id);
 Window *wm_get_active_window(void);
 void wm_set_active_window(ID id);
+UH wm_get_window_count(void);
+Window *wm_get_window_by_index(UH index);
 void wm_draw_window(Window *win);
 void wm_draw_all(void);
-bool wm_handle_click(uint16_t x, uint16_t y);
+void wm_cascade_windows(void);
+void wm_tile_windows(void);
+void wm_restore_default(void);
+bool wm_handle_click(uint16_t x, uint16_t y, ID *out_drag_win_id);
 
 #ifdef __cplusplus
 }

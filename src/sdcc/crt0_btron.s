@@ -11,6 +11,20 @@
     .globl  l__INITIALIZER
     .globl  gsinit
 
+    ;; Define area ordering for SDLD linker:
+    ;; ROM areas (placed starting at 0x4010)
+    .area   _CODE
+    .area   _HOME
+    .area   _GSINIT
+    .area   _GSFINAL
+    .area   _CONST
+    .area   _INITIALIZER
+    ;; RAM areas (placed starting at 0xC000)
+    .area   _DATA
+    .area   _INITIALIZED
+    .area   _BSS
+    .area   _HEAP
+
     ;; MSX ROM Cartridge Header at 0x4000 (Slot Page 1)
     .area   _HEADER (ABS)
     .org    0x4000
@@ -31,15 +45,29 @@ _exec:
     di
     ld      sp, #0xEFFF         ; Set stack pointer below MSX system area (0xF380)
 
+    ;; ── Map Page 2 (0x8000..0xBFFF) to Cartridge Slot ─────────────────
+    in      a, (#0xA8)
+    ld      b, a
+    and     #0x0C               ; bits 2-3 (Page 1 slot)
+    rlca
+    rlca                        ; shift to bits 4-5 (Page 2 slot)
+    ld      c, a
+    ld      a, b
+    and     #0xCF               ; clear bits 4-5
+    or      c
+    out     (#0xA8), a          ; Page 2 now maps to cartridge slot
+
+    ;; ── For ASCII16 MegaROM: Select Bank 1 for Page 2 ──────────────────
+    ld      a, #0x01
+    ld      (#0x7000), a
+
     ;; ── Detect MSX turbo R and activate R800 CPU Mode ───────────────────
     ld      a, (#0x002D)        ; MSX version ID in BIOS ROM (3 = MSX turbo R)
     cp      #0x03
     jr      nz, .z80_mode
     ;; Select R800 ROM mode (Mode 0x82: R800 with ROM in fast mode)
     ld      a, #0x82
-    ld      iy, #0x0000
-    ld      ix, #0x0180         ; CHGCPU BIOS vector
-    call    0x001C              ; CALSLT
+    call    0x0180              ; CHGCPU BIOS entry in Page 0
 .z80_mode:
 
     ;; ── Clear uninitialized DATA (BSS) segment ──────────────────────────

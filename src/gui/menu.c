@@ -4,6 +4,8 @@
 
 #include "menu.h"
 #include "window.h"
+#include "compositor.h"
+#include "../apps/app_editor.h"
 #include "../msxgl/vdp.h"
 #include "../msxgl/core.h"
 #include "../font/font_latin.h"
@@ -126,7 +128,41 @@ bool menu_handle_click(uint16_t x, uint16_t y)
             uint8_t selected_item = (uint8_t)((y - (popup_y + 3)) / 14);
             if (selected_item < m->item_count) {
                 /* Execute menu selection */
-                if (s_open_menu_idx == 3) {
+                if (s_open_menu_idx == 0) {
+                    /* TRON Menu */
+                    if (selected_item == 0) {
+                        /* About: focus Terminal */
+                        Window *win = wm_get_window(2);
+                        if (win) {
+                            win->state = WIN_STATE_NORMAL;
+                            wm_set_active_window(2);
+                        }
+                    } else if (selected_item == 3) {
+                        /* Memory / Storage Cabinet */
+                        Window *win = wm_get_window(4);
+                        if (win) {
+                            win->state = WIN_STATE_NORMAL;
+                            wm_set_active_window(4);
+                        }
+                    } else if (selected_item == 4) {
+                        /* Reboot */
+                        msx_reboot();
+                    }
+                } else if (s_open_menu_idx == 1) {
+                    /* File Menu */
+                    if (selected_item == 0 || selected_item == 1) {
+                        Window *win = wm_get_window(1);
+                        if (win) {
+                            win->state = WIN_STATE_NORMAL;
+                            wm_set_active_window(1);
+                        }
+                    } else if (selected_item == 3) {
+                        Window *act = wm_get_active_window();
+                        if (act) {
+                            act->state = WIN_STATE_CLOSED;
+                        }
+                    }
+                } else if (s_open_menu_idx == 3) {
                     /* View Menu: Open Windows */
                     Window *win = NULL;
                     if (selected_item == 0) win = wm_get_window(1); /* Editor */
@@ -138,24 +174,44 @@ bool menu_handle_click(uint16_t x, uint16_t y)
                         win->state = WIN_STATE_NORMAL;
                         wm_set_active_window(win->win_id);
                     }
+                } else if (s_open_menu_idx == 4) {
+                    /* Window Menu */
+                    if (selected_item == 0) {
+                        wm_cascade_windows();
+                    } else if (selected_item == 1) {
+                        wm_tile_windows();
+                    } else if (selected_item == 2) {
+                        Window *act = wm_get_active_window();
+                        if (act && act->state == WIN_STATE_NORMAL) {
+                            act->state = WIN_STATE_ZOOMED;
+                            act->x = 2; act->y = 14; act->w = 508; act->h = 194;
+                        }
+                    } else if (selected_item == 3) {
+                        wm_restore_default();
+                    }
                 } else if (s_open_menu_idx == 5) {
                     /* Help Menu: Switch document in Editor */
-                    Window *win = wm_get_window(1);
+                    if (selected_item == 0) {
+                        app_editor_load_body(1);
+                    } else if (selected_item == 1) {
+                        app_editor_load_body(2);
+                    }
+                    Window *win = wm_get_window(selected_item == 2 ? 3 : 1);
                     if (win) {
                         win->state = WIN_STATE_NORMAL;
-                        wm_set_active_window(1);
+                        wm_set_active_window(win->win_id);
                     }
                 }
             }
             s_open_menu_idx = -1;
-            wm_draw_all();
+            comp_repair_rect(popup_x, popup_y, popup_w, popup_h);
             menu_draw_bar();
             return true;
         }
 
         /* Click outside closed the popup */
         s_open_menu_idx = -1;
-        wm_draw_all();
+        comp_repair_rect(popup_x, popup_y, popup_w, popup_h);
         menu_draw_bar();
         return true;
     }

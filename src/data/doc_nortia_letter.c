@@ -17,7 +17,7 @@ const uint8_t g_doc_nortia_letter_tad[] = {
 
     /* 2. Subtitle: NORTIA Order / TAD Working Group */
     TAD_SEG_TEXT, TAD_LANG_LATIN, BTRON_COL_DARK_GRAY, BTRON_COL_WHITE,
-    33, 0,
+    29, 0,
     'T','o',':',' ','N','O','R','T','I','A',' ','T','A','D',' ','W','o','r','k','i',
     'n','g',' ','G','r','o','u','p',0,
 
@@ -40,21 +40,21 @@ const uint8_t g_doc_nortia_letter_tad[] = {
 
     /* 5. Feature List */
     TAD_SEG_TEXT, TAD_LANG_LATIN, BTRON_COL_CHARCOAL, BTRON_COL_WHITE,
-    38, 0,
+    35, 0,
     '-',' ','A','S','C','I','I',' ','R','8','0','0',' ','T','u','r','b','o',' ','C',
     'P','U',' ','(','2','8','.','6',' ','M','H','z',')',0,
 
     TAD_SEG_NEWLINE,
 
     TAD_SEG_TEXT, TAD_LANG_LATIN, BTRON_COL_CHARCOAL, BTRON_COL_WHITE,
-    37, 0,
+    34, 0,
     '-',' ','V','9','9','5','8',' ','S','c','r','e','e','n',' ','7',' ','(','5','1',
     '2','x','2','1','2','x','1','6','c','o','l',')',0,
 
     TAD_SEG_NEWLINE,
 
     TAD_SEG_TEXT, TAD_LANG_LATIN, BTRON_COL_CHARCOAL, BTRON_COL_WHITE,
-    35, 0,
+    34, 0,
     '-',' ','R','e','a','l','/','V','i','r','t',' ','B','o','d','y',' ','H','y','p',
     'e','r','d','a','t','a',' ','M','o','d','e','l',0,
 

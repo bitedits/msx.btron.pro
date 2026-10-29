@@ -69,3 +69,21 @@ const BMSX_RealBody *bmsx_get_body_by_index(UH index)
     return &s_real_bodies[index];
 }
 
+const BMSX_RealBody *bmsx_find_body_by_title(const char *title)
+{
+    if (!title) return NULL;
+    for (UH i = 0; i < s_body_count; i++) {
+        UH j = 0;
+        bool match = true;
+        while (title[j] != '\0' || s_real_bodies[i].title[j] != '\0') {
+            if (title[j] != s_real_bodies[i].title[j]) {
+                match = false;
+                break;
+            }
+            j++;
+        }
+        if (match) return &s_real_bodies[i];
+    }
+    return NULL;
+}
+

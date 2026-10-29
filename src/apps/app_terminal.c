@@ -3,13 +3,16 @@
  */
 
 #include "app_terminal.h"
+#include "app_editor.h"
+#include "../gui/window.h"
 #include "../msxgl/vdp.h"
+#include "../msxgl/core.h"
 #include "../font/font_latin.h"
 #include "../kernel/itron_task.h"
 #include "../kernel/bmsx_body.h"
 #include <stddef.h>
 
-#define TERM_MAX_LINES  9
+#define TERM_MAX_LINES  5
 #define TERM_LINE_LEN   44
 
 static char s_term_lines[TERM_MAX_LINES][TERM_LINE_LEN];
@@ -48,7 +51,7 @@ static void term_execute_cmd(const char *cmd)
     term_append_line(cmd);
 
     if (cmd[0] == 'v' && cmd[1] == 'e' && cmd[2] == 'r') {
-        term_append_line("B-MSX OS v1.0 [BTRON3.20]");
+        term_append_line("B-MSX OS v1.0 [BTRON 3.20]");
         term_append_line("Kernel: uITRON 3.0 / R800 Turbo R");
     } else if (cmd[0] == 'l' && cmd[1] == 's') {
         term_append_line("Real Bodies in MegaROM:");
@@ -56,7 +59,14 @@ static void term_execute_cmd(const char *cmd)
         for (UH i = 0; i < count; i++) {
             const BMSX_RealBody *b = bmsx_get_body_by_index(i);
             if (b) {
-                term_append_line(b->title);
+                char item[44];
+                item[0] = '#'; item[1] = '0' + (char)b->body_id; item[2] = ' ';
+                uint8_t p = 3;
+                for (uint8_t k = 0; b->title[k] != '\0' && p < 42; k++) {
+                    item[p++] = b->title[k];
+                }
+                item[p] = '\0';
+                term_append_line(item);
             }
         }
     } else if (cmd[0] == 't' && cmd[1] == 'a' && cmd[2] == 's' && cmd[3] == 'k') {
@@ -65,10 +75,47 @@ static void term_execute_cmd(const char *cmd)
     } else if (cmd[0] == 'r' && cmd[1] == '8') {
         term_append_line("CPU: ASCII R800 fast mode [28.6 MHz]");
         term_append_line("Bus: 16-bit internal ALUs active");
-    } else if (cmd[0] == 'c' && cmd[1] == 'l' && cmd[2] == 's') {
+    } else if ((cmd[0] == 'c' && cmd[1] == 'l' && cmd[2] == 's') ||
+               (cmd[0] == 'c' && cmd[1] == 'l' && cmd[2] == 'e' && cmd[3] == 'a' && cmd[4] == 'r')) {
         s_line_count = 0;
+    } else if (cmd[0] == 'c' && cmd[1] == 'a' && cmd[2] == 't') {
+        if (cmd[4] == '1') {
+            term_append_line("Body #1: Heart Sutra (TAD)");
+            term_append_line("Lang: Sanskrit, Tibetan, Chinese");
+        } else if (cmd[4] == '2') {
+            term_append_line("Body #2: NORTIA TAD Letter");
+            term_append_line("Recipient: TAD Working Group");
+        } else {
+            term_append_line("Usage: cat <1|2>");
+        }
+    } else if ((cmd[0] == 'o' && cmd[1] == 'p' && cmd[2] == 'e' && cmd[3] == 'n') ||
+               (cmd[0] == 'e' && cmd[1] == 'd' && cmd[2] == 'i' && cmd[3] == 't')) {
+        char arg = (cmd[0] == 'o') ? cmd[5] : cmd[5];
+        if (arg == '1' || arg == '2') {
+            app_editor_load_body(arg - '0');
+            Window *win = wm_get_window(1);
+            if (win) { win->state = WIN_STATE_NORMAL; wm_set_active_window(1); }
+            wm_draw_all();
+        } else if (arg == '3') {
+            Window *win = wm_get_window(3);
+            if (win) { win->state = WIN_STATE_NORMAL; wm_set_active_window(3); }
+            wm_draw_all();
+        } else if (arg == '4') {
+            Window *win = wm_get_window(4);
+            if (win) { win->state = WIN_STATE_NORMAL; wm_set_active_window(4); }
+            wm_draw_all();
+        } else {
+            term_append_line("Usage: open <1..4>");
+        }
+    } else if (cmd[0] == 't' && cmd[1] == 'i' && cmd[2] == 'l') {
+        wm_tile_windows();
+    } else if (cmd[0] == 'c' && cmd[1] == 'a' && cmd[2] == 's') {
+        wm_cascade_windows();
+    } else if (cmd[0] == 'r' && cmd[1] == 'e' && cmd[2] == 'b') {
+        msx_reboot();
     } else if (cmd[0] == 'h' && cmd[1] == 'e' && cmd[2] == 'l') {
-        term_append_line("Commands: ver, ls, tasks, r800, cls");
+        term_append_line("Commands: ver, ls, cat <id>, open <id>,");
+        term_append_line("tile, cascade, tasks, r800, cls, reboot");
     } else {
         term_append_line("Unknown command. Type 'help'.");
     }
@@ -114,7 +161,8 @@ void app_terminal_paint(Window *win)
     prompt[p++] = '_'; /* Blinking block cursor */
     prompt[p] = '\0';
 
-    font_draw_string(content_x + 6, content_y + 4 + (s_line_count * 12),
+    uint8_t prompt_line = (s_line_count < TERM_MAX_LINES) ? s_line_count : (TERM_MAX_LINES);
+    font_draw_string(content_x + 6, content_y + 4 + (prompt_line * 12),
                      prompt, BTRON_COL_WHITE, BTRON_COL_BLACK);
 }
 
@@ -126,21 +174,44 @@ void app_terminal_on_click(Window *win, uint16_t local_x, uint16_t local_y)
 
 void app_terminal_input_char(char c)
 {
+    Window *win = wm_get_window(2);
+    if (!win) return;
+
     if (c == '\r' || c == '\n') {
         s_cmd_buf[s_cmd_len] = '\0';
         term_execute_cmd(s_cmd_buf);
         s_cmd_len = 0;
         s_cmd_buf[0] = '\0';
-    } else if (c == 0x08) {
-        /* Backspace */
-        if (s_cmd_len > 0) s_cmd_len--;
-    } else if (c >= 32 && c <= 126 && s_cmd_len < 28) {
-        s_cmd_buf[s_cmd_len++] = c;
-        s_cmd_buf[s_cmd_len] = '\0';
-    }
-    Window *win = wm_get_window(2);
-    if (win) {
-        wm_draw_window(win);
+        app_terminal_paint(win);
+    } else {
+        if (c == 0x08) {
+            /* Backspace */
+            if (s_cmd_len > 0) s_cmd_len--;
+        } else if (c >= 32 && c <= 126 && s_cmd_len < 28) {
+            s_cmd_buf[s_cmd_len++] = c;
+            s_cmd_buf[s_cmd_len] = '\0';
+        }
+
+        uint16_t content_x = win->x + 2;
+        uint16_t content_y = win->y + 14;
+        uint16_t content_w = win->w - 4;
+
+        /* Render only prompt line */
+        char prompt[40];
+        prompt[0] = 'B'; prompt[1] = 'T'; prompt[2] = 'R'; prompt[3] = 'O';
+        prompt[4] = 'N'; prompt[5] = '>'; prompt[6] = ' ';
+        uint8_t p = 7;
+        for (uint8_t k = 0; k < s_cmd_len && p < 36; k++) {
+            prompt[p++] = s_cmd_buf[k];
+        }
+        prompt[p++] = '_'; /* Blinking block cursor */
+        prompt[p] = '\0';
+
+        uint8_t prompt_line = (s_line_count < TERM_MAX_LINES) ? s_line_count : (TERM_MAX_LINES);
+        /* Clear just the prompt line */
+        vdp_fill_rect(content_x + 6, content_y + 4 + (prompt_line * 12), content_w - 12, 12, BTRON_COL_BLACK);
+        font_draw_string(content_x + 6, content_y + 4 + (prompt_line * 12),
+                         prompt, BTRON_COL_WHITE, BTRON_COL_BLACK);
     }
 }
 

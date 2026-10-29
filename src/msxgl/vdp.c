@@ -28,13 +28,15 @@ uint8_t vdp_read_status(uint8_t reg)
 
 void vdp_wait_cmd(void)
 {
+    vdp_write_reg(15, 2);
     uint16_t timeout = 60000;
     while (timeout--) {
-        uint8_t s2 = vdp_read_status(2);
+        uint8_t s2 = msx_in(PORT_VDP_REG);
         if ((s2 & 0x01) == 0) {
             break;
         }
     }
+    vdp_write_reg(15, 0);
 }
 
 void vdp_set_vram_write_addr(uint32_t addr)
@@ -95,18 +97,18 @@ void vdp_init_btron_palette(void)
 
 void vdp_init_screen7(void)
 {
-    /* V9958 / V9938 Screen 7 Setup: 512x212, 16 colors per pixel */
-    vdp_write_reg(0, 0x0E);  /* M5=1, M4=1, M3=1 (Screen 7 mode bits) */
+    /* V9958 / V9938 Screen 7 Setup: 512x212, 16 colors per pixel (Mode 0x14) */
+    vdp_write_reg(0, 0x0A);  /* M5=1, M4=0, M3=1 (Screen 7 mode bits: (0x0A & 0x0E) << 1 = 0x14) */
     vdp_write_reg(1, 0x62);  /* 4K/16K=1, BL=1 (display on), SI=1 (16x16 sprites) */
     vdp_write_reg(2, 0x1F);  /* Pattern layout base address 0x00000 */
     vdp_write_reg(7, 0x08);  /* Backdrop color: Light Gray (BTRON background) */
     vdp_write_reg(8, 0x08);  /* VR=1 (64K/128K VRAM), SPD=0 (sprites enabled) */
     vdp_write_reg(9, 0x80);  /* LN=1 (212 display lines), IL=0 (non-interlace) */
 
-    /* Setup Sprite tables: Pattern at 0x1F000, Attributes at 0x1FA00 */
-    vdp_write_reg(5, 0x3F);  /* Sprite attribute table low */
-    vdp_write_reg(11, 0x03); /* Sprite attribute table high */
-    vdp_write_reg(6, 0x3E);  /* Sprite pattern generator */
+    /* Setup Sprite tables: Pattern at 0x1F000, Attributes at 0x1FA00, Colors at 0x1F800 */
+    vdp_write_reg(5, 0xF4);  /* Sprite attribute table low: (0xF4 << 7) = 0x7A00 */
+    vdp_write_reg(11, 0x03); /* Sprite attribute table high: (0x03 << 15) = 0x18000 -> 0x1FA00 */
+    vdp_write_reg(6, 0x3E);  /* Sprite pattern generator: (0x3E << 11) = 0x1F000 */
 
     vdp_init_btron_palette();
 
@@ -135,6 +137,103 @@ void vdp_cmd_hmmv(uint16_t dx, uint16_t dy, uint16_t nx, uint16_t ny, uint8_t co
     msx_out(PORT_VDP_INDIR, 0x00);         /* ARG: 0 */
     msx_out(PORT_VDP_INDIR, 0xC0);         /* CMD: HMMV */
     msx_ei();
+}
+
+void vdp_cmd_hmmm(uint16_t sx, uint16_t sy, uint16_t dx, uint16_t dy, uint16_t nx, uint16_t ny, uint8_t arg)
+{
+    vdp_wait_cmd();
+
+    msx_di();
+    vdp_write_reg(17, 32); /* Start at R#32 (SX) */
+    msx_out(PORT_VDP_INDIR, (uint8_t)(sx & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((sx >> 8) & 0x01));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(sy & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((sy >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(dx & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((dx >> 8) & 0x01));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(dy & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((dy >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(nx & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((nx >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(ny & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((ny >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, 0x00);
+    msx_out(PORT_VDP_INDIR, arg);
+    msx_out(PORT_VDP_INDIR, 0xD0);         /* CMD: HMMM (High-speed VRAM to VRAM BitBlt) */
+    msx_ei();
+}
+
+void vdp_cmd_lmmm(uint16_t sx, uint16_t sy, uint16_t dx, uint16_t dy, uint16_t nx, uint16_t ny, uint8_t arg, uint8_t op)
+{
+    vdp_wait_cmd();
+
+    msx_di();
+    vdp_write_reg(17, 32);
+    msx_out(PORT_VDP_INDIR, (uint8_t)(sx & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((sx >> 8) & 0x01));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(sy & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((sy >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(dx & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((dx >> 8) & 0x01));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(dy & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((dy >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(nx & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((nx >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(ny & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((ny >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, 0x00);
+    msx_out(PORT_VDP_INDIR, arg);
+    msx_out(PORT_VDP_INDIR, (uint8_t)(0x90 | (op & 0x0F))); /* CMD: LMMM */
+    msx_ei();
+}
+
+void vdp_cmd_ymmm(uint16_t sy, uint16_t dx, uint16_t dy, uint16_t ny, uint8_t arg)
+{
+    vdp_wait_cmd();
+
+    msx_di();
+    vdp_write_reg(17, 34); /* Start at R#34 (SY) */
+    msx_out(PORT_VDP_INDIR, (uint8_t)(sy & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((sy >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(dx & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((dx >> 8) & 0x01));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(dy & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((dy >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, 0x00); /* NX unused */
+    msx_out(PORT_VDP_INDIR, 0x00);
+    msx_out(PORT_VDP_INDIR, (uint8_t)(ny & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((ny >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, 0x00);
+    msx_out(PORT_VDP_INDIR, arg);
+    msx_out(PORT_VDP_INDIR, 0xE0); /* CMD: YMMM */
+    msx_ei();
+}
+
+void vdp_copy_rect(uint16_t sx, uint16_t sy, uint16_t dx, uint16_t dy, uint16_t w, uint16_t h)
+{
+    if (w == 0 || h == 0) return;
+    uint8_t arg = 0;
+    if (sx < dx && (sx + w) > dx) {
+        arg |= 0x04; /* DIX = 1: right to left */
+        sx += w - 1;
+        dx += w - 1;
+    }
+    if (sy < dy && (sy + h) > dy) {
+        arg |= 0x08; /* DIY = 1: bottom to top */
+        sy += h - 1;
+        dy += h - 1;
+    }
+    vdp_cmd_hmmm(sx, sy, dx, dy, w, h, arg);
+}
+
+void vdp_scroll_rect_up(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t delta_y, uint8_t fill_color)
+{
+    if (w == 0 || h <= delta_y) {
+        vdp_fill_rect(x, y, w, h, fill_color);
+        return;
+    }
+    vdp_cmd_hmmm(x, y + delta_y, x, y, w, h - delta_y, 0x00);
+    vdp_fill_rect(x, y + h - delta_y, w, delta_y, fill_color);
 }
 
 void vdp_cmd_lmmv(uint16_t dx, uint16_t dy, uint16_t nx, uint16_t ny, uint8_t color, uint8_t op)
@@ -231,23 +330,21 @@ void vdp_draw_bevel_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
 void vdp_init_sprites(void)
 {
     /* BTRON Mouse Arrow Cursor Pattern (16x16: 16 rows * 2 bytes = 32 bytes) */
+    /* Standard V9938 16x16 Sprite Layout:
+     * Bytes 0..7:   Top-Left (rows 0..7)
+     * Bytes 8..15:  Bottom-Left (rows 8..15)
+     * Bytes 16..23: Top-Right (rows 0..7)
+     * Bytes 24..31: Bottom-Right (rows 8..15)
+     */
     static const uint8_t arrow_cursor_pat[32] = {
-        0xC0, 0x00, /* 11000000 00000000 */
-        0xE0, 0x00, /* 11100000 00000000 */
-        0xF0, 0x00, /* 11110000 00000000 */
-        0xF8, 0x00, /* 11111000 00000000 */
-        0xFC, 0x00, /* 11111100 00000000 */
-        0xFE, 0x00, /* 11111110 00000000 */
-        0xFF, 0x00, /* 11111111 00000000 */
-        0xF8, 0x00, /* 11111000 00000000 */
-        0xD8, 0x00, /* 11011000 00000000 */
-        0x8C, 0x00, /* 10001100 00000000 */
-        0x0C, 0x00, /* 00001100 00000000 */
-        0x06, 0x00, /* 00000110 00000000 */
-        0x06, 0x00, /* 00000110 00000000 */
-        0x00, 0x00,
-        0x00, 0x00,
-        0x00, 0x00
+        /* Top-Left (8x8) */
+        0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF, 0xF8,
+        /* Bottom-Left (8x8) */
+        0xD8, 0x8C, 0x0C, 0x06, 0x06, 0x00, 0x00, 0x00,
+        /* Top-Right (8x8) */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        /* Bottom-Right (8x8) */
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
 
     vdp_set_sprite_pattern(0, arrow_cursor_pat);
@@ -266,13 +363,20 @@ void vdp_set_sprite_pattern(uint8_t pat_idx, const uint8_t *pattern16)
 
 void vdp_set_sprite_pos(uint8_t plane, uint16_t x, uint8_t y, uint8_t pat_idx, uint8_t color)
 {
-    /* VRAM base for sprite attribute table: 0x1FA00 + plane * 4 */
-    uint32_t addr = 0x1FA00UL + ((uint32_t)plane * 4);
-    vdp_set_vram_write_addr(addr);
+    /* 1. Sprite Color Table (Mode 2): 0x1F800 + plane * 16 */
+    uint32_t sct_addr = 0x1F800UL + ((uint32_t)plane * 16);
+    vdp_set_vram_write_addr(sct_addr);
+    uint8_t col_attr = (color & 0x0F);
+    for (uint8_t line = 0; line < 16; line++) {
+        msx_out(PORT_VDP_DATA, col_attr);
+    }
 
-    /* Sprite attributes: Y, X, Pattern, Color & Flags */
+    /* 2. Sprite Attribute Table (Mode 2): 0x1FA00 + plane * 4
+     * In Screen 7 (512x212), sprite horizontal coordinate is 0..255 (x / 2). */
+    uint32_t sat_addr = 0x1FA00UL + ((uint32_t)plane * 4);
+    vdp_set_vram_write_addr(sat_addr);
     msx_out(PORT_VDP_DATA, y);
-    msx_out(PORT_VDP_DATA, (uint8_t)(x & 0xFF));
+    msx_out(PORT_VDP_DATA, (uint8_t)((x >> 1) & 0xFF));
     msx_out(PORT_VDP_DATA, pat_idx);
-    msx_out(PORT_VDP_DATA, (uint8_t)(color & 0x0F));
+    msx_out(PORT_VDP_DATA, 0x00);
 }

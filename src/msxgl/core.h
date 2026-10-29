@@ -33,6 +33,7 @@ void msx_set_cpu_mode(uint8_t mode);
 /* Delay & Synchronization */
 void msx_delay(uint16_t cycles);
 void msx_wait_vblank(void);
+void msx_reboot(void);
 
 #ifdef __cplusplus
 }
