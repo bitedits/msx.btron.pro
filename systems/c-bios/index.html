@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>C-BIOS — オープンソース互換ファームウェア | msx.btron.pro</title>
-    <meta name="description" content="C-BIOS の完全技術仕様。GPL/BSD ライセンス、完全クリーンルーム設計、MSX1/MSX2/MSX2+/turboR 向けバイナリ変種、およびエミュレータ自動同梱アーキテクチャ。">
+    <meta name="description" content="C-BIOS の完全技術仕様。GPL/BSD ライセンス、完全クリーンルーム設計、MSX1/MSX2/MSX2+/turboR 向けバイナリ変種、カートリッジ自動起動ベクタ ($4000 'AB')、および B-MSX C99 エミュレーション統合。">
     <link rel="stylesheet" href="../../index.css?v=3">
 </head>
 <body>
@@ -18,7 +18,7 @@
                 <li><a href="../../emulators/index.html">Emulators</a></li>
                 <li><a href="../../games/index.html">Games</a></li>
                 <li><a href="../../systems/index.html" class="active">Systems</a></li>
-                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+                <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
             </ul>
         </div>
     </nav>
@@ -32,12 +32,12 @@
     </nav>
 
     <div class="setting-hero">
-        <div class="setting-hero-badge">C-BIOS 0.29+ · Cleanroom Re-implementation · Open-Source Firmware · Zero-Copyright Encumbrance</div>
+        <div class="setting-hero-badge">C-BIOS 0.29+ · Cleanroom Re-implementation · Open-Source Firmware · Zero-Copyright Encumbrance · B-MSX Core</div>
         <h1>C-BIOS (Systems)</h1>
         <div class="subtitle">
-            BouKiCHi 氏らによってゼロから開発された、自由なライセンスを持つ MSX 互換ファームウェア。
+            BouKiCHi 氏らによってゼロから開発された、自由なライセンスを持つ MSX 互換ファームウェアと B-MSX 瞬時起動規約。
             <span class="subtitle-en">
-                "Comprehensive technical specification of C-BIOS, a 100% cleanroom open-source MSX BIOS enabling legal emulator bundling and direct cartridge execution."
+                "Comprehensive technical specification of C-BIOS, a 100% cleanroom open-source MSX BIOS enabling legal emulator bundling, direct cartridge execution, and instant fast-forwarding."
             </span>
         </div>
     </div>
@@ -46,21 +46,22 @@
         <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
 
         <div class="tagline-card">
-            <strong>クリーンルーム設計の意義</strong> — 原典の MSX-BIOS はマイクロソフトおよび各メーカーの著作権下にあるため、オープンソースエミュレータに同梱して再配布することが法的に困難でした。C-BIOS は、公式仕様書の関数シグネチャのみを参照して完全に新規書き起こされたクリーンルーム実装であり、BASIC インタープリタを省きカートリッジの自動認識と即時起動に特化しています。
+            <strong>クリーンルーム設計の意義と著作権フリーの解放</strong> — 原典の MSX-BIOS はマイクロソフトおよび各ハードウェアメーカーの著作権下にあるため、オープンソースエミュレータに同梱して自由に再配布することが法的に困難でした。C-BIOS は、公式仕様書の関数シグネチャと挙動規則のみを参照して完全に新規書き起こされたクリーンルーム実装です。プロプライエタリな BASIC インタープリタを省き、カートリッジの自動認識と即時起動に特化。B-System の <strong>B-MSX</strong> では、この C-BIOS を標準ファームウェアとして採用し、合法的なエミュレーション配布と高速早送り（Fast-Forward）を実現しています。<br>
             <span class="tagline-en">
-                "C-BIOS eliminates copyright barriers by providing a pristine, cleanroom replacement for proprietary MSX ROMs. Designed specifically for gaming and emulator distribution, it implements the official BIOS jump table while omitting the proprietary MSX-BASIC interpreter."
+                "C-BIOS eliminates copyright barriers by providing a pristine, cleanroom replacement for proprietary MSX ROMs. Designed specifically for gaming and emulator distribution, it implements the official BIOS jump table while omitting the proprietary MSX-BASIC interpreter. Within B-System, B-MSX bundles C-BIOS as its default firmware, pairing it with fast-forward frame skips and heterogeneous CPU emulation."
             </span>
         </div>
 
+        <!-- 01 / Target Variants -->
         <section class="doc-section">
             <div class="band-head">
                 <span class="band-index">01 / Variants</span>
-                <h2 class="jp-title">1. ビルド変種とファイル構成 (Target Variants)</h2>
-                <p class="band-eyebrow">MSX1 · MSX2 · MSX2+ · turbo R Builds</p>
+                <h2 class="jp-title">1. ビルド変種とバイナリ構成 (Target Variants &amp; Matrix)</h2>
+                <p class="band-eyebrow">MSX1 · MSX2 · MSX2+ · turbo R Builds · Regional Keyboards</p>
             </div>
             <div class="doc-summary">
                 世代および地域（日本、欧州、ブラジル）に応じた C-BIOS のバイナリ構成です。<br>
-                <span class="summary-en">"Target matrix detailing generation-specific ROM files and regional keyboard/video configurations."</span>
+                <span class="summary-en">"Target matrix detailing generation-specific ROM files, regional keyboard maps, and video initialization configurations."</span>
             </div>
 
             <div class="market-table-wrap">
@@ -71,7 +72,7 @@
                             <th>対象世代</th>
                             <th>地域・キーボード</th>
                             <th>サイズ</th>
-                            <th>特徴と搭載機能</th>
+                            <th>特徴と搭載機能 (Functional Capabilities)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -80,35 +81,201 @@
                             <td>MSX1</td>
                             <td>日本 (JIS)</td>
                             <td>16 KiB</td>
-                            <td>TMS9918A VDP 制御、PSG サウンド、カートリッジ直接起動</td>
+                            <td>TMS9918A VDP 制御、PSG サウンド、JIS 配列キーボード、カートリッジ直接起動。</td>
                         </tr>
                         <tr>
                             <td><code>cbios_main_msx2_jp.rom</code></td>
                             <td>MSX2</td>
                             <td>日本 (JIS)</td>
                             <td>32 KiB</td>
-                            <td>V9938 グラフィックコマンド、パレット設定、RTC サポート</td>
+                            <td>V9938 グラフィックコマンド、パレット設定、RTC サポート。Hitachi HC-90/95 標準採用品。</td>
                         </tr>
                         <tr>
                             <td><code>cbios_main_msx2+_jp.rom</code></td>
                             <td>MSX2+</td>
                             <td>日本 (JIS)</td>
                             <td>32 KiB</td>
-                            <td>V9958 自然画モード、横スムーズスクロール</td>
+                            <td>V9958 自然画モード、横スムーズスクロール、MSX-MUSIC (YM2413) 初期化。</td>
                         </tr>
                         <tr>
                             <td><code>cbios_main_msxtr.rom</code></td>
-                            <td>turbo R</td>
+                            <td>MSX turbo R</td>
                             <td>共通</td>
                             <td>32 KiB</td>
-                            <td>R800 CPU 検出、高速 PCM サポート</td>
+                            <td>ASCII R800 CPU 検出、PCM 8ビット音声出力サポート、高速バス調停。</td>
+                        </tr>
+                        <tr>
+                            <td><code>cbios_sub.rom</code></td>
+                            <td>MSX2 / 2+ / TR</td>
+                            <td>共通</td>
+                            <td>16 KiB</td>
+                            <td>Sub-ROM (スロット 0-1)。V9938/V9958 向け追加グラフィックプリミティブベクタ群。</td>
+                        </tr>
+                        <tr>
+                            <td><code>cbios_music.rom</code></td>
+                            <td>MSX-MUSIC</td>
+                            <td>共通</td>
+                            <td>16 KiB</td>
+                            <td>FM-PAC 互換 OPLL (YM2413) 演奏ドライバおよび BASIC 拡張ステートメント。</td>
                         </tr>
                         <tr>
                             <td><code>cbios_logo_msx2.rom</code></td>
                             <td>ブートロゴ</td>
                             <td>共通</td>
                             <td>16 KiB</td>
-                            <td>起動時のグラフィカル C-BIOS ロゴ表示サブシステム</td>
+                            <td>起動時のグラフィカル C-BIOS ロゴアニメーション（早送りによりスキップ可能）。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 02 / Cleanroom Cartridge Boot Protocol -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Cartridge Dispatch</span>
+                <h2 class="jp-title">2. カートリッジ自動認識と起動プロトコル (Cartridge Boot Protocol)</h2>
+                <p class="band-eyebrow">Signature "AB" ($4000) · Vector Execution · Mapper Sniffing</p>
+            </div>
+            <div class="doc-summary">
+                BASIC インタープリタを介さず、ROM カセットを瞬時に解析・起動する C-BIOS 内部手順です。<br>
+                <span class="summary-en">"Algorithmic execution path for inspecting $4000 'AB' ROM headers and auto-detecting MegaROM banking topologies."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>オフセット番地 (Offset)</th>
+                            <th>フィールド名</th>
+                            <th>期待値 (Value)</th>
+                            <th>動作仕様 (Execution Protocol)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$4000–$4001</code></td>
+                            <td>ヘッダシグネチャ</td>
+                            <td><code>"AB"</code> (<code>0x41 0x42</code>)</td>
+                            <td>ROM カートリッジ識別記号。存在しない場合はスロット走査を継続。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$4002–$4003</code></td>
+                            <td>INIT ベクタ</td>
+                            <td>アドレス (16-bit)</td>
+                            <td>カートリッジ初期化サブルーチン。画面モード設定やワークエリア確保を行う。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$4004–$4005</code></td>
+                            <td>EXEC ベクタ</td>
+                            <td>アドレス (16-bit)</td>
+                            <td>ゲームプログラム本編エントリ番地。<code>JP (EXEC)</code> により本編へ制御を遷移。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$4006–$4007</code></td>
+                            <td>STATEMENT 拡張</td>
+                            <td>アドレス (16-bit)</td>
+                            <td>BASIC コールステートメント拡張ルーチン（C-BIOS では通常スキップ）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$4008–$4009</code></td>
+                            <td>DEVICE 拡張</td>
+                            <td>アドレス (16-bit)</td>
+                            <td>拡張 I/O デバイスドライバエントリ。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 03 / Pure Z80 Jump Implementations -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / Jump Implementations</span>
+                <h2 class="jp-title">3. 純粋 Z80 アセンブラによる互換ベクタ実装 (Pure Z80 Implementations)</h2>
+                <p class="band-eyebrow">Zero-Bloat Assembly · Invariant Register Calling Conventions</p>
+            </div>
+            <div class="doc-summary">
+                C-BIOS が標準 MSX-BIOS 仕様を満たすためにアセンブラで実装している主要ルーチンです。<br>
+                <span class="summary-en">"High-performance Z80 assembly implementations of official BIOS jump vectors, ensuring binary compatibility with commercial titles."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>エントリ番地</th>
+                            <th>ベクタ識別子</th>
+                            <th>C-BIOS における実装手法 (Implementation Logic)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$001C</code></td>
+                            <td><code>CALSLT</code></td>
+                            <td>スタック上に現在の PPI 8255 ポート A および <code>$FFFF</code> サブスロット状態を退避し、指定スロットのページを有効化して <code>CALL (IX)</code> を実行。復帰時にスロット状態を完全復元。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0024</code></td>
+                            <td><code>ENASLT</code></td>
+                            <td>渡されたスロット番号に基づき、対象アドレスページのポート A または <code>$FFFF</code> レジスタを書き換え、システムテーブル <code>SLTTBL</code> を更新。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$005C</code></td>
+                            <td><code>LDIRVM</code></td>
+                            <td>ポート <code>$99</code>（または <code>$89</code>）に書き込みアドレスを設定した後、<code>OTIR</code> 命令を用いてメイン RAM から VDP ポート <code>$98</code> へ高速バースト転送。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$005F</code></td>
+                            <td><code>CHGMOD</code></td>
+                            <td>レジスタ <code>A</code> に応じて VDP 初期化テーブルを選択。SCREEN 0〜8 のレジスタ 0〜7 / 8〜23 を一括書き込みし、<code>RGnSAV</code> を更新。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00A2</code></td>
+                            <td><code>CHPUT</code></td>
+                            <td>SCREEN 0/1/2 の各文字パターンテーブルを走査し、カーソル位置 <code>(CSRX, CSRY)</code> の VRAM ネームテーブルへ ASCII コードを書き込み。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 04 / B-MSX Integration & Fast-Forwarding -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">04 / B-MSX Integration</span>
+                <h2 class="jp-title">4. B-System B-MSX への統合と高速早送り (B-MSX Integration &amp; Fast-Forward)</h2>
+                <p class="band-eyebrow">NASA/JPL Power of Ten · Fast-Forward Skip · Zero Copyright Encumbrance</p>
+            </div>
+            <div class="doc-summary">
+                B-System の C99 コアにおいて、C-BIOS がどのように活用され、高速起動を実現しているかの仕様です。<br>
+                <span class="summary-en">"Integration details within B-System B-MSX, demonstrating fast-forward boot skips and unencumbered open-source redistribution."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>機能特徴 (Feature)</th>
+                            <th>B-MSX C99 アーキテクチャでの動作 (Architecture Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>早送り (Fast-Forward)</b></td>
+                            <td><code>msx_app_fast_forward(450)</code> により、C-BIOS の起動ロゴおよび初期化待機ループを 0 秒で通過。描画更新をバイパスして命令サイクルのみを進めるため、瞬時にタイトル画面へ到達。</td>
+                        </tr>
+                        <tr>
+                            <td><b>著作権フリー配布</b></td>
+                            <td>C-BIOS は GPL/BSD ライセンスであるため、B-System リポジトリおよび WebAssembly バイナリへ合法的に直接内蔵可能。外部 ROM ダンプ作業が一切不要。</td>
+                        </tr>
+                        <tr>
+                            <td><b>HC-90/HC-95 互換</b></td>
+                            <td>Hitachi HC-90 / HC-95 ワークステーションの実行時には、日本語 MSX2 C-BIOS (<code>cbios_main_msx2_jp.rom</code>) と JIS 第1/第2水準漢字ROM を自動結合してマッピング。</td>
+                        </tr>
+                        <tr>
+                            <td><b>多機種自動切替</b></td>
+                            <td>装填された ROM カートリッジの容量とヘッダ特性（XRacing=MSX1, Bad Apple=MSX2+, BULLRUSH=MSX2/TR）に基づき、B-MSX が適切な C-BIOS 変種を動的に配備。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -116,9 +283,68 @@
         </section>
     </main>
 
-    <footer>
-        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
-            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro C-BIOS
+    <footer class="app-footer">
+        <div class="wrap">
+            <div class="footer-columns">
+                <div>
+                    <h4>Computers</h4>
+                    <ul>
+                        <li><a href="../../computers/sony-hb-f900/index.html">Sony HB-F900</a></li>
+                        <li><a href="../../computers/sony-hb-g900ap/index.html">Sony HB-G900AP</a></li>
+                        <li><a href="../../computers/victor-hc-95/index.html">Victor HC-95 AB</a></li>
+                        <li><a href="../../computers/yamaha-yis-805/index.html">Yamaha YIS-805 256</a></li>
+                        <li><a href="../../computers/panasonic-fs-a1fm/index.html">Panasonic FS-A1FM</a></li>
+                        <li><a href="../../computers/hitachi-mb-h70/index.html">Hitachi MB-H70</a></li>
+                        <li><a href="../../computers/index.html">全13機種一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Systems</h4>
+                    <ul>
+                        <li><a href="../btron/index.html">8-bit BTRON</a></li>
+                        <li><a href="../msx-bios/index.html">MSX-BIOS</a></li>
+                        <li><a href="../msx-dos/index.html">MSX-DOS 2</a></li>
+                        <li><a href="index.html" class="active">C-BIOS</a></li>
+                        <li><a href="../uzix/index.html">UZIX (Unix V7)</a></li>
+                        <li><a href="../index.html">基本ソフト一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Development</h4>
+                    <ul>
+                        <li><a href="../../development/sdcc/index.html">SDCC Compiler</a></li>
+                        <li><a href="../../development/pasmo/index.html">Pasmo Assembler</a></li>
+                        <li><a href="../../development/index.html">Toolchain Overview</a></li>
+                        <li><a href="https://btron.pro/btron/doc/txt/MSX-SOUND.txt" target="_blank">MSX Sound Spec</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Emulators</h4>
+                    <ul>
+                        <li><a href="../../emulators/openMSX/index.html">openMSX</a></li>
+                        <li><a href="../../emulators/blueMSX/index.html">blueMSX</a></li>
+                        <li><a href="../../emulators/tronMSX/index.html">tronMSX (B-MSX)</a></li>
+                        <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-System MSX App</a></li>
+                        <li><a href="https://btron.pro/btron/b-media/msx.html" target="_blank">B-MSX Book Spec</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom" style="text-align: center; margin-top: 4.5rem; padding-top: 3.5rem; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 0.84rem; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 1.6rem;">
+                <a href="../../sakazaki.svg" title="Sakazaki Clan Kamon — 二蓋笠 (Nigai-gasa)" style="display: inline-block; text-decoration: none; margin-bottom: 0.2rem;">
+                    <img src="../../sakazaki.svg" alt="Sakazaki Order Logo" style="width: 108px; height: auto; display: block; opacity: 0.88; transition: opacity 0.25s ease, transform 0.25s ease;">
+                </a>
+                <div class="footer-legal">
+                    <p style="margin: 0 0 0.85rem; font-weight: 500; letter-spacing: 0.04em; color: #b8c0c8; font-size: 0.81rem;">
+                        &copy; 2026 Cryptographics Telesystems, LLC. Ukraine. All rights reserved.
+                    </p>
+                    <p style="margin: 0 0 0.9rem; line-height: 1.75;">
+                        <b>TRADEMARK &amp; COMPLIANCE DISCLOSURE:</b> MSX&trade; is a registered trademark of MSX Licensing Corporation and ASCII Corporation. C-BIOS is an open-source project licensed under the BSD license. SONY&reg;, HitBit&trade;, and G-ZERO&trade; are trademarks or registered trademarks of Sony Group Corporation / Sony Corporation. Panasonic&reg; (Panasonic Holdings Corporation), Victor / JVC&reg; (JVCKENWOOD Corporation), Yamaha&reg; (Yamaha Corporation), and Hitachi&reg; (Hitachi, Ltd.) are trademarks of their respective proprietors. All manufacturer designations, hardware component identifiers, and registered software titles cited within this repository are the property of their respective trademark holders and are reproduced strictly under statutory fair use doctrine for non-commercial historical preservation, register-level hardware documentation, and cleanroom interoperability engineering.
+                    </p>
+                    <p style="margin: 0; line-height: 1.75; color: #69747e; font-size: 0.74rem;">
+                        msx.btron.pro &nbsp;·&nbsp; MSX Archival &amp; Technical Portal &nbsp;·&nbsp; Under ISC / MIT Licence &nbsp;·&nbsp; Conforming to DOCOPS &amp; PUBLISH Standards
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 

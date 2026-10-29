@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>8-bit BTRON — MSX向け実身仮身ランタイム | msx.btron.pro</title>
-    <meta name="description" content="8-bit BTRON for MSX の技術仕様。BMSX リアルボディレコード構造、TAD (Tron Application Databus) セグメント配置、µITRON 風軽量イベントキュー、および B-System B-MSX コア連携。">
+    <meta name="description" content="8-bit BTRON for MSX の技術仕様。BMSX リアルボディレコード構造、TAD (Tron Application Databus) セグメント配置、TRON 多言語文字コードと漢字ROM (0xD8-0xDB)、µITRON 風軽量イベントキュー、および B-System B-MSX コア連携。">
     <link rel="stylesheet" href="../../index.css?v=3">
 </head>
 <body>
@@ -18,7 +18,7 @@
                 <li><a href="../../emulators/index.html">Emulators</a></li>
                 <li><a href="../../games/index.html">Games</a></li>
                 <li><a href="../../systems/index.html" class="active">Systems</a></li>
-                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+                <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
             </ul>
         </div>
     </nav>
@@ -32,7 +32,7 @@
     </nav>
 
     <div class="setting-hero">
-        <div class="setting-hero-badge">BTRON 3.20 Architecture · Real/Virtual Body Model · TAD 8-bit Segments · µITRON Tasking</div>
+        <div class="setting-hero-badge">BTRON 3.20 Architecture · Real/Virtual Body Model · 8-bit TAD Segments · µITRON Tasking</div>
         <h1>8-bit BTRON (Systems)</h1>
         <div class="subtitle">
             MSX の Z80 バンク空間上に再構成された、超漢字・実身仮身ハイパーメディアモデルと確定性 µITRON ランタイム。
@@ -46,17 +46,18 @@
         <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
 
         <div class="tagline-card">
-            <strong>BTRON と MSX の邂逅</strong> — BTRON（Business TRON）は、坂村健氏が構想した人間中心の統一オペレーティングシステムであり、階層ファイルシステムに代わる実身（Real Object）と仮身（Virtual Object）のネットワーク構造（ハイパーメディア）を根幹に持ちます。8-bit BTRON は、ワークステーション向けの巨大な仕様を 64 KiB の MSX Z80 上に凝縮。16 KiB メモリマッパーをスワップ単位として用い、TAD（TRON Application Databus）テキストとウィンドウ枠を V9938/V9958 上へ直接描画します。
+            <strong>BTRON と MSX の邂逅</strong> — BTRON（Business TRON）は、坂村健氏が構想した人間中心の統一オペレーティングシステムであり、階層ファイルシステムに代わる実身（Real Object）と仮身（Virtual Object）のネットワーク構造（ハイパーメディア）を根幹に持ちます。8-bit BTRON は、ワークステーション向けの巨大な仕様を 64 KiB の MSX Z80 上に凝縮。16 KiB メモリマッパーをスワップ単位として用い、TAD（TRON Application Databus）テキストとウィンドウ枠を V9938/V9958 上へ直接描画します。B-System の <strong>B-MSX</strong> では、この実身仮身空間と完全に直結する C99 確定性コアを提供します。<br>
             <span class="tagline-en">
-                "8-bit BTRON adapts the seminal TRON real/virtual body hypermedia paradigm to the 8-bit Z80 addressing plane. By leveraging 16 KiB memory mapper segments as storage blocks, it hosts TAD variable-length records and cooperative window primitives without requiring workstation-class MMUs."
+                "8-bit BTRON adapts the seminal TRON real/virtual body hypermedia paradigm to the 8-bit Z80 addressing plane. By leveraging 16 KiB memory mapper segments as storage blocks, it hosts TAD variable-length records and cooperative window primitives without requiring workstation-class MMUs. In B-System, the B-MSX core tightly integrates with this hypermedia model under strict C99 determinism."
             </span>
         </div>
 
+        <!-- 01 / BMSX Record Structure -->
         <section class="doc-section">
             <div class="band-head">
                 <span class="band-index">01 / Record</span>
-                <h2 class="jp-title">1. BMSX 実身レコード構造 (BMSX Real-Body Record)</h2>
-                <p class="band-eyebrow">Byte Offsets · Header Signatures · Link Chains</p>
+                <h2 class="jp-title">1. BMSX 実身レコード構造 (BMSX Real-Body Record Layout)</h2>
+                <p class="band-eyebrow">Binary Offsets · Header Signatures · Link Chains · Mapper Blocks</p>
             </div>
             <div class="doc-summary">
                 MSX メモリマッパーセグメント上に永続化される <code>BMSX</code> 実身レコードのバイナリ構造です。<br>
@@ -84,48 +85,49 @@
                             <td><code>+0x04..+0x05</code></td>
                             <td><code>body_id</code></td>
                             <td><code>uint16_t</code></td>
-                            <td>一意の実身番号 (0x0001–0xFFFF)</td>
+                            <td>一意の実身番号 (0x0001–0xFFFF)。0x0000 は無効・未使用レコード。</td>
                         </tr>
                         <tr>
                             <td><code>+0x06..+0x07</code></td>
                             <td><code>parent_id</code></td>
                             <td><code>uint16_t</code></td>
-                            <td>所属仮身（リンク元）の実身番号</td>
+                            <td>所属仮身（リンク元）の実身番号。ルートウィンドウ実身は 0x0000。</td>
                         </tr>
                         <tr>
                             <td><code>+0x08..+0x09</code></td>
                             <td><code>record_len</code></td>
                             <td><code>uint16_t</code></td>
-                            <td>後続する TAD セグメントデータの総バイト数</td>
+                            <td>後続する TAD セグメントデータの総バイト数 (ヘッダ 16 バイトを除く)。</td>
                         </tr>
                         <tr>
                             <td><code>+0x0A..+0x0B</code></td>
                             <td><code>flags</code></td>
                             <td><code>uint16_t</code></td>
-                            <td>属性フラグ (Bit 0: 読取専用, Bit 1: 変更済, Bit 2: 暗号化)</td>
+                            <td>属性フラグ (Bit 0: 読取専用, Bit 1: 変更済ダーティ, Bit 2: 暗号化, Bit 3: フォルダ実身)。</td>
                         </tr>
                         <tr>
                             <td><code>+0x0C..+0x0F</code></td>
                             <td><code>mtime</code></td>
                             <td><code>uint32_t</code></td>
-                            <td>最終更新日時 (エポック秒)</td>
+                            <td>最終更新日時 (UNIX エポック秒、または RTC リアルタイムクロック値)。</td>
                         </tr>
                         <tr>
                             <td><code>+0x10..+EOF</code></td>
                             <td><code>tad_payload</code></td>
                             <td><code>uint8_t[]</code></td>
-                            <td>8-bit TAD 可変長セグメントストリーム (テキスト・図形)</td>
+                            <td>8-bit TAD 可変長セグメントストリーム (テキスト・仮身リンク・図形プリミティブ)。</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
+        <!-- 02 / 8-bit TAD Segments -->
         <section class="doc-section">
             <div class="band-head">
                 <span class="band-index">02 / TAD</span>
-                <h2 class="jp-title">2. 8-bit TAD セグメント仕様 (TAD Segments)</h2>
-                <p class="band-eyebrow">Variable-Length Segments · TRON Multilingual Character Code</p>
+                <h2 class="jp-title">2. 8-bit TAD セグメント仕様 (8-bit TAD Segment Primitives)</h2>
+                <p class="band-eyebrow">Variable-Length Segments · Hypermedia Tags · V9938 Acceleration</p>
             </div>
             <div class="doc-summary">
                 BTRON のデータ交換標準である TAD（TRON Application Databus）の 8 ビットセグメント仕様です。<br>
@@ -139,7 +141,7 @@
                             <th>セグメント ID</th>
                             <th>名称 (Segment Name)</th>
                             <th>構造・引数 (Arguments)</th>
-                            <th>機能仕様 (Functional Specification)</th>
+                            <th>機能仕様とハードウェア動作 (Functional Specification)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -147,43 +149,225 @@
                             <td><code>0x01</code></td>
                             <td>テキスト (Text Run)</td>
                             <td><code>len (uint8), chars[]</code></td>
-                            <td>TRON コード JIS 第1/第2水準漢字および ASCII 文字列</td>
+                            <td>TRON コード JIS 第1/第2水準漢字および ASCII 文字列。漢字ROM ポート経由で描画。</td>
                         </tr>
                         <tr>
                             <td><code>0x02</code></td>
                             <td>仮身タグ (Link Tag)</td>
-                            <td><code>target_body_id (uint16)</code></td>
-                            <td>他の実身を開くためのアイコン（仮身）を文章中に埋め込み</td>
+                            <td><code>target_body_id (uint16), icon_id (uint8), title_len (uint8), title[]</code></td>
+                            <td>他の実身を開くためのアイコン（仮身）を文章中に埋め込み。ダブルクリックで該当実身を窓として開く。</td>
                         </tr>
                         <tr>
                             <td><code>0x03</code></td>
                             <td>図形描画 (Vector Primitive)</td>
-                            <td><code>cmd (uint8), x0, y0, x1, y1</code></td>
-                            <td>V9938 ハードウェア描画エンジンへの直接線分・矩形描画指示</td>
+                            <td><code>cmd (uint8), x0 (int16), y0 (int16), x1 (int16), y1 (int16), color (uint8)</code></td>
+                            <td>V9938 ハードウェア描画エンジン（<code>LINE</code> / <code>HMMV</code>）への直接指示。矩形、線分、楕円の描画。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x04</code></td>
+                            <td>書体変更 (Font Face)</td>
+                            <td><code>font_id (uint8), size_pt (uint8)</code></td>
+                            <td>明朝体、ゴシック体、英数フォントの指定、およびポイントサイズ切り替え。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x05</code></td>
+                            <td>ビットマップ面 (Bitmap Plane)</td>
+                            <td><code>width (uint16), height (uint16), bpp (uint8), data[]</code></td>
+                            <td>モノクロまたは 16 色ビットマップ画像データをインライン展開。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x06</code></td>
+                            <td>色属性 (Color Attribute)</td>
+                            <td><code>fg_color (uint8), bg_color (uint8)</code></td>
+                            <td>後続するテキスト描画の描画色（前景色・背景色パレット番号）を変更。</td>
                         </tr>
                         <tr>
                             <td><code>0xFF</code></td>
                             <td>終端記号 (Stream End)</td>
                             <td>なし</td>
-                            <td>TAD ペイロードの終了を示し、パーサを終了</td>
+                            <td>TAD ペイロードの終了を示し、ストリームパーサの処理を完了。</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
+        <!-- 03 / TRON Multilingual & Kanji ROM -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">03 / Links</span>
-                <h2 class="jp-title">3. B-System 実装との統合 (B-System B-MSX Connection)</h2>
-                <p class="band-eyebrow">Shared C99 Architecture &amp; Links</p>
+                <span class="band-index">03 / TRON Code &amp; Kanji</span>
+                <h2 class="jp-title">3. TRON 多言語文字コードと漢字ROM制御 (TRON Code &amp; Kanji ROM)</h2>
+                <p class="band-eyebrow">JIS X 0208 · Ports $D8–$DB · 16×16 Font Matrix Paging</p>
+            </div>
+            <div class="doc-summary">
+                BTRON の特徴である多言語文字処理体系と、MSX 実機の漢字ROM（JIS 第1・第2水準）ハードウェアインターフェース仕様です。<br>
+                <span class="summary-en">"Hardware register specification for Japanese Kanji ROM addressing (Ports $D8–$DB), streaming 16×16 glyph bitmaps directly into VRAM."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>I/O ポート (Port)</th>
+                            <th>アクセス</th>
+                            <th>レジスタ機能 (Register Function)</th>
+                            <th>ハードウェア動作仕様 (Silicon Interface)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>0xD8</code></td>
+                            <td>書込専用 (Out)</td>
+                            <td>第1水準漢字ROM アドレス下位 (A0–A7)</td>
+                            <td>JIS 区点コードから算出された 16×16 ドットグリフ（32バイト）の先頭アドレス下位を設定。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0xD9</code></td>
+                            <td>書込専用 (Out)</td>
+                            <td>第1水準漢字ROM アドレス上位 (A8–A16)</td>
+                            <td>漢字ROM アドレス上位を設定。アドレス設定後、ポート 0xD9 からの連続読出が可能となる。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0xD9</code></td>
+                            <td>読出専用 (In)</td>
+                            <td>第1水準漢字ROM データ (32バイト順次読出)</td>
+                            <td>1 バイト読み出すごとに内部アドレスカウンタが自動インクリメント。32 回連続リードで 1 文字分取得。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0xDA</code></td>
+                            <td>書込専用 (Out)</td>
+                            <td>第2水準漢字ROM アドレス下位 (A0–A7)</td>
+                            <td>JIS 第2水準漢字ROM の先頭アドレス下位ビットを設定。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0xDB</code></td>
+                            <td>書込専用 (Out)</td>
+                            <td>第2水準漢字ROM アドレス上位 (A8–A16)</td>
+                            <td>第2水準漢字ROM のアドレス上位ビットを設定。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0xDB</code></td>
+                            <td>読出専用 (In)</td>
+                            <td>第2水準漢字ROM データ (32バイト順次読出)</td>
+                            <td>第2水準漢字グリフデータの順次読み出し。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 04 / Tasking -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">04 / Tasking</span>
+                <h2 class="jp-title">4. バンク空間における確定性 μITRON タスク機構 (μITRON Tasking in Banked RAM)</h2>
+                <p class="band-eyebrow">Deterministic Scheduling · Lightweight Event Queue · Cooperative Multitasking</p>
+            </div>
+            <div class="doc-summary">
+                Z80 のメモリマッパー空間上で協調動作する、μITRON 準拠の軽量リアルタイムイベント駆動機構です。<br>
+                <span class="summary-en">"Deterministic task scheduling primitives and message queue protocols operating within banked 16 KiB memory mapper slots."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>システムコール (API)</th>
+                            <th>引数 (Arguments)</th>
+                            <th>機能仕様とスケジューリング動作 (Kernel Behavior)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>b_cre_tsk</code></td>
+                            <td><code>tskid, pk_ctsk (優先度, エントリ番地, スタック)</code></td>
+                            <td>新規タスクの生成。タスクコントロールブロック (TCB) を割り当て初期化。</td>
+                        </tr>
+                        <tr>
+                            <td><code>b_sta_tsk</code></td>
+                            <td><code>tskid, stacd (起動コード)</code></td>
+                            <td>タスクを実行可能状態（READY）へ移行。スケジューラキューに登録。</td>
+                        </tr>
+                        <tr>
+                            <td><code>b_snd_msg</code></td>
+                            <td><code>mbxid, pk_msg (メッセージポインタ)</code></td>
+                            <td>メールボックスへのメッセージ送信。キュー先頭の待機タスクを起床。</td>
+                        </tr>
+                        <tr>
+                            <td><code>b_rcv_msg</code></td>
+                            <td><code>mbxid, pk_msg, tmout (タイムアウト)</code></td>
+                            <td>メールボックスからのメッセージ受信。空の場合は受信待ち（WAIT）状態へ遷移。</td>
+                        </tr>
+                        <tr>
+                            <td><code>b_rot_rdq</code></td>
+                            <td><code>pri (優先度)</code></td>
+                            <td>同一優先度タスクのラウンドロビン実行。協調型タスク切り替えの基本単位。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 05 / Window Engine -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">05 / Window Engine</span>
+                <h2 class="jp-title">5. ウィンドウ描画と V9938/V9958 統合 (Window Composition &amp; Hardware Blitter)</h2>
+                <p class="band-eyebrow">3D Bevel Styling · Dirty Rectangles · Direct Framebuffer Composition</p>
+            </div>
+            <div class="doc-summary">
+                BTRON 標準の 3D ベベル境界、ウィンドウタイトルバー、およびマウスカーソル追従のハードウェア描画仕様です。<br>
+                <span class="summary-en">"Window manager rasterization using V9938 hardware command acceleration (HMMV/LMMV) for instant 3D bevels and scroll blitting."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>描画要素 (GUI Element)</th>
+                            <th>描画手法 / ハードウェアコマンド</th>
+                            <th>技術仕様 (Technical Details)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>ウィンドウ枠・ベベル</b></td>
+                            <td>V9938 <code>LINE</code> / <code>HMMV</code> コマンド</td>
+                            <td>右上ハイライト（白）と左下シャドウ（濃灰）による 2px ベベル枠。CPU 介入なしに VDP が矩形描画。</td>
+                        </tr>
+                        <tr>
+                            <td><b>タイトルバー</b></td>
+                            <td>V9938 <code>HMMV</code> 矩形塗りつぶし</td>
+                            <td>アクティブウィンドウは TRON 浅葱（<code>#008080</code>）、非アクティブ時は灰（<code>#808080</code>）をハードウェア高速転送。</td>
+                        </tr>
+                        <tr>
+                            <td><b>スクロール更新</b></td>
+                            <td>V9938 <code>YMMM</code> (VRAM 間垂直転送)</td>
+                            <td>文章スクロール時に CPU による全再描画を行わず、VRAM 内部で矩形領域を一括スライド。</td>
+                        </tr>
+                        <tr>
+                            <td><b>マウスカーソル</b></td>
+                            <td>ハードウェアスプライト (Plane 0)</td>
+                            <td>矢印カーソルを VDP スプライト面 0 に配置。PSG ポート A/B 経由のパルスマウス入力を 60Hz 割込みで追従。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 06 / Links -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">06 / Links</span>
+                <h2 class="jp-title">6. B-System 実装との統合 (B-System B-MSX Connection)</h2>
+                <p class="band-eyebrow">Shared C99 Architecture &amp; References</p>
             </div>
             <div class="related-grid">
-                <a href="../../../btron/b-system/apps/MSX.html" target="_blank" class="related-card">
+                <a href="https://btron.pro/b-system/apps/MSX.html" target="_blank" class="related-card">
                     <h4>B-System B-MSX アプリ仕様 <span>↗</span></h4>
                     <p>B-System ワークベンチ上の MSX2+ コア、カートリッジ実行窓、および Geo3D 規約。</p>
                 </a>
-                <a href="../../../btron/b-media/msx.html" target="_blank" class="related-card">
+                <a href="https://btron.pro/btron/b-media/msx.html" target="_blank" class="related-card">
                     <h4>B-Book B-MSX 規範仕様 (Rev 1.05) <span>↗</span></h4>
                     <p>Z80 タイミング、V9958 レンダラ、PSG-PCM 統合、NASA/JPL 信頼性基準。</p>
                 </a>
@@ -199,9 +383,68 @@
         </section>
     </main>
 
-    <footer>
-        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
-            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro 8-bit BTRON
+    <footer class="app-footer">
+        <div class="wrap">
+            <div class="footer-columns">
+                <div>
+                    <h4>Computers</h4>
+                    <ul>
+                        <li><a href="../../computers/sony-hb-f900/index.html">Sony HB-F900</a></li>
+                        <li><a href="../../computers/sony-hb-g900ap/index.html">Sony HB-G900AP</a></li>
+                        <li><a href="../../computers/victor-hc-95/index.html">Victor HC-95 AB</a></li>
+                        <li><a href="../../computers/yamaha-yis-805/index.html">Yamaha YIS-805 256</a></li>
+                        <li><a href="../../computers/panasonic-fs-a1fm/index.html">Panasonic FS-A1FM</a></li>
+                        <li><a href="../../computers/hitachi-mb-h70/index.html">Hitachi MB-H70</a></li>
+                        <li><a href="../../computers/index.html">全13機種一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Systems</h4>
+                    <ul>
+                        <li><a href="index.html" class="active">8-bit BTRON</a></li>
+                        <li><a href="../msx-bios/index.html">MSX-BIOS</a></li>
+                        <li><a href="../msx-dos/index.html">MSX-DOS 2</a></li>
+                        <li><a href="../c-bios/index.html">C-BIOS</a></li>
+                        <li><a href="../uzix/index.html">UZIX (Unix V7)</a></li>
+                        <li><a href="../index.html">基本ソフト一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Development</h4>
+                    <ul>
+                        <li><a href="../../development/sdcc/index.html">SDCC Compiler</a></li>
+                        <li><a href="../../development/pasmo/index.html">Pasmo Assembler</a></li>
+                        <li><a href="../../development/index.html">Toolchain Overview</a></li>
+                        <li><a href="https://btron.pro/btron/doc/txt/MSX-SOUND.txt" target="_blank">MSX Sound Spec</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Emulators</h4>
+                    <ul>
+                        <li><a href="../../emulators/openMSX/index.html">openMSX</a></li>
+                        <li><a href="../../emulators/blueMSX/index.html">blueMSX</a></li>
+                        <li><a href="../../emulators/tronMSX/index.html">tronMSX (B-MSX)</a></li>
+                        <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-System MSX App</a></li>
+                        <li><a href="https://btron.pro/btron/b-media/msx.html" target="_blank">B-MSX Book Spec</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom" style="text-align: center; margin-top: 4.5rem; padding-top: 3.5rem; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 0.84rem; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 1.6rem;">
+                <a href="../../sakazaki.svg" title="Sakazaki Clan Kamon — 二蓋笠 (Nigai-gasa)" style="display: inline-block; text-decoration: none; margin-bottom: 0.2rem;">
+                    <img src="../../sakazaki.svg" alt="Sakazaki Order Logo" style="width: 108px; height: auto; display: block; opacity: 0.88; transition: opacity 0.25s ease, transform 0.25s ease;">
+                </a>
+                <div class="footer-legal">
+                    <p style="margin: 0 0 0.85rem; font-weight: 500; letter-spacing: 0.04em; color: #b8c0c8; font-size: 0.81rem;">
+                        &copy; 2026 Cryptographics Telesystems, LLC. Ukraine. All rights reserved.
+                    </p>
+                    <p style="margin: 0 0 0.9rem; line-height: 1.75;">
+                        <b>TRADEMARK &amp; COMPLIANCE DISCLOSURE:</b> MSX&trade; is a registered trademark of MSX Licensing Corporation and ASCII Corporation. TRON, BTRON, and μITRON are trademarks of TRON Forum and Professor Ken Sakamura. SONY&reg;, HitBit&trade;, and G-ZERO&trade; are trademarks or registered trademarks of Sony Group Corporation / Sony Corporation. Panasonic&reg; (Panasonic Holdings Corporation), Victor / JVC&reg; (JVCKENWOOD Corporation), Yamaha&reg; (Yamaha Corporation), and Hitachi&reg; (Hitachi, Ltd.) are trademarks of their respective proprietors. All manufacturer designations, hardware component identifiers, and registered software titles cited within this repository are the property of their respective trademark holders and are reproduced strictly under statutory fair use doctrine for non-commercial historical preservation, register-level hardware documentation, and cleanroom interoperability engineering.
+                    </p>
+                    <p style="margin: 0; line-height: 1.75; color: #69747e; font-size: 0.74rem;">
+                        msx.btron.pro &nbsp;·&nbsp; MSX Archival &amp; Technical Portal &nbsp;·&nbsp; Under ISC / MIT Licence &nbsp;·&nbsp; Conforming to DOCOPS &amp; PUBLISH Standards
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MSX-DOS — ディスクオペレーティングシステムとNextor | msx.btron.pro</title>
-    <meta name="description" content="MSX-DOS 1/2 および Nextor の完全技術仕様。INT 21h BDOS 呼出、FCB 制御、ファイルハンドル、FAT12/FAT16 クラスタ構造、および SD カードドライバインターフェース。">
+    <meta name="description" content="MSX-DOS 1/2 および Nextor の完全技術仕様。INT 21h BDOS 呼出、FCB 制御、ファイルハンドル、メモリマッパー管理、FAT12/FAT16 クラスタ構造、および SD カードドライバインターフェース。">
     <link rel="stylesheet" href="../../index.css?v=3">
 </head>
 <body>
@@ -18,7 +18,7 @@
                 <li><a href="../../emulators/index.html">Emulators</a></li>
                 <li><a href="../../games/index.html">Games</a></li>
                 <li><a href="../../systems/index.html" class="active">Systems</a></li>
-                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+                <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
             </ul>
         </div>
     </nav>
@@ -32,7 +32,7 @@
     </nav>
 
     <div class="setting-hero">
-        <div class="setting-hero-badge">Tim Paterson · ASCII &amp; Microsoft · CP/M 2.2 ABI · Nextor FAT16 Evolution</div>
+        <div class="setting-hero-badge">Tim Paterson · ASCII &amp; Microsoft · CP/M 2.2 ABI · Nextor FAT16 Evolution · B-MSX FDC Integration</div>
         <h1>MSX-DOS (Systems)</h1>
         <div class="subtitle">
             CP/M 互換 BDOS 呼出規約と MS-DOS FAT ファイルシステムの完全統合、および現代の Nextor 拡張。
@@ -46,21 +46,22 @@
         <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
 
         <div class="tagline-card">
-            <strong>Tim Paterson による架け橋</strong> — MSX-DOS は、MS-DOS の原作者であるティム・パターソン氏らによって開発されました。8 ビット Z80 空間で CP/M 2.2 と完全なシステムコール互換性を保ちながら、ディスクフォーマットには PC/AT 互換機と直接交換可能な FAT12 を採用。さらに MSX-DOS 2 では階層ディレクトリとメモリマッパー環境変数が導入され、現代のオープンソース Nextor によって FAT16 大容量 SD カード運用へと進化しました。
+            <strong>Tim Paterson による架け橋と FAT ファイルシステム統合</strong> — MSX-DOS は、MS-DOS の原作者であるティム・パターソン氏らによって開発されました。8 ビット Z80 空間で CP/M 2.2 と完全なシステムコール互換性（アドレス <code>$0005</code> 呼出）を保ちながら、ディスクフォーマットには PC/AT 互換機と直接交換可能な FAT12 を採用。さらに MSX-DOS 2 では階層ディレクトリ、ファイルハンドル、環境変数、および動的メモリマッパー管理が導入され、現代のオープンソース Nextor によって FAT16 大容量 SD カード運用へと進化を遂げました。B-System の <strong>B-MSX</strong> では、WD2793/MB89311 コントローラエミュレーションを通じて 720KB フロッピーイメージをネイティブ稼働させます。<br>
             <span class="tagline-en">
-                "Engineered by MS-DOS author Tim Paterson, MSX-DOS bridged the 8-bit CP/M software ecosystem with the IBM PC FAT filesystem standard. Running out of address $0100 in transient program areas, it progressed from FAT12 floppy disks to MSX-DOS 2 directory trees and Albert Beevendorp's FAT16 Nextor kernel."
+                "Engineered by MS-DOS author Tim Paterson, MSX-DOS bridged the 8-bit CP/M software ecosystem with the IBM PC FAT filesystem standard. Running out of address $0100 in transient program areas, it progressed from FAT12 floppy disks to MSX-DOS 2 directory trees and Albert Beevendorp's FAT16 Nextor kernel. In B-System, the B-MSX core replicates WD2793 floppy controllers for authentic media execution."
             </span>
         </div>
 
+        <!-- 01 / BDOS System Calls -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">01 / BDOS</span>
-                <h2 class="jp-title">1. BDOS システムコール規約 (INT 21h API)</h2>
-                <p class="band-eyebrow">Entry Point $0005 · C Register Functions</p>
+                <span class="band-index">01 / BDOS API</span>
+                <h2 class="jp-title">1. BDOS システムコール規約 (INT 21h / CALL $0005 API)</h2>
+                <p class="band-eyebrow">CP/M 2.2 Compatibility · MSX-DOS 2 Handles · Memory Mapper Management</p>
             </div>
             <div class="doc-summary">
-                MSX-DOS プログラムは、アドレス <code>$0005</code> へ <code>CALL</code> することで BDOS 機能を呼び出します。<br>
-                <span class="summary-en">"Primary disk operating system routines invoked by loading function code into register C and calling address $0005."</span>
+                レジスタ <code>C</code> に機能コードを格納し、アドレス <code>$0005</code> へ <code>CALL</code> することで実行されるシステムコール群です。<br>
+                <span class="summary-en">"Comprehensive register calling conventions for CP/M compatibility, hierarchical file handles, and memory mapper management."</span>
             </div>
 
             <div class="market-table-wrap">
@@ -69,46 +70,316 @@
                         <tr>
                             <th>機能番号 (C Reg)</th>
                             <th>機能名 (Function Name)</th>
-                            <th>入力引数 (Input)</th>
-                            <th>戻り値 (Output)</th>
-                            <th>仕様概要 (Functional Specification)</th>
+                            <th>入力引数 (Input Registers)</th>
+                            <th>戻り値 (Output Registers)</th>
+                            <th>機能仕様 (Functional Specification)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
+                            <td><code>0x00</code></td>
+                            <td>Program Terminate</td>
+                            <td>なし</td>
+                            <td>なし</td>
+                            <td>プログラムの実行を終了し、COMMAND.COM へ制御を復帰。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x01</code></td>
+                            <td>Console Input</td>
+                            <td>なし</td>
+                            <td><code>A</code> = 入力文字コード</td>
+                            <td>キーボードから 1 文字入力しエコーバック表示（Ctrl+C 検査あり）。</td>
+                        </tr>
+                        <tr>
                             <td><code>0x02</code></td>
                             <td>Console Output</td>
-                            <td><code>E</code> = 文字コード</td>
+                            <td><code>E</code> = 出力文字コード</td>
                             <td>なし</td>
-                            <td>コンソール画面へ 1 文字出力</td>
+                            <td>コンソール画面へ 1 文字出力。タブ文字は空白に展開。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x06</code></td>
+                            <td>Direct Console I/O</td>
+                            <td><code>E</code> (0xFF=入力, その他=出力)</td>
+                            <td><code>A</code> = 入力文字 (入力時)</td>
+                            <td>直接コンソール入出力（エコーバックなし、Ctrl+C 検査なし）。</td>
                         </tr>
                         <tr>
                             <td><code>0x09</code></td>
                             <td>Output String</td>
-                            <td><code>DE</code> = '$' 終端文字列</td>
+                            <td><code>DE</code> = '$' 終端文字列番地</td>
                             <td>なし</td>
-                            <td>'$' で終わる文字列を画面に出力</td>
+                            <td><code>'$'</code> (0x24) で終わる文字列を画面に出力。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x0B</code></td>
+                            <td>Console Status</td>
+                            <td>なし</td>
+                            <td><code>A</code> (0xFF=文字有, 0x00=空)</td>
+                            <td>キーボード入力バッファに文字が存在するかをノンブロッキング検査。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x0E</code></td>
+                            <td>Select Drive</td>
+                            <td><code>E</code> = ドライブ番号 (0=A, 1=B)</td>
+                            <td><code>A</code> = 総有効ドライブ数</td>
+                            <td>カレントデフォルトドライブを変更。</td>
                         </tr>
                         <tr>
                             <td><code>0x0F</code></td>
                             <td>Open File (FCB)</td>
+                            <td><code>DE</code> = 未オープン FCB ポインタ</td>
+                            <td><code>A</code> = 0x00 (成功) / 0xFF (失敗)</td>
+                            <td>ファイルコントロールブロック (FCB) を用いてファイルをオープン。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x10</code></td>
+                            <td>Close File (FCB)</td>
+                            <td><code>DE</code> = オープン済 FCB ポインタ</td>
+                            <td><code>A</code> = 0x00 (成功) / 0xFF (失敗)</td>
+                            <td>FCB ファイルをクローズし、ディレクトリエントリの日時・サイズを更新。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x14</code></td>
+                            <td>Sequential Read (FCB)</td>
                             <td><code>DE</code> = FCB ポインタ</td>
-                            <td><code>A</code> = 0 (成功) / 0xFF (失敗)</td>
-                            <td>ファイルコントロールブロックによるファイルオープン</td>
+                            <td><code>A</code> = エラーコード (0=成功, 1=EOF)</td>
+                            <td>カレントレコードから 128 バイトを DTA バッファへ読み出し。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x15</code></td>
+                            <td>Sequential Write (FCB)</td>
+                            <td><code>DE</code> = FCB ポインタ</td>
+                            <td><code>A</code> = エラーコード (0=成功, 1=ディスク満杯)</td>
+                            <td>DTA バッファの 128 バイトをカレントレコードへ書き込み。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x1A</code></td>
+                            <td>Set DTA Address</td>
+                            <td><code>DE</code> = 転送バッファアドレス</td>
+                            <td>なし</td>
+                            <td>ディスク転送エリア (DTA) のバッファ先頭番地を設定 (デフォルト: <code>$0080</code>)。</td>
                         </tr>
                         <tr>
                             <td><code>0x43</code></td>
                             <td>Open File Handle</td>
-                            <td><code>DE</code> = パス文字列, <code>A</code> = モード</td>
-                            <td><code>B</code> = ハンドル, <code>A</code> = エラー</td>
-                            <td>MSX-DOS 2: ハンドルによるファイルオープン</td>
+                            <td><code>DE</code> = ASCIIZ パス名, <code>A</code> = オープンモード</td>
+                            <td><code>B</code> = ハンドル番号, <code>A</code> = エラー</td>
+                            <td>MSX-DOS 2: 階層パスを指定してファイルハンドルを取得。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x44</code></td>
+                            <td>Create File Handle</td>
+                            <td><code>DE</code> = ASCIIZ パス名, <code>A</code> = 作成モード, <code>B</code> = 属性</td>
+                            <td><code>B</code> = ハンドル番号, <code>A</code> = エラー</td>
+                            <td>MSX-DOS 2: 新規ファイルを作成しファイルハンドルを取得。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x45</code></td>
+                            <td>Close File Handle</td>
+                            <td><code>B</code> = ハンドル番号</td>
+                            <td><code>A</code> = エラーコード</td>
+                            <td>MSX-DOS 2: ファイルハンドルをクローズ。</td>
                         </tr>
                         <tr>
                             <td><code>0x48</code></td>
                             <td>Read File Handle</td>
                             <td><code>B</code> = ハンドル, <code>DE</code> = バッファ, <code>HL</code> = 長さ</td>
-                            <td><code>HL</code> = 読込バイト数</td>
-                            <td>MSX-DOS 2: ハンドルからの指定バイト数読出</td>
+                            <td><code>HL</code> = 実際読込バイト数, <code>A</code> = エラー</td>
+                            <td>MSX-DOS 2: ハンドルから指定バイト数を任意メモリへ読み出し。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x49</code></td>
+                            <td>Write File Handle</td>
+                            <td><code>B</code> = ハンドル, <code>DE</code> = バッファ, <code>HL</code> = 長さ</td>
+                            <td><code>HL</code> = 実際書込バイト数, <code>A</code> = エラー</td>
+                            <td>MSX-DOS 2: ハンドルへ指定バイト数を書き込み。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x4A</code></td>
+                            <td>Seek File Handle</td>
+                            <td><code>B</code> = ハンドル, <code>A</code> = 基準モード, <code>DE:HL</code> = オフセット</td>
+                            <td><code>DE:HL</code> = 新規ポインタ位置</td>
+                            <td>MSX-DOS 2: ファイルポインタを移動 (0=先頭, 1=現在位置, 2=末尾)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x59</code></td>
+                            <td>Change Directory</td>
+                            <td><code>DE</code> = ASCIIZ ディレクトリパス</td>
+                            <td><code>A</code> = エラーコード</td>
+                            <td>MSX-DOS 2: カレントワーキングディレクトリを変更 (CHDIR)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x6B</code></td>
+                            <td>Get Environment Item</td>
+                            <td><code>HL</code> = 変数名ポインタ, <code>DE</code> = 値バッファ, <code>B</code> = 長さ</td>
+                            <td><code>A</code> = エラーコード</td>
+                            <td>MSX-DOS 2: 環境変数（PATH, PROMPT 等）の値を取得。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 02 / Filesystem Architecture -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / FAT Layout</span>
+                <h2 class="jp-title">2. ファイルシステム構造 (FAT12 &amp; Nextor FAT16 Architecture)</h2>
+                <p class="band-eyebrow">Boot Sector BPB · 12-bit Packing · Root Directory Entry (32 Bytes)</p>
+            </div>
+            <div class="doc-summary">
+                標準フロッピーディスク (FAT12) および Nextor 大容量ストレージ (FAT16) のセクタ配置仕様です。<br>
+                <span class="summary-en">"Silicon disk layout defining the BIOS Parameter Block (BPB), 12-bit cluster packing, and 32-byte directory entries."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>セクタ領域 (Sector Region)</th>
+                            <th>標準 2DD フロッピー (FAT12)</th>
+                            <th>Nextor 大容量区画 (FAT16)</th>
+                            <th>機能と構造 (Functional Role)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>ブートセクタ (Boot Sector)</b></td>
+                            <td>LBA 0 (512 バイト)</td>
+                            <td>LBA 0 (MBR) / パーティション LBA 0</td>
+                            <td>BPB (BIOS Parameter Block)、クラスタサイズ、FAT数、ブートコード。</td>
+                        </tr>
+                        <tr>
+                            <td><b>FAT テーブル (FAT1 &amp; FAT2)</b></td>
+                            <td>LBA 1〜6 (3セクタ × 2部)</td>
+                            <td>クラスタ数に応じた可変セクタ数</td>
+                            <td>FAT12 は 1.5 バイト（12ビット）/クラスタ。FAT16 は 2 バイト（16ビット）/クラスタ。</td>
+                        </tr>
+                        <tr>
+                            <td><b>ルートディレクトリエントリ</b></td>
+                            <td>LBA 7〜13 (112 エントリ固定)</td>
+                            <td>可変 (通常 512 エントリ固定)</td>
+                            <td>各 32 バイトのファイル記述子（ファイル名 8.3、属性、日時、開始クラスタ、サイズ）。</td>
+                        </tr>
+                        <tr>
+                            <td><b>データクラスタ領域</b></td>
+                            <td>LBA 14〜1439 (713 クラスタ)</td>
+                            <td>最大 65,524 クラスタ (最大 2GB/区画)</td>
+                            <td>実ファイルデータおよびサブディレクトリ（DOS 2）を格納。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="doc-summary" style="margin-top: 1.5rem;">
+                <strong>32 バイト ディレクトリエントリ構造 (Directory Entry Format):</strong>
+                <ul style="margin: 0.5rem 0 0 1.25rem; line-height: 1.75; font-size: 0.88rem;">
+                    <li><code>+0x00..+0x07</code>: ファイル主名 (ASCII 8文字、スペース埋め)。先頭 <code>0xE5</code> は削除済、<code>0x00</code> は未割当終端。</li>
+                    <li><code>+0x08..+0x0A</code>: 拡張子 (ASCII 3文字、例: <code>"COM"</code>, <code>"BAS"</code>)。</li>
+                    <li><code>+0x0B</code>: 属性バイト (Bit 0: 読取専用, Bit 1: 隠し, Bit 2: システム, Bit 3: ボリュームラベル, Bit 4: サブディレクトリ, Bit 5: アーカイブ)。</li>
+                    <li><code>+0x16..+0x17</code>: 最終更新時刻 (Bit 15–11: 時 0–23, Bit 10–5: 分 0–59, Bit 4–0: 秒/2 0–29)。</li>
+                    <li><code>+0x18..+0x19</code>: 最終更新日付 (Bit 15–9: 年 1980年起点, Bit 8–5: 月 1–12, Bit 4–0: 日 1–31)。</li>
+                    <li><code>+0x1A..+0x1B</code>: 開始クラスタ番号 (16ビット、FAT テーブルの探索インデックス)。</li>
+                    <li><code>+0x1C..+0x1F</code>: ファイルサイズ (32ビット符号なし整数、最大 4 GiB、FAT12/16 実効値)。</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 03 / Disk Driver Interface -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / Disk Driver</span>
+                <h2 class="jp-title">3. ディスクコントローラと Disk ROM ベクタ (Disk Driver &amp; FDC Controller)</h2>
+                <p class="band-eyebrow">WD2793 / MB89311 FDC · Disk ROM Jump Table · Memory Map</p>
+            </div>
+            <div class="doc-summary">
+                フロッピーディスクコントローラ (FDC) および Disk ROM が提供する下位ドライバベクタ群です。<br>
+                <span class="summary-en">"Low-level driver entry points implemented within Disk ROM firmware, mediating hardware I/O with floppy controllers."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>ROM アドレス</th>
+                            <th>ベクタ名 (Identifier)</th>
+                            <th>引数・レジスタ (Registers)</th>
+                            <th>機能仕様 (Functional Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$4010</code></td>
+                            <td><code>DSKIO</code></td>
+                            <td><code>F</code> (Carry=書込, NC=読出), <code>A</code> = ドライブ, <code>B</code> = セクタ数, <code>C</code> = メディア記述子, <code>DE</code> = 論理セクタ番号, <code>HL</code> = メモリバッファ</td>
+                            <td>ディスクセクタの物理リード／ライト。エラー時は Carry フラグとともに <code>A</code> レジスタにエラー種別を返却。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$4013</code></td>
+                            <td><code>DSKCHG</code></td>
+                            <td><code>A</code> = ドライブ, <code>B</code> = メディア記述子</td>
+                            <td>ディスク交換状態の検査。戻り値 <code>B</code> = 1 (未交換), 0 (不明), -1 (交換済)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$4016</code></td>
+                            <td><code>GETDPB</code></td>
+                            <td><code>A</code> = ドライブ, <code>HL</code> = DPB 格納バッファ</td>
+                            <td>ドライブパラメータブロック (DPB) を構築してバッファに取得。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$4019</code></td>
+                            <td><code>CHOICE</code></td>
+                            <td>戻り値: <code>HL</code> = 選択肢文字列ポインタ</td>
+                            <td>ディスクフォーマット時の選択肢メニュー文字列を取得。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$401C</code></td>
+                            <td><code>DSKFMT</code></td>
+                            <td><code>A</code> = ドライブ, <code>D</code> = 選択肢番号, <code>HL</code> = ワークバッファ</td>
+                            <td>ディスクの物理フォーマットおよびトラックベリファイを実行。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 04 / B-MSX Integration -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">04 / B-MSX Integration</span>
+                <h2 class="jp-title">4. B-System B-MSX におけるフロッピーエミュレーション (FDD Subsystem in B-MSX)</h2>
+                <p class="band-eyebrow">WD2793 Silicon Simulation · Raw 720KB Disk Images · HC-95 FDD Support</p>
+            </div>
+            <div class="doc-summary">
+                B-System ワークベンチ空間で MSX-DOS を稼働させるためのフロッピーディスク仮想化仕様です。<br>
+                <span class="summary-en">"Silicon-level WD2793 controller simulation in B-MSX handling 720 KiB raw disk image files and direct DOS boot sequences."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>コンポーネント</th>
+                            <th>エミュレーション方式 (Methodology)</th>
+                            <th>技術詳細 (Technical Architecture)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>WD2793 コントローラ</b></td>
+                            <td>C99 レジスタレベルステートマシン</td>
+                            <td>コマンドレジスタ（Seek, Step, Read Sector, Write Sector）およびステータスレジスタ（CRCエラー、Indexパルス）の完全シミュレーション。</td>
+                        </tr>
+                        <tr>
+                            <td><b>フロッピーディスクイメージ</b></td>
+                            <td>720 KiB RAW イメージ (<code>.dsk</code>)</td>
+                            <td>両面・80トラック・9セクタ/トラック・512バイト/セクタの標準 2DD ジオメトリ（総 1,440 セクタ）を仮想ドライブへ直接マウント。</td>
+                        </tr>
+                        <tr>
+                            <td><b>Hitachi HC-95 FDD 連携</b></td>
+                            <td>フロッピー内蔵ワークステーション</td>
+                            <td>HC-95 固有の FDD インターフェース ROM を自動リンクし、MSX-DOS 2 コマンドライン環境を HD64180 / MSX2 空間上で即時起動。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -116,9 +387,68 @@
         </section>
     </main>
 
-    <footer>
-        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
-            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro MSX-DOS
+    <footer class="app-footer">
+        <div class="wrap">
+            <div class="footer-columns">
+                <div>
+                    <h4>Computers</h4>
+                    <ul>
+                        <li><a href="../../computers/sony-hb-f900/index.html">Sony HB-F900</a></li>
+                        <li><a href="../../computers/sony-hb-g900ap/index.html">Sony HB-G900AP</a></li>
+                        <li><a href="../../computers/victor-hc-95/index.html">Victor HC-95 AB</a></li>
+                        <li><a href="../../computers/yamaha-yis-805/index.html">Yamaha YIS-805 256</a></li>
+                        <li><a href="../../computers/panasonic-fs-a1fm/index.html">Panasonic FS-A1FM</a></li>
+                        <li><a href="../../computers/hitachi-mb-h70/index.html">Hitachi MB-H70</a></li>
+                        <li><a href="../../computers/index.html">全13機種一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Systems</h4>
+                    <ul>
+                        <li><a href="../btron/index.html">8-bit BTRON</a></li>
+                        <li><a href="../msx-bios/index.html">MSX-BIOS</a></li>
+                        <li><a href="index.html" class="active">MSX-DOS 2</a></li>
+                        <li><a href="../c-bios/index.html">C-BIOS</a></li>
+                        <li><a href="../uzix/index.html">UZIX (Unix V7)</a></li>
+                        <li><a href="../index.html">基本ソフト一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Development</h4>
+                    <ul>
+                        <li><a href="../../development/sdcc/index.html">SDCC Compiler</a></li>
+                        <li><a href="../../development/pasmo/index.html">Pasmo Assembler</a></li>
+                        <li><a href="../../development/index.html">Toolchain Overview</a></li>
+                        <li><a href="https://btron.pro/btron/doc/txt/MSX-SOUND.txt" target="_blank">MSX Sound Spec</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Emulators</h4>
+                    <ul>
+                        <li><a href="../../emulators/openMSX/index.html">openMSX</a></li>
+                        <li><a href="../../emulators/blueMSX/index.html">blueMSX</a></li>
+                        <li><a href="../../emulators/tronMSX/index.html">tronMSX (B-MSX)</a></li>
+                        <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-System MSX App</a></li>
+                        <li><a href="https://btron.pro/btron/b-media/msx.html" target="_blank">B-MSX Book Spec</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom" style="text-align: center; margin-top: 4.5rem; padding-top: 3.5rem; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 0.84rem; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 1.6rem;">
+                <a href="../../sakazaki.svg" title="Sakazaki Clan Kamon — 二蓋笠 (Nigai-gasa)" style="display: inline-block; text-decoration: none; margin-bottom: 0.2rem;">
+                    <img src="../../sakazaki.svg" alt="Sakazaki Order Logo" style="width: 108px; height: auto; display: block; opacity: 0.88; transition: opacity 0.25s ease, transform 0.25s ease;">
+                </a>
+                <div class="footer-legal">
+                    <p style="margin: 0 0 0.85rem; font-weight: 500; letter-spacing: 0.04em; color: #b8c0c8; font-size: 0.81rem;">
+                        &copy; 2026 Cryptographics Telesystems, LLC. Ukraine. All rights reserved.
+                    </p>
+                    <p style="margin: 0 0 0.9rem; line-height: 1.75;">
+                        <b>TRADEMARK &amp; COMPLIANCE DISCLOSURE:</b> MSX&trade; is a registered trademark of MSX Licensing Corporation and ASCII Corporation. MS-DOS&reg; is a registered trademark of Microsoft Corporation. CP/M&reg; is a registered trademark of Digital Research, Inc. SONY&reg;, HitBit&trade;, and G-ZERO&trade; are trademarks or registered trademarks of Sony Group Corporation / Sony Corporation. Panasonic&reg; (Panasonic Holdings Corporation), Victor / JVC&reg; (JVCKENWOOD Corporation), Yamaha&reg; (Yamaha Corporation), and Hitachi&reg; (Hitachi, Ltd.) are trademarks of their respective proprietors. All manufacturer designations, hardware component identifiers, and registered software titles cited within this repository are the property of their respective trademark holders and are reproduced strictly under statutory fair use doctrine for non-commercial historical preservation, register-level hardware documentation, and cleanroom interoperability engineering.
+                    </p>
+                    <p style="margin: 0; line-height: 1.75; color: #69747e; font-size: 0.74rem;">
+                        msx.btron.pro &nbsp;·&nbsp; MSX Archival &amp; Technical Portal &nbsp;·&nbsp; Under ISC / MIT Licence &nbsp;·&nbsp; Conforming to DOCOPS &amp; PUBLISH Standards
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 

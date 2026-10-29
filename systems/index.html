@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>系統 — 基本ソフトウェアとファームウェア | msx.btron.pro</title>
-    <meta name="description" content="MSX アーキテクチャを駆動する基本ソフトウェア群の総合目録。MSX-BIOS、MSX-DOS 1/2、Nextor、オープンソース C-BIOS、Unix V7 クローン UZIX、そして 8-bit BTRON for MSX。">
+    <meta name="description" content="MSX アーキテクチャを駆動する基本ソフトウェア群の総合技術目録。MSX-BIOS、MSX-DOS 1/2、Nextor、オープンソース C-BIOS、Unix V7 クローン UZIX、そして 8-bit BTRON for MSX。">
     <link rel="stylesheet" href="../index.css?v=3">
 </head>
 <body>
@@ -18,7 +18,7 @@
                 <li><a href="../emulators/index.html">Emulators</a></li>
                 <li><a href="../games/index.html">Games</a></li>
                 <li><a href="../systems/index.html" class="active">Systems</a></li>
-                <li><a href="../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+                <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
             </ul>
         </div>
     </nav>
@@ -30,7 +30,7 @@
     </nav>
 
     <div class="setting-hero">
-        <div class="setting-hero-badge">Operating Systems &amp; BIOSes · 5 Major Software Architectures · 8-bit BTRON</div>
+        <div class="setting-hero-badge">Operating Systems &amp; BIOSes · 5 Major Software Architectures · 8-bit BTRON · C-BIOS · UZIX</div>
         <h1>系統 (Systems)</h1>
         <div class="subtitle">
             標準 BIOS からディスクオペレーティングシステム、UNIX クローン、そして 8-bit BTRON に至る基本ソフトウェア体系。
@@ -42,21 +42,22 @@
 
     <main class="wrap">
         <div class="tagline-card">
-            <strong>基盤ソフトウェアの多様性</strong> — MSX の 64 KiB バンク空間は、単一の静的 BIOS に制約されることはありませんでした。スロット多重化とメモリマッパーを駆使することにより、DOS、UNIX、そして坂村健氏が提唱した BTRON（超漢字・実身仮身ハイパーメディアモデル）の 8 ビット実装まで、高度なオペレーティングシステムが Z80 上で実稼働しました。
+            <strong>基盤ソフトウェアの多様性とメモリ空間の解放</strong> — MSX の 64 KiB バンク空間は、単一の静的 BIOS に制約されることはありませんでした。スロット多重化とメモリマッパー（16 KiB セグメント）を駆使することにより、CP/M 互換ディスク OS、プリエンプティブ UNIX、そして坂村健氏が提唱した BTRON（超漢字・実身仮身ハイパーメディアモデル）の 8 ビット実装まで、高度なオペレーティングシステムが Z80 上で実稼働しました。B-System の <strong>B-MSX</strong> では、これら全環境の相互運用性を C99 確定性コアとして忠実に再現しています。<br>
             <span class="tagline-en">
-                "The banked MSX addressing architecture liberated software developers from static firmware limitations. Through dynamic slot switching and memory mappers, the platform hosted CP/M-compatible disk operating systems, preemptive Unix kernels, and an 8-bit BTRON hypermedia engine."
+                "The banked MSX addressing architecture liberated software developers from static firmware limitations. Through dynamic slot switching and memory mappers, the platform hosted CP/M-compatible disk operating systems, preemptive Unix kernels, and an 8-bit BTRON hypermedia engine. Within B-System, the B-MSX C99 core accurately simulates these diverse OS environments under strict deterministic contracts."
             </span>
         </div>
 
+        <!-- 01 / Spectrum Cards -->
         <section class="doc-section">
             <div class="band-head">
                 <span class="band-index">01 / Spectrum</span>
-                <h2 class="jp-title">1. 基本ソフトウェア目録 (Systems Spectrum)</h2>
-                <p class="band-eyebrow">Firmware · DOS · UNIX · BTRON</p>
+                <h2 class="jp-title">1. 基本ソフトウェア体系目録 (Systems Spectrum)</h2>
+                <p class="band-eyebrow">Firmware · DOS &amp; Nextor · UNIX V7 · 8-bit BTRON</p>
             </div>
             <div class="doc-summary">
                 アーカイブされている 5 つの主要な基本ソフトウェア・ファームウェアの仕様一覧です。<br>
-                <span class="summary-en">"Overview of five major system software implementations running on native MSX hardware."</span>
+                <span class="summary-en">"Architectural overview of five fundamental system software implementations running natively on MSX hardware."</span>
             </div>
 
             <div class="strip">
@@ -64,21 +65,21 @@
                     <span class="card-num">01</span>
                     <h4>8-bit BTRON (for MSX)</h4>
                     <p class="role">Hypermedia &amp; Tasking Subsystem</p>
-                    <p>BTRON 3.20 の実身仮身（リアル／バーチャルボディ）レコードと TAD を 8 ビット Z80 空間に移植した確定性ランタイム。B-System の B-MSX と直結。</p>
+                    <p>BTRON 3.20 の実身仮身（リアル／バーチャルボディ）レコードと TAD を 8 ビット Z80 空間に移植した確定性ランタイム。B-System の B-MSX と直結し、V9938 高速描画と μITRON 軽量タスクキューを稼働。</p>
                     <a class="entry" href="btron/index.html">8-bit BTRON 仕様書 →</a>
                 </div>
                 <div class="card">
                     <span class="card-num">02</span>
                     <h4>MSX-BIOS</h4>
                     <p class="role">Hardware Abstraction Jump Table</p>
-                    <p><code>$0000–$015B</code> の標準ベクタジャンプ表。スロット間呼出 <code>CALSLT</code>、スロット切替 <code>ENASLT</code>、およびワークエリア（<code>$F380–$FFFF</code>）辞書。</p>
+                    <p><code>$0000–$015B</code> の標準ベクタジャンプ表。スロット間呼出 <code>CALSLT</code>、スロット切替 <code>ENASLT</code>、VDP ブロック転送、およびシステム作業領域（<code>$F380–$FFFF</code>）辞書。</p>
                     <a class="entry" href="msx-bios/index.html">BIOS ベクタ仕様書 →</a>
                 </div>
                 <div class="card">
                     <span class="card-num">03</span>
                     <h4>MSX-DOS 2 &amp; Nextor</h4>
                     <p class="role">Disk Operating System &amp; FAT16</p>
-                    <p>CP/M 互換 <code>INT 21h</code> BDOS 呼出、階層ディレクトリ、環境変数、および Nextor による FAT16 大容量ストレージ制御。</p>
+                    <p>CP/M 互換 <code>INT 21h</code> BDOS 呼出、階層ディレクトリ、ファイルハンドル、環境変数、および Nextor による FAT16 大容量 SD/CF ストレージ制御。</p>
                     <a class="entry" href="msx-dos/index.html">MSX-DOS / Nextor 仕様書 →</a>
                 </div>
             </div>
@@ -88,23 +89,209 @@
                     <span class="card-num">04</span>
                     <h4>C-BIOS</h4>
                     <p class="role">Open-Source Cleanroom Firmware</p>
-                    <p>BouKiCHi 氏率いるチームによって開発された、GPL/BSD 準拠の 100% オープンソース互換 BIOS。BASIC を省きカートリッジ自動起動に特化。</p>
+                    <p>BouKiCHi 氏率いるチームによって開発された、GPL/BSD 準拠の 100% オープンソース互換 BIOS。BASIC を省きカートリッジ自動起動に特化。B-MSX 標準内蔵。</p>
                     <a class="entry" href="c-bios/index.html">C-BIOS 内部構造 →</a>
                 </div>
                 <div class="card">
                     <span class="card-num">05</span>
                     <h4>UZIX</h4>
                     <p class="role">Unix V7 Clone for MSX</p>
-                    <p>Z80 上で動作するプリエンプティブ Unix クローン。メモリマッパーを活用したプロセス空間分離、fork/exec、パイプ、標準 V7 シェル環境。</p>
+                    <p>Z80 上で動作するプリエンプティブ Unix クローン。メモリマッパーを活用したプロセス空間分離、fork/exec、パイプ IPC、標準 V7 シェル環境。</p>
                     <a class="entry" href="uzix/index.html">UZIX カーネル仕様書 →</a>
                 </div>
             </div>
         </section>
+
+        <!-- 02 / Comparative Matrix -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Architecture Matrix</span>
+                <h2 class="jp-title">2. 主要システムアーキテクチャ比較表 (Comparative Architecture Matrix)</h2>
+                <p class="band-eyebrow">Kernel Model · Memory Footprint · Storage · Process Management</p>
+            </div>
+            <div class="doc-summary">
+                5 大基本ソフトウェアのメモリ要件、カーネルモデル、ストレージ抽象化、および B-MSX 連携仕様の対照です。<br>
+                <span class="summary-en">"Cross-platform architectural comparison matrix evaluating memory requirements, kernel paradigm, and hardware compatibility."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>システム名 (System)</th>
+                            <th>カーネル種別 (Kernel Type)</th>
+                            <th>最小メモリ / スロット</th>
+                            <th>ストレージ / ファイルシステム</th>
+                            <th>主要ハードウェア要件</th>
+                            <th>B-MSX C99 エミュレーション</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>8-bit BTRON</b></td>
+                            <td>協調型ハイパーメディア＋確定論的 μITRON キュー</td>
+                            <td>64 KiB RAM + 128 KiB マッパー</td>
+                            <td>BMSX 実身仮身ネットワーク / TAD レコード</td>
+                            <td>MSX2 (V9938), 漢字ROM レベル1/2, マウス</td>
+                            <td>ウィンドウ内直接描画、Geo3D 連携、リアル身仮身管理</td>
+                        </tr>
+                        <tr>
+                            <td><b>MSX-BIOS</b></td>
+                            <td>ハードウェア抽象化ジャンプテーブル (HAL)</td>
+                            <td>16 KiB ROM (Slot 0) + 16 KiB RAM</td>
+                            <td>カセットテープ (CMT 1200/2400 baud), ROM</td>
+                            <td>MSX1 (TMS9918A), PSG (AY-3-8910)</td>
+                            <td>C-BIOS 相互置換、早送り (Fast-Forward) 対応</td>
+                        </tr>
+                        <tr>
+                            <td><b>MSX-DOS 2 &amp; Nextor</b></td>
+                            <td>CP/M 2.2 互換 BDOS + MS-DOS 階層ファイルシステム</td>
+                            <td>64 KiB RAM + 64 KiB マッパー + Disk ROM</td>
+                            <td>FAT12 (フロッピー 720KB), FAT16 (Nextor SD 最大 2GB)</td>
+                            <td>MSX2+, フロッピー / IDE / SD インターフェース</td>
+                            <td>WD2793 FDC エミュレーション、DOS コール互換レイヤ</td>
+                        </tr>
+                        <tr>
+                            <td><b>C-BIOS</b></td>
+                            <td>クリーンルーム互換 BIOS (BASIC 排除)</td>
+                            <td>16 KiB / 32 KiB ROM</td>
+                            <td>ROM カートリッジ直結 (Auto-run)</td>
+                            <td>MSX1 / MSX2 / MSX2+ / turboR (TMS9918A〜V9958)</td>
+                            <td>B-MSX 標準同梱、著作権完全フリー、瞬時ブート</td>
+                        </tr>
+                        <tr>
+                            <td><b>UZIX</b></td>
+                            <td>プリエンプティブ Unix Version 7 カーネル</td>
+                            <td>128 KiB〜512 KiB メモリマッパー</td>
+                            <td>Unix V7 ファイルシステム (512B ブロック, Inode)</td>
+                            <td>MSX2 (80桁テキスト), タイマー割込み (60Hz)</td>
+                            <td>マッパーポート 0xFC–0xFF 空間分離、多重タスク実行</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 03 / Memory Mapping Strategies -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / Memory Paging</span>
+                <h2 class="jp-title">3. メモリマッパーとスロット制御戦略 (Memory Paging Strategies)</h2>
+                <p class="band-eyebrow">PPI 8255 Port $A8 · Subslot Register $FFFF · Mapper I/O Ports $FC–$FF</p>
+            </div>
+            <div class="doc-summary">
+                各オペレーティングシステムが 64 KiB の Z80 アドレス空間（4 ページ）をどのように分割・活用しているかの設計比較です。<br>
+                <span class="summary-en">"Comparative analysis of Z80 address plane partitioning across the four 16 KiB architectural pages (Page 0 to Page 3)."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>システム</th>
+                            <th>Page 0 (0x0000–0x3FFF)</th>
+                            <th>Page 1 (0x4000–0x7FFF)</th>
+                            <th>Page 2 (0x8000–0xBFFF)</th>
+                            <th>Page 3 (0xC000–0xFFFF)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>MSX-BIOS</b></td>
+                            <td>BIOS ROM (ジャンプ表・初期化)</td>
+                            <td>BASIC ROM / カートリッジ ROM</td>
+                            <td>カートリッジ拡張 / ワークエリア</td>
+                            <td>メイン RAM (システム変数 $F380–$FFFF, スタック)</td>
+                        </tr>
+                        <tr>
+                            <td><b>MSX-DOS 2</b></td>
+                            <td>RAM (BDOS コール 0005H, TPA 0100H〜)</td>
+                            <td>RAM (TPA アプリケーション実行空間)</td>
+                            <td>RAM (TPA 拡張 / マッパー動的バンク)</td>
+                            <td>RAM (MSX-DOS 2 カーネル作業域, ディスクバッファ)</td>
+                        </tr>
+                        <tr>
+                            <td><b>UZIX</b></td>
+                            <td>プロセス ユーザ空間 (Text &amp; Data)</td>
+                            <td>プロセス ユーザ空間 (Heap &amp; Stack)</td>
+                            <td>カーネル常駐コード (VFS, ドライバ)</td>
+                            <td>カーネルデータ (PCB, Inode 表, 割込みスタック)</td>
+                        </tr>
+                        <tr>
+                            <td><b>8-bit BTRON</b></td>
+                            <td>BTRON コアランタイム / TAD パーサ</td>
+                            <td>実身レコードスワップ空間 (16KB マッパー)</td>
+                            <td>ウィンドウ管理 / V9938 レンダラ</td>
+                            <td>μITRON イベントキュー, 仮身ポインタ, スタック</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 
-    <footer>
-        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
-            <a href="../index.html" style="color:var(--tron-teal); text-decoration:none;">← MSX アーカイブ本拠へ戻る</a> &nbsp;·&nbsp; msx.btron.pro Systems
+    <footer class="app-footer">
+        <div class="wrap">
+            <div class="footer-columns">
+                <div>
+                    <h4>Computers</h4>
+                    <ul>
+                        <li><a href="../computers/sony-hb-f900/index.html">Sony HB-F900</a></li>
+                        <li><a href="../computers/sony-hb-g900ap/index.html">Sony HB-G900AP</a></li>
+                        <li><a href="../computers/victor-hc-95/index.html">Victor HC-95 AB</a></li>
+                        <li><a href="../computers/yamaha-yis-805/index.html">Yamaha YIS-805 256</a></li>
+                        <li><a href="../computers/panasonic-fs-a1fm/index.html">Panasonic FS-A1FM</a></li>
+                        <li><a href="../computers/hitachi-mb-h70/index.html">Hitachi MB-H70</a></li>
+                        <li><a href="../computers/index.html">全13機種一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Systems</h4>
+                    <ul>
+                        <li><a href="btron/index.html">8-bit BTRON</a></li>
+                        <li><a href="msx-bios/index.html">MSX-BIOS</a></li>
+                        <li><a href="msx-dos/index.html">MSX-DOS 2</a></li>
+                        <li><a href="c-bios/index.html">C-BIOS</a></li>
+                        <li><a href="uzix/index.html">UZIX (Unix V7)</a></li>
+                        <li><a href="index.html" class="active">基本ソフト一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Development</h4>
+                    <ul>
+                        <li><a href="../development/sdcc/index.html">SDCC Compiler</a></li>
+                        <li><a href="../development/pasmo/index.html">Pasmo Assembler</a></li>
+                        <li><a href="../development/index.html">Toolchain Overview</a></li>
+                        <li><a href="https://btron.pro/btron/doc/txt/MSX-SOUND.txt" target="_blank">MSX Sound Spec</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Emulators</h4>
+                    <ul>
+                        <li><a href="../emulators/openMSX/index.html">openMSX</a></li>
+                        <li><a href="../emulators/blueMSX/index.html">blueMSX</a></li>
+                        <li><a href="../emulators/tronMSX/index.html">tronMSX (B-MSX)</a></li>
+                        <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-System MSX App</a></li>
+                        <li><a href="https://btron.pro/btron/b-media/msx.html" target="_blank">B-MSX Book Spec</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom" style="text-align: center; margin-top: 4.5rem; padding-top: 3.5rem; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 0.84rem; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 1.6rem;">
+                <a href="../sakazaki.svg" title="Sakazaki Clan Kamon — 二蓋笠 (Nigai-gasa)" style="display: inline-block; text-decoration: none; margin-bottom: 0.2rem;">
+                    <img src="../sakazaki.svg" alt="Sakazaki Order Logo" style="width: 108px; height: auto; display: block; opacity: 0.88; transition: opacity 0.25s ease, transform 0.25s ease;">
+                </a>
+                <div class="footer-legal">
+                    <p style="margin: 0 0 0.85rem; font-weight: 500; letter-spacing: 0.04em; color: #b8c0c8; font-size: 0.81rem;">
+                        &copy; 2026 Cryptographics Telesystems, LLC. Ukraine. All rights reserved.
+                    </p>
+                    <p style="margin: 0 0 0.9rem; line-height: 1.75;">
+                        <b>TRADEMARK &amp; COMPLIANCE DISCLOSURE:</b> MSX&trade; is a registered trademark of MSX Licensing Corporation and ASCII Corporation. TRON, BTRON, and μITRON are trademarks of TRON Forum and Professor Ken Sakamura. SONY&reg;, HitBit&trade;, and G-ZERO&trade; are trademarks or registered trademarks of Sony Group Corporation / Sony Corporation. Panasonic&reg; (Panasonic Holdings Corporation), Victor / JVC&reg; (JVCKENWOOD Corporation), Yamaha&reg; (Yamaha Corporation), and Hitachi&reg; (Hitachi, Ltd.) are trademarks of their respective proprietors. All manufacturer designations, hardware component identifiers, and registered software titles cited within this repository are the property of their respective trademark holders and are reproduced strictly under statutory fair use doctrine for non-commercial historical preservation, register-level hardware documentation, and cleanroom interoperability engineering.
+                    </p>
+                    <p style="margin: 0; line-height: 1.75; color: #69747e; font-size: 0.74rem;">
+                        msx.btron.pro &nbsp;·&nbsp; MSX Archival &amp; Technical Portal &nbsp;·&nbsp; Under ISC / MIT Licence &nbsp;·&nbsp; Conforming to DOCOPS &amp; PUBLISH Standards
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 

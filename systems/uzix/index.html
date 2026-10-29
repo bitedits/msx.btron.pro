@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UZIX — MSX上のUnix System 7実装 | msx.btron.pro</title>
-    <meta name="description" content="UZIX の完全技術仕様。Z80 向け Unix System 7 クローン。メモリマッパーを活用したプロセス空間分離、プリエンプティブスケジューラ、fork/exec、および V7 準拠ファイルシステム。">
+    <meta name="description" content="UZIX の完全技術仕様。Z80 向け Unix System 7 クローン。メモリマッパーを活用したプロセス空間分離 (0xFC/0xFD)、プリエンプティブスケジューラ、fork/exec、および V7 準拠 Inode ファイルシステム。">
     <link rel="stylesheet" href="../../index.css?v=3">
 </head>
 <body>
@@ -18,7 +18,7 @@
                 <li><a href="../../emulators/index.html">Emulators</a></li>
                 <li><a href="../../games/index.html">Games</a></li>
                 <li><a href="../../systems/index.html" class="active">Systems</a></li>
-                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+                <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
             </ul>
         </div>
     </nav>
@@ -32,7 +32,7 @@
     </nav>
 
     <div class="setting-hero">
-        <div class="setting-hero-badge">Unix Version 7 Architecture · Preemptive Z80 Multitasking · Process Bank Switching</div>
+        <div class="setting-hero-badge">Unix Version 7 Architecture · Preemptive Z80 Multitasking · Process Bank Switching · Inode VFS</div>
         <h1>UZIX (Systems)</h1>
         <div class="subtitle">
             8 ビット MSX 上で稼働する、プロセス仮想メモリとプリエンプティブマルチタスクを備えた本格 Unix V7 クローン。
@@ -46,17 +46,18 @@
         <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
 
         <div class="tagline-card">
-            <strong>Z80 上の真の UNIX</strong> — UZIX は、PC 向け Unix V7 の設計を MSX Z80 へ移植したオペレーティングシステムです。ハードウェア MMU を持たない Z80 において、MSX のメモリマッパー（16 KiB セグメント）をプロセス空間切り替え機構として活用。プロセスごとに独立した 32 KiB のユーザ空間を提供し、タイマー割り込みによるプリエンプティブスケジューリング、fork/exec、Unix パイプ、および標準シェル（sh）を実現しました。
+            <strong>Z80 上の真の UNIX とメモリマッパーのプロセス分離</strong> — UZIX は、PC 向け Unix V7 の設計を MSX Z80 へ移植したオペレーティングシステムです。ハードウェア MMU を持たない Z80 において、MSX の標準メモリマッパー（16 KiB セグメント）をプロセス空間切り替え機構として活用。プロセスごとに独立した 32 KiB のユーザ空間を提供し、タイマー割り込みによるプリエンプティブスケジューリング、fork/exec、Unix パイプ、および標準シェル（sh）を実現しました。B-System の <strong>B-MSX</strong> では、メモリマッパーポート <code>0xFC–0xFF</code> の完全エミュレーションにより、UZIX のマルチタスク実行を完全サポートします。<br>
             <span class="tagline-en">
-                "UZIX demonstrates the surprising sophistication of MSX hardware by deploying a preemptive Unix V7 kernel onto banked Z80 architecture. By multiplexing memory mapper segments to serve as virtual address spaces, it provides true process isolation, pipe IPC, and a standard Unix userland."
+                "UZIX demonstrates the surprising sophistication of MSX hardware by deploying a preemptive Unix V7 kernel onto banked Z80 architecture. By multiplexing memory mapper segments to serve as virtual address spaces, it provides true process isolation, pipe IPC, and a standard Unix userland. Within B-System, the B-MSX core accurately models mapper I/O ports $FC–$FF to host preemptive UZIX processes."
             </span>
         </div>
 
+        <!-- 01 / Kernel Memory Layout -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">01 / Kernel</span>
-                <h2 class="jp-title">1. カーネルアーキテクチャ (Kernel Architecture)</h2>
-                <p class="band-eyebrow">Preemptive Scheduler · Process Memory Layout</p>
+                <span class="band-index">01 / Kernel Memory</span>
+                <h2 class="jp-title">1. カーネルメモリ構造とプロセス空間分離 (Kernel Memory Layout)</h2>
+                <p class="band-eyebrow">Z80 64 KiB Address Plane · Mapper Ports $FC/$FD · Resident Kernel Page</p>
             </div>
             <div class="doc-summary">
                 UZIX カーネルのメモリ構成とプロセス空間の割り当て仕様です。<br>
@@ -69,24 +70,302 @@
                         <tr>
                             <th>メモリ領域 (Z80 Address)</th>
                             <th>常駐内容 (Resident Content)</th>
-                            <th>マッパー動作 (Mapper Action)</th>
+                            <th>マッパー動作と機能 (Mapper Behavior)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>0x0000–0x7FFF</code> (Page 0–1)</td>
-                            <td>ユーザプロセス空間 (User Process Context)</td>
-                            <td>プロセス切り替え時にマッパーポート 0xFC/0xFD で物理 RAM を切り替え</td>
+                            <td><code>0x0000–0x3FFF</code> (Page 0)</td>
+                            <td>ユーザプロセス空間 (Text &amp; Data)</td>
+                            <td>マッパーポート <code>0xFC</code>。プロセス切り替え時にプロセスの物理 RAM セグメントをマッピング。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x4000–0x7FFF</code> (Page 1)</td>
+                            <td>ユーザプロセス空間 (Heap &amp; User Stack)</td>
+                            <td>マッパーポート <code>0xFD</code>。ユーザプロセスの動的メモリ割り当ておよびコールスタック空間。</td>
                         </tr>
                         <tr>
                             <td><code>0x8000–0xBFFF</code> (Page 2)</td>
-                            <td>カーネルコードおよび VFS バッファ</td>
-                            <td>常駐固定セグメント (システム全体で共有)</td>
+                            <td>カーネルコードおよび VFS キャッシュ</td>
+                            <td>マッパーポート <code>0xFE</code>。常駐固定セグメント。システムコールハンドラ、スケジューラ、ファイルシステム。</td>
                         </tr>
                         <tr>
                             <td><code>0xC000–0xFFFF</code> (Page 3)</td>
-                            <td>カーネルデータ、スタック、ハードウェア I/O</td>
-                            <td>常駐固定セグメント (割込ハンドラとシステムワークエリア)</td>
+                            <td>カーネルデータ、PCB、I/O バッファ、カーネルスタック</td>
+                            <td>マッパーポート <code>0xFF</code>。常駐固定セグメント。全プロセスの管理テーブル (PCB) および MSX ハードウェア I/O。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 02 / Process Management & Multitasking -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Multitasking</span>
+                <h2 class="jp-title">2. プロセス管理とプリエンプティブスケジューラ (Preemptive Multitasking)</h2>
+                <p class="band-eyebrow">PCB struct proc · 60Hz Context Switching · Register Frame Stacks</p>
+            </div>
+            <div class="doc-summary">
+                タイマー割り込み（60Hz）によるプリエンプティブコンテキストスイッチとプロセス管理構造です。<br>
+                <span class="summary-en">"Preemptive scheduling driven by the 60 Hz VDP vertical blanking interrupt, saving full Z80 register states onto process stacks."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>PCB フィールド (Field)</th>
+                            <th>型・サイズ (Type)</th>
+                            <th>機能仕様と管理内容 (Role &amp; Definition)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>p_pid</code></td>
+                            <td><code>pid_t (uint16)</code></td>
+                            <td>一意のプロセス識別子 (PID)。init は PID 1。</td>
+                        </tr>
+                        <tr>
+                            <td><code>p_ppid</code></td>
+                            <td><code>pid_t (uint16)</code></td>
+                            <td>親プロセスの PID。終了時に親へ SIGCHLD を配送。</td>
+                        </tr>
+                        <tr>
+                            <td><code>p_status</code></td>
+                            <td><code>uint8_t</code></td>
+                            <td>プロセス状態 (<code>P_READY</code>, <code>P_RUNNING</code>, <code>P_SLEEP</code>, <code>P_ZOMBIE</code>)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>p_priority</code></td>
+                            <td><code>int8_t</code></td>
+                            <td>スケジューリング優先度 (-20〜+20)。nice 値により動的補正。</td>
+                        </tr>
+                        <tr>
+                            <td><code>p_page0, p_page1</code></td>
+                            <td><code>uint8_t, uint8_t</code></td>
+                            <td>プロセスに割り当てられた物理メモリマッパーセグメント番号 (Page 0/1)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>p_sp</code></td>
+                            <td><code>uint16_t</code></td>
+                            <td>コンテキストスイッチ時におけるプロセスの退避スタックポインタ (SP)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>p_sigmask</code></td>
+                            <td><code>uint16_t</code></td>
+                            <td>保留中シグナルマスク (SIGHUP, SIGINT, SIGKILL, SIGPIPE 等)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>p_files[]</code></td>
+                            <td><code>struct file*[16]</code></td>
+                            <td>オープン中ファイル記述子配列 (stdin, stdout, stderr, etc.)。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="doc-summary" style="margin-top: 1.5rem;">
+                <strong>プリエンプティブコンテキストスイッチの手順:</strong>
+                <ol style="margin: 0.5rem 0 0 1.25rem; line-height: 1.75; font-size: 0.88rem;">
+                    <li>60Hz VDP 垂直同期割込みが発生。Z80 割込みハンドラが起動。</li>
+                    <li>実行中プロセスの全レジスタ群（<code>AF, BC, DE, HL, IX, IY, PC</code> および裏レジスタ <code>AF', BC', DE', HL'</code>）をスタックへ <code>PUSH</code>。</li>
+                    <li>スタックポインタ <code>SP</code> をカレントプロセスの <code>p_sp</code> に保存。</li>
+                    <li>スケジューラが実行可能キューから最高優先度の次プロセスを選択。</li>
+                    <li>I/O ポート <code>0xFC</code> および <code>0xFD</code> に次プロセスの <code>p_page0</code>, <code>p_page1</code> を出力し、アドレス空間を瞬時に切り替え。</li>
+                    <li>次プロセスの <code>p_sp</code> からスタックポインタを復帰し、全レジスタを <code>POP</code> して <code>RETI</code>。</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- 03 / System Calls -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / System Calls</span>
+                <h2 class="jp-title">3. Unix V7 システムコール規約 (Unix V7 System Call Table)</h2>
+                <p class="band-eyebrow">RST 30H Trapping · POSIX-Compliant File &amp; Process APIs</p>
+            </div>
+            <div class="doc-summary">
+                UZIX カーネルが Z80 上で提供する代表的な Unix V7 システムコール群です。<br>
+                <span class="summary-en">"POSIX/V7 standard system calls trapped via Z80 software interrupts, exposing fork, execve, pipe, and filesystem controls."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>番号 (Call No)</th>
+                            <th>システムコール名</th>
+                            <th>C 言語シグネチャ (Signature)</th>
+                            <th>機能仕様 (Functional Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>0x02</code></td>
+                            <td><code>fork</code></td>
+                            <td><code>pid_t fork(void)</code></td>
+                            <td>プロセスの複製。親プロセス空間を新規マッパーセグメントへ複製し子プロセスを生成。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x03</code></td>
+                            <td><code>read</code></td>
+                            <td><code>int read(int fd, void *buf, int nbytes)</code></td>
+                            <td>ファイル記述子からのデータ読み込み（VFS キャッシュバッファ経由）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x04</code></td>
+                            <td><code>write</code></td>
+                            <td><code>int write(int fd, const void *buf, int nbytes)</code></td>
+                            <td>ファイル記述子へのデータ書き込み。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x05</code></td>
+                            <td><code>open</code></td>
+                            <td><code>int open(const char *path, int flags, int mode)</code></td>
+                            <td>パス名を Inode テーブルで解決し、ファイル記述子を返却。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x06</code></td>
+                            <td><code>close</code></td>
+                            <td><code>int close(int fd)</code></td>
+                            <td>ファイル記述子をクローズし、参照カウントを減算。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x07</code></td>
+                            <td><code>wait</code></td>
+                            <td><code>pid_t wait(int *status)</code></td>
+                            <td>子プロセスの終了待機。終了ステータスを取得しゾンビプロセスを解放。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x0B</code></td>
+                            <td><code>execve</code></td>
+                            <td><code>int execve(const char *path, char *const argv[], char *const envp[])</code></td>
+                            <td>実行可能バイナリ（UZIX a.out 形式）をプロセス空間にロードして実行開始。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x0C</code></td>
+                            <td><code>chdir</code></td>
+                            <td><code>int chdir(const char *path)</code></td>
+                            <td>プロセスのカレントワーキングディレクトリ Inode を変更。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x11</code></td>
+                            <td><code>brk</code></td>
+                            <td><code>int brk(void *addr)</code></td>
+                            <td>プロセスのデータセグメント終端（ヒープ境界）を動的に拡張。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x12</code></td>
+                            <td><code>stat</code></td>
+                            <td><code>int stat(const char *path, struct stat *buf)</code></td>
+                            <td>指定パスの Inode メタデータ（サイズ、パーミッション、更新日時）を取得。</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x2A</code></td>
+                            <td><code>pipe</code></td>
+                            <td><code>int pipe(int fildes[2])</code></td>
+                            <td>単方向パイプの作成。メモリバッファを用いたプロセス間通信チャネル。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 04 / V7 Filesystem & Inodes -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">04 / Filesystem</span>
+                <h2 class="jp-title">4. V7 ファイルシステムと Inode 構造 (V7 Filesystem &amp; Inodes)</h2>
+                <p class="band-eyebrow">512-Byte Disk Blocks · Superblock · Multi-Level Direct/Indirect Inodes</p>
+            </div>
+            <div class="doc-summary">
+                512 バイトブロックで構成される UZIX の Inode ベースファイルシステム仕様です。<br>
+                <span class="summary-en">"Unix Seventh Edition filesystem layout featuring 512-byte disk blocks, superblocks, and direct/indirect inode addressing."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>構造体メンバ (Member)</th>
+                            <th>型・サイズ</th>
+                            <th>機能仕様とディスク配置 (Inode Role &amp; Layout)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>i_mode</code></td>
+                            <td><code>uint16_t</code></td>
+                            <td>ファイル種別（通常ファイル、ディレクトリ、文字デバイス、ブロックデバイス、パイプ）およびパーミッション。</td>
+                        </tr>
+                        <tr>
+                            <td><code>i_nlink</code></td>
+                            <td><code>uint8_t</code></td>
+                            <td>ハードリンク数。0 に達した際にディスクブロックを解放。</td>
+                        </tr>
+                        <tr>
+                            <td><code>i_uid, i_gid</code></td>
+                            <td><code>uint8_t, uint8_t</code></td>
+                            <td>ファイル所有者およびグループ識別子。</td>
+                        </tr>
+                        <tr>
+                            <td><code>i_size</code></td>
+                            <td><code>uint32_t</code></td>
+                            <td>ファイルサイズ（バイト長、最大 16 MiB）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>i_addr[0..5]</code></td>
+                            <td><code>uint16_t[6]</code></td>
+                            <td>直接ブロックアドレス (Direct Blocks)。最初の 3,072 バイトを直接参照。</td>
+                        </tr>
+                        <tr>
+                            <td><code>i_addr[6]</code></td>
+                            <td><code>uint16_t</code></td>
+                            <td>間接ブロックアドレス (Indirect Block)。256 個のデータブロックアドレスを保持するセクタを参照。</td>
+                        </tr>
+                        <tr>
+                            <td><code>i_addr[7]</code></td>
+                            <td><code>uint16_t</code></td>
+                            <td>二重間接ブロックアドレス (Double Indirect Block)。大容量ファイル用。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 05 / B-MSX Integration -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">05 / B-MSX Integration</span>
+                <h2 class="jp-title">5. B-System B-MSX における UZIX エミュレーション (UZIX in B-MSX Core)</h2>
+                <p class="band-eyebrow">Mapper I/O Ports $FC–$FF · 80-Column Text Engine · Deterministic Clock</p>
+            </div>
+            <div class="doc-summary">
+                B-System ワークベンチ空間上で UZIX のマルチタスクおよび端末シェルを駆動する仕様です。<br>
+                <span class="summary-en">"B-MSX C99 hardware modeling supporting UZIX memory mapper segment paging and 80-column V9938 terminal emulation."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>エミュレーション要素</th>
+                            <th>実装方式 (Implementation Details)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>マッパー I/O ポート 0xFC–0xFF</b></td>
+                            <td>C99 完全モデル化。ポート書き込み時に各 16 KiB ページのアドレスポインタテーブルを瞬時に置換し、ゼロオーバーヘッドでプロセス空間をスイッチ。</td>
+                        </tr>
+                        <tr>
+                            <td><b>V9938 80桁コンソール</b></td>
+                            <td>SCREEN 0 (80×24) テキストモードを高速ラスタライズ。ANSI エスケープシーケンスおよび Unix ターミナルコマンドを鮮明に表示。</td>
+                        </tr>
+                        <tr>
+                            <td><b>ストレージ仮想化</b></td>
+                            <td>UZIX のフロッピーイメージ（720KB）および IDE / SD ハードディスクイメージ（最大 32MB）を仮想ブロックデバイスとしてマウント。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -94,9 +373,68 @@
         </section>
     </main>
 
-    <footer>
-        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
-            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro UZIX
+    <footer class="app-footer">
+        <div class="wrap">
+            <div class="footer-columns">
+                <div>
+                    <h4>Computers</h4>
+                    <ul>
+                        <li><a href="../../computers/sony-hb-f900/index.html">Sony HB-F900</a></li>
+                        <li><a href="../../computers/sony-hb-g900ap/index.html">Sony HB-G900AP</a></li>
+                        <li><a href="../../computers/victor-hc-95/index.html">Victor HC-95 AB</a></li>
+                        <li><a href="../../computers/yamaha-yis-805/index.html">Yamaha YIS-805 256</a></li>
+                        <li><a href="../../computers/panasonic-fs-a1fm/index.html">Panasonic FS-A1FM</a></li>
+                        <li><a href="../../computers/hitachi-mb-h70/index.html">Hitachi MB-H70</a></li>
+                        <li><a href="../../computers/index.html">全13機種一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Systems</h4>
+                    <ul>
+                        <li><a href="../btron/index.html">8-bit BTRON</a></li>
+                        <li><a href="../msx-bios/index.html">MSX-BIOS</a></li>
+                        <li><a href="../msx-dos/index.html">MSX-DOS 2</a></li>
+                        <li><a href="../c-bios/index.html">C-BIOS</a></li>
+                        <li><a href="index.html" class="active">UZIX (Unix V7)</a></li>
+                        <li><a href="../index.html">基本ソフト一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Development</h4>
+                    <ul>
+                        <li><a href="../../development/sdcc/index.html">SDCC Compiler</a></li>
+                        <li><a href="../../development/pasmo/index.html">Pasmo Assembler</a></li>
+                        <li><a href="../../development/index.html">Toolchain Overview</a></li>
+                        <li><a href="https://btron.pro/btron/doc/txt/MSX-SOUND.txt" target="_blank">MSX Sound Spec</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Emulators</h4>
+                    <ul>
+                        <li><a href="../../emulators/openMSX/index.html">openMSX</a></li>
+                        <li><a href="../../emulators/blueMSX/index.html">blueMSX</a></li>
+                        <li><a href="../../emulators/tronMSX/index.html">tronMSX (B-MSX)</a></li>
+                        <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-System MSX App</a></li>
+                        <li><a href="https://btron.pro/btron/b-media/msx.html" target="_blank">B-MSX Book Spec</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom" style="text-align: center; margin-top: 4.5rem; padding-top: 3.5rem; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 0.84rem; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 1.6rem;">
+                <a href="../../sakazaki.svg" title="Sakazaki Clan Kamon — 二蓋笠 (Nigai-gasa)" style="display: inline-block; text-decoration: none; margin-bottom: 0.2rem;">
+                    <img src="../../sakazaki.svg" alt="Sakazaki Order Logo" style="width: 108px; height: auto; display: block; opacity: 0.88; transition: opacity 0.25s ease, transform 0.25s ease;">
+                </a>
+                <div class="footer-legal">
+                    <p style="margin: 0 0 0.85rem; font-weight: 500; letter-spacing: 0.04em; color: #b8c0c8; font-size: 0.81rem;">
+                        &copy; 2026 Cryptographics Telesystems, LLC. Ukraine. All rights reserved.
+                    </p>
+                    <p style="margin: 0 0 0.9rem; line-height: 1.75;">
+                        <b>TRADEMARK &amp; COMPLIANCE DISCLOSURE:</b> MSX&trade; is a registered trademark of MSX Licensing Corporation and ASCII Corporation. UNIX&reg; is a registered trademark of The Open Group. UZIX is an open-source Unix V7 implementation. SONY&reg;, HitBit&trade;, and G-ZERO&trade; are trademarks or registered trademarks of Sony Group Corporation / Sony Corporation. Panasonic&reg; (Panasonic Holdings Corporation), Victor / JVC&reg; (JVCKENWOOD Corporation), Yamaha&reg; (Yamaha Corporation), and Hitachi&reg; (Hitachi, Ltd.) are trademarks of their respective proprietors. All manufacturer designations, hardware component identifiers, and registered software titles cited within this repository are the property of their respective trademark holders and are reproduced strictly under statutory fair use doctrine for non-commercial historical preservation, register-level hardware documentation, and cleanroom interoperability engineering.
+                    </p>
+                    <p style="margin: 0; line-height: 1.75; color: #69747e; font-size: 0.74rem;">
+                        msx.btron.pro &nbsp;·&nbsp; MSX Archival &amp; Technical Portal &nbsp;·&nbsp; Under ISC / MIT Licence &nbsp;·&nbsp; Conforming to DOCOPS &amp; PUBLISH Standards
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 
