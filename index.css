@@ -1394,6 +1394,30 @@ body {
             font-weight: 500;
         }
 
+        .footer-legal {
+            max-width: 860px;
+            margin: 0 auto;
+            line-height: 1.8;
+            font-size: 0.77rem;
+            color: #78838d;
+            text-align: center;
+        }
+
+        .footer-legal b {
+            color: #b8c0c8;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .footer-legal a {
+            color: #98a1a9;
+            text-decoration: underline;
+        }
+
+        .footer-legal a:hover {
+            color: var(--tron-teal);
+        }
+
         /* ── Scroll reveal ────────────────────────────────────────────────── */
         html.js .reveal {
             opacity: 0;
