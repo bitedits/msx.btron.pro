@@ -78,36 +78,31 @@ MSX の中核を成すのは、64 KiB の Z80 アドレス空間を 16 KiB 単�
                 <div class="showcase">
                     <div class="plate-column">
                         <figure class="plate">
-                            <div class="field" style="padding: 1.5rem; background: var(--plate); display: block; overflow-x: auto;">
-                                <div class="market-table-wrap" style="margin: 0; box-shadow: none; border: none; min-width: 480px;">
+                            <div class="field" style="padding: 1.2rem; background: var(--plate); display: block; overflow: hidden;">
+                                <div class="market-table-wrap" style="margin: 0; box-shadow: none; border: none; overflow: hidden;">
                                 <table class="market-table">
                                     <thead>
                                         <tr>
-                                            <th>メモリページ (Z80 Address)</th>
-                                            <th>標準割当 (Standard Mapping)</th>
-                                            <th>スロット制御 (Arbitration)</th>
+                                            <th style="width: 32%;">ページ・番地</th>
+                                            <th>標準割当・スロット制御</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td><b>Page 0</b> (<code>$0000–$3FFF</code>)</td>
-                                            <td>MSX-BIOS (16 KiB ROM)</td>
-                                            <td>PPI Port <code>0xA8</code> [Bits 0–1]</td>
+                                            <td><b>Page 0</b><br><code style="font-size:0.78rem;">$0000–$3FFF</code></td>
+                                            <td><b>MSX-BIOS</b> (16 KiB ROM)<br><span style="font-size:0.78rem; color:var(--ink-3);">PPI <code>0xA8</code> [Bits 0–1]</span></td>
                                         </tr>
                                         <tr>
-                                            <td><b>Page 1</b> (<code>$4000–$7FFF</code>)</td>
-                                            <td>BASIC ROM / カートリッジ ROM (Header at <code>$4000</code>)</td>
-                                            <td>PPI Port <code>0xA8</code> [Bits 2–3]</td>
+                                            <td><b>Page 1</b><br><code style="font-size:0.78rem;">$4000–$7FFF</code></td>
+                                            <td><b>BASIC / ROM カートリッジ</b> (ヘッダ <code>$4000</code>)<br><span style="font-size:0.78rem; color:var(--ink-3);">PPI <code>0xA8</code> [Bits 2–3]</span></td>
                                         </tr>
                                         <tr>
-                                            <td><b>Page 2</b> (<code>$8000–$BFFF</code>)</td>
-                                            <td>カートリッジ拡張 / メモリマッパー RAM</td>
-                                            <td>PPI Port <code>0xA8</code> [Bits 4–5]</td>
+                                            <td><b>Page 2</b><br><code style="font-size:0.78rem;">$8000–$BFFF</code></td>
+                                            <td><b>拡張カートリッジ / マッパー RAM</b><br><span style="font-size:0.78rem; color:var(--ink-3);">PPI <code>0xA8</code> [Bits 4–5]</span></td>
                                         </tr>
                                         <tr>
-                                            <td><b>Page 3</b> (<code>$C000–$FFFF</code>)</td>
-                                            <td>メイン RAM / ワークエリア (<code>$F380–$FFFF</code>)</td>
-                                            <td>PPI Port <code>0xA8</code> [Bits 6–7]</td>
+                                            <td><b>Page 3</b><br><code style="font-size:0.78rem;">$C000–$FFFF</code></td>
+                                            <td><b>メイン RAM / ワークエリア</b> (<code>$F380–$FFFF</code>)<br><span style="font-size:0.78rem; color:var(--ink-3);">PPI <code>0xA8</code> [Bits 6–7]</span></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -232,14 +227,39 @@ MSX のソフトウェア環境は、ROM に焼き付けられた静的な BIOS 
                 <div class="showcase flip">
                     <div class="plate-column">
                         <figure class="plate">
-                            <div class="field" style="padding: 1.8rem; background: var(--plate);">
-                                <ul class="spec" style="margin: 0;">
-                                    <li><strong>MSX-BIOS</strong><span><code>$0000–$015B</code> ベクタジャンプ表・<code>CALSLT</code>・<code>ENASLT</code></span></li>
-                                    <li><strong>MSX-DOS 2 / Nextor</strong><span><code>INT 21h</code> BDOS 呼出・ディレクトリ・FAT16 SDカード制御</span></li>
-                                    <li><strong>C-BIOS</strong><span>GPL/BSD 準拠完全クリーンルーム MSX1/2/2+/TR BIOS</span></li>
-                                    <li><strong>UZIX</strong><span>Z80 プリエンプティブ Unix V7・多重プロセス・fork/exec</span></li>
-                                    <li><strong>8-bit BTRON</strong><span>BMSX 実身レコード・TAD 8-bit セグメント・µITRON タスク</span></li>
-                                </ul>
+                            <div class="field" style="padding: 1.2rem; background: var(--plate); display: block; overflow: hidden;">
+                                <div class="market-table-wrap" style="margin: 0; box-shadow: none; border: none; overflow: hidden;">
+                                <table class="market-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 32%;">システム名</th>
+                                            <th>カーネル規約・主要仕様</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><b>MSX-BIOS</b></td>
+                                            <td><code>$0000–$015B</code> ベクタ表・<code>CALSLT</code>・<code>ENASLT</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>MSX-DOS 2</b></td>
+                                            <td><code>INT 21h</code> BDOS 呼出・ディレクトリ・FAT16 SD 制御</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>C-BIOS</b></td>
+                                            <td>完全クリーンルーム MSX1/2/2+/TR オープン BIOS</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>UZIX</b></td>
+                                            <td>Z80 プリエンプティブ Unix V7・多重プロセス・fork</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>8-bit BTRON</b></td>
+                                            <td>実身仮身モデル・TAD 8-bit・µITRON タスク</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                </div>
                             </div>
                             <figcaption>
                                 <span><b>Operating Systems Spectrum</b> — Firmware &amp; Kernels</span>
@@ -373,12 +393,38 @@ MSX 向けプログラミングは、実機上の BASIC やアセンブラから
                 <div class="showcase">
                     <div class="plate-column">
                         <figure class="plate">
-                            <div class="field" style="padding: 1.5rem; background: #14171a; color: #e6e8eb; border-radius: 4px;">
-                                <pre style="font-family: var(--mono-font); font-size: 0.82rem; line-height: 1.6; margin: 0; overflow-x: auto;"><code><span style="color:#788596;">// SDCC MSX カートリッジビルドコマンド規約</span>
-<span style="color:#56c2c6;">sdcc</span> -mz80 --no-std-crt0 --opt-code-size      --fomit-frame-pointer      --code-loc 0x4020 --data-loc 0xC000      -Wl-b_HEADER=0x4000      crt0_msx.rel main.rel -o game.ihx
-
-<span style="color:#788596;">// バイナリ変換 (32 KiB フラット ROM)</span>
-<span style="color:#56c2c6;">hex2bin</span> -e rom game.ihx</code></pre>
+                            <div class="field" style="padding: 1.2rem; background: var(--plate); display: block; overflow: hidden;">
+                                <div class="market-table-wrap" style="margin: 0 0 1rem 0; box-shadow: none; border: none; overflow: hidden;">
+                                <table class="market-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 32%;">工程・ツール</th>
+                                            <th>配置・引数規約</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><b>コンパイル</b><br><code style="font-size:0.78rem;">sdcc -mz80</code></td>
+                                            <td><code>--code-loc 0x4020</code> (ヘッダ直後)<br><code>--data-loc 0xC000</code> (RAM ワークエリア)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>ヘッダ注入</b><br><code style="font-size:0.78rem;">sdldz80</code></td>
+                                            <td><code>-Wl-b_HEADER=0x4000</code> (16B ROM 識別子)<br><code>crt0_msx.rel main.rel -o game.ihx</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>ROM 生成</b><br><code style="font-size:0.78rem;">hex2bin</code></td>
+                                            <td><code>-e rom game.ihx</code> (32 KiB フラット ROM)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                </div>
+                                <div style="background: #14171a; color: #e6e8eb; padding: 0.85rem 1rem; border-radius: 3px; font-family: var(--mono-font); font-size: 0.77rem; line-height: 1.6; white-space: pre-wrap; word-break: break-all; overflow: hidden;">
+<span style="color:#788596;"># カートリッジワンショットビルド</span>
+<span style="color:#56c2c6;">sdcc</span> -mz80 --no-std-crt0 --opt-code-size \
+  --fomit-frame-pointer --code-loc 0x4020 \
+  --data-loc 0xC000 -Wl-b_HEADER=0x4000 \
+  crt0_msx.rel main.rel -o game.ihx &amp;&amp; \
+<span style="color:#56c2c6;">hex2bin</span> -e rom game.ihx</div>
                             </div>
                             <figcaption>
                                 <span><b>SDCC Toolchain Pipeline</b> — Free-standing Z80 Compiler</span>
