@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
     <link rel="stylesheet" href="index.css?v=3">
     <script>document.documentElement.className += ' js';</script>
 </head>
+
 <body>
 
     <!-- Sticky Global Navigation -->
@@ -41,10 +43,20 @@
             <h1 class="jp-title">8ビットの黄金律。</h1>
             <div class="hero-rule"></div>
             <p class="hero-lede">
-                1983 年、アスキーとマイクロソフトによって提唱された MSX は、メーカーの垣根を越えてハードウェアとソフトウェアの完全な互換性を実現した、歴史上類を見ない 8 ビット統一コンピュータ規格です。Z80 CPU、テキサス・インスツルメンツ社製 VDP（TMS9918A から V9938、V9958 へ進化）、ゼネラル・インスツルメント社製 PSG 音源、そして洗練されたスロット拡張機構が、単一の論理空間のもとに統合されました。ソニー、松下電器、日本ビクター、日立、ヤマハらが競い、入門機から音楽スタジオ専用機、放送局用リアルタイム映像編集ワークステーションに至る多様な機械群を生み出しました。本アーカイブは、その全シリコンレジスタ仕様、システム構造、開発環境、および遊戯ソフトウェアの工学的遺産を恒久的に記録・展示するものです。
+                1983 年、アスキーとマイクロソフトによって提唱された MSX は、メーカーの垣根を越えてハードウェアとソフトウェアの完全な互換性を実現した、歴史上類を見ない 8 ビット統一コンピュータ規格です。Z80
+                CPU、テキサス・インスツルメンツ社製 VDP（TMS9918A から V9938、V9958 へ進化）、ゼネラル・インスツルメント社製 PSG
+                音源、そして洗練されたスロット拡張機構が、単一の論理空間のもとに統合されました。ソニー、松下電器、日本ビクター、日立、ヤマハらが競い、入門機から音楽スタジオ専用機、放送局用リアルタイム映像編集ワークステーションに至る多様な機械群を生み出しました。本アーカイブは、その全シリコンレジスタ仕様、システム構造、開発環境、および遊戯ソフトウェアの工学的遺産を恒久的に記録・展示するものです。
             </p>
             <p class="hero-lede-en">
-                Established in 1983 through the collaboration of ASCII and Microsoft, the MSX architecture defined an unprecedented international standard for 8-bit computing that guaranteed cross-manufacturer binary compatibility. By coupling the Zilog Z80 microprocessor with dedicated video display processors (TMS9918A, V9938, V9958), a programmable sound generator (AY-3-8910), and a structured 4-tier slot bus system, MSX separated display logic from main system memory. Across four generations—MSX1, MSX2, MSX2+, and MSX turbo R—industrial heavyweights including Sony, Panasonic, Victor (JVC), Hitachi, and Yamaha expanded the platform from accessible consumer consoles to broadcast-quality video editing workstations. This portal serves as a rigorous technical repository preserving register-level documentation, development toolchains, emulation cores, and software teardowns.
+                Established in 1983 through the collaboration of ASCII and Microsoft, the MSX architecture defined an
+                unprecedented international standard for 8-bit computing that guaranteed cross-manufacturer binary
+                compatibility. By coupling the Zilog Z80 microprocessor with dedicated video display processors
+                (TMS9918A, V9938, V9958), a programmable sound generator (AY-3-8910), and a structured 4-tier slot bus
+                system, MSX separated display logic from main system memory. Across four generations—MSX1, MSX2, MSX2+,
+                and MSX turbo R—industrial heavyweights including Sony, Panasonic, Victor (JVC), Hitachi, and Yamaha
+                expanded the platform from accessible consumer consoles to broadcast-quality video editing workstations.
+                This portal serves as a rigorous technical repository preserving register-level documentation,
+                development toolchains, emulation cores, and software teardowns.
             </p>
             <div class="hero-marks">
                 <span>Z80A @ 3.58 MHz · V9938/V9958 · PSG / OPLL</span>
@@ -68,44 +80,64 @@
 
                 <div class="band-intro">
                     <p>
-MSX の中核を成すのは、64 KiB の Z80 アドレス空間を 16 KiB 単位の 4 ページに分割し、4 つの基本スロットと各スロット配下の 4 つの拡張スロット（計 16 スロット・理論上最大 256 スロット）を動的に割り当てるスロット機構です。CPU は VRAM に直接アドレスバスを接続せず、VDP の I/O ポート（0x98–0x9B）を介して非同期に読み書きを行うことで、バスの競合を完全に排除しました。この設計こそが、全メーカーの実機でカートリッジを無変更稼働させる堅牢性の源泉泉です。
+                        MSX の中核を成すのは、64 KiB の Z80 アドレス空間を 16 KiB 単位の 4 ページに分割し、4 つの基本スロットと各スロット配下の 4 つの拡張スロット（計 16
+                        スロット・理論上最大 256 スロット）を動的に割り当てるスロット機構です。CPU は VRAM に直接アドレスバスを接続せず、VDP の I/O
+                        ポート（0x98–0x9B）を介して非同期に読み書きを行うことで、バスの競合を完全に排除しました。この設計こそが、全メーカーの実機でカートリッジを無変更稼働させる堅牢性の源泉泉です。
                     </p>
                     <p class="en">
-                        At the core of the MSX architecture lies a segmented memory management model dividing the 64 KiB Z80 addressing space into four 16 KiB pages. Primary slots are selected via the 8255 PPI port 0xA8, while secondary slots are multiplexed through memory address 0xFFFF. The VRAM is fully decoupled from the CPU bus, accessed strictly through dedicated VDP I/O ports. This hardware abstraction enabled universal software interchangeability across disparate chassis designs.
+                        At the core of the MSX architecture lies a segmented memory management model dividing the 64 KiB
+                        Z80 addressing space into four 16 KiB pages. Primary slots are selected via the 8255 PPI port
+                        0xA8, while secondary slots are multiplexed through memory address 0xFFFF. The VRAM is fully
+                        decoupled from the CPU bus, accessed strictly through dedicated VDP I/O ports. This hardware
+                        abstraction enabled universal software interchangeability across disparate chassis designs.
                     </p>
                 </div>
 
                 <div class="showcase">
                     <div class="plate-column">
                         <figure class="plate">
-                            <div class="field" style="padding: 1.2rem; background: var(--plate); display: block; overflow: hidden;">
-                                <div class="market-table-wrap" style="margin: 0; box-shadow: none; border: none; overflow: hidden;">
-                                <table class="market-table">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 32%;">ページ・番地</th>
-                                            <th>標準割当・スロット制御</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><b>Page 0</b><br><code style="font-size:0.78rem;">$0000–$3FFF</code></td>
-                                            <td><b>MSX-BIOS</b> (16 KiB ROM)<br><span style="font-size:0.78rem; color:var(--ink-3);">PPI <code>0xA8</code> [Bits 0–1]</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td><b>Page 1</b><br><code style="font-size:0.78rem;">$4000–$7FFF</code></td>
-                                            <td><b>BASIC / ROM カートリッジ</b> (ヘッダ <code>$4000</code>)<br><span style="font-size:0.78rem; color:var(--ink-3);">PPI <code>0xA8</code> [Bits 2–3]</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td><b>Page 2</b><br><code style="font-size:0.78rem;">$8000–$BFFF</code></td>
-                                            <td><b>拡張カートリッジ / マッパー RAM</b><br><span style="font-size:0.78rem; color:var(--ink-3);">PPI <code>0xA8</code> [Bits 4–5]</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td><b>Page 3</b><br><code style="font-size:0.78rem;">$C000–$FFFF</code></td>
-                                            <td><b>メイン RAM / ワークエリア</b> (<code>$F380–$FFFF</code>)<br><span style="font-size:0.78rem; color:var(--ink-3);">PPI <code>0xA8</code> [Bits 6–7]</span></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div class="field"
+                                style="padding: 1.2rem; background: var(--plate); display: block; overflow: hidden;">
+                                <div class="market-table-wrap"
+                                    style="margin: 0; box-shadow: none; border: none; overflow: hidden;">
+                                    <table class="market-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 32%;">ページ・番地</th>
+                                                <th>標準割当・スロット制御</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><b>Page 0</b><br><code style="font-size:0.78rem;">$0000–$3FFF</code>
+                                                </td>
+                                                <td><b>MSX-BIOS</b> (16 KiB ROM)<br><span
+                                                        style="font-size:0.78rem; color:var(--ink-3);">PPI
+                                                        <code>0xA8</code> [Bits 0–1]</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>Page 1</b><br><code style="font-size:0.78rem;">$4000–$7FFF</code>
+                                                </td>
+                                                <td><b>BASIC / ROM カートリッジ</b> (ヘッダ <code>$4000</code>)<br><span
+                                                        style="font-size:0.78rem; color:var(--ink-3);">PPI
+                                                        <code>0xA8</code> [Bits 2–3]</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>Page 2</b><br><code style="font-size:0.78rem;">$8000–$BFFF</code>
+                                                </td>
+                                                <td><b>拡張カートリッジ / マッパー RAM</b><br><span
+                                                        style="font-size:0.78rem; color:var(--ink-3);">PPI
+                                                        <code>0xA8</code> [Bits 4–5]</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>Page 3</b><br><code style="font-size:0.78rem;">$C000–$FFFF</code>
+                                                </td>
+                                                <td><b>メイン RAM / ワークエリア</b> (<code>$F380–$FFFF</code>)<br><span
+                                                        style="font-size:0.78rem; color:var(--ink-3);">PPI
+                                                        <code>0xA8</code> [Bits 6–7]</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                             <figcaption>
@@ -118,13 +150,16 @@ MSX の中核を成すのは、64 KiB の Z80 アドレス空間を 16 KiB 単�
                         <p class="role">Architecture — Silicon Rules</p>
                         <h3 class="jp-title">スロット多重化と I/O 境界</h3>
                         <p>
-スロット制御はインテル 8255 PPI のポート 0xA8 と、各拡張スロットの 0xFFFF に配置された反転レジスタによって行われます。メイン RAM は最上位のページ 3 に確保され、システム変数・フック領域（$F380–$FFFF）が常に CPU から直接参照可能となるよう配慮されています。
+                            スロット制御はインテル 8255 PPI のポート 0xA8 と、各拡張スロットの 0xFFFF に配置された反転レジスタによって行われます。メイン RAM は最上位のページ 3
+                            に確保され、システム変数・フック領域（$F380–$FFFF）が常に CPU から直接参照可能となるよう配慮されています。
                         </p>
                         <ul class="spec">
                             <li><strong>基本スロット選択</strong><span>PPI ポート <code>0xA8</code>（読出・書込両用）</span></li>
                             <li><strong>拡張スロット選択</strong><span>各スロットのアドレス <code>0xFFFF</code>（反転書込・読出）</span></li>
-                            <li><strong>メモリマッパー</strong><span>ポート <code>0xFC–0xFF</code> による 16 KiB 物理 RAM 割当</span></li>
-                            <li><strong>VDP 制御ポート</strong><span>ポート <code>0x98</code>（データ） / <code>0x99</code>（コマンド・レジスタ指定）</span></li>
+                            <li><strong>メモリマッパー</strong><span>ポート <code>0xFC–0xFF</code> による 16 KiB 物理 RAM 割当</span>
+                            </li>
+                            <li><strong>VDP 制御ポート</strong><span>ポート <code>0x98</code>（データ） /
+                                    <code>0x99</code>（コマンド・レジスタ指定）</span></li>
                         </ul>
                         <a class="entry" href="systems/index.html">基本ソフトと BIOS 仕様 →</a>
                     </div>
@@ -143,10 +178,16 @@ MSX の中核を成すのは、64 KiB の Z80 アドレス空間を 16 KiB 単�
 
                 <div class="band-intro">
                     <p>
-MSX は家庭用パーソナルコンピュータにとどまらず、各社が誇る専門領域の最先端技術を注入した実験場でもありました。ソニーは放送用編集卓とゲンロックを備えた HB-F900/G900AP を送り出し、日本ビクターは二重 CPU 構成のビデオタイトラー HC-90/95 を開発。ヤマハは本格 FM 音源モジュールと MIDI を組み込んだ YIS-805 を、松下電器はワープロと高速モデムを凝縮した FS-A1FM を世に問いました。本資料館では厳選された 13 機種のレジスタ単位の完全なハードウェア仕様を保管します。
+                        MSX は家庭用パーソナルコンピュータにとどまらず、各社が誇る専門領域の最先端技術を注入した実験場でもありました。ソニーは放送用編集卓とゲンロックを備えた HB-F900/G900AP
+                        を送り出し、日本ビクターは二重 CPU 構成のビデオタイトラー HC-90/95 を開発。ヤマハは本格 FM 音源モジュールと MIDI を組み込んだ YIS-805
+                        を、松下電器はワープロと高速モデムを凝縮した FS-A1FM を世に問いました。本資料館では厳選された 13 機種のレジスタ単位の完全なハードウェア仕様を保管します。
                     </p>
                     <p class="en">
-                        MSX manifested across an extraordinary variety of specialized chassis. Sony produced the broadcast-oriented HB-F900 and HB-G900AP with genlock and digitizer hardware; Victor engineered dual-CPU video titlers (HC-90 and HC-95 series) for video production studios; Yamaha built the professional YIS-805 music computer with SFG-05 FM synthesis and MIDI; and Panasonic mastered integration with the FS-A1FM featuring integrated MSX-MUSIC and telecommunication modems.
+                        MSX manifested across an extraordinary variety of specialized chassis. Sony produced the
+                        broadcast-oriented HB-F900 and HB-G900AP with genlock and digitizer hardware; Victor engineered
+                        dual-CPU video titlers (HC-90 and HC-95 series) for video production studios; Yamaha built the
+                        professional YIS-805 music computer with SFG-05 FM synthesis and MIDI; and Panasonic mastered
+                        integration with the FS-A1FM featuring integrated MSX-MUSIC and telecommunication modems.
                     </p>
                 </div>
 
@@ -199,7 +240,8 @@ MSX は家庭用パーソナルコンピュータにとどまらず、各社が�
                 </div>
 
                 <div style="margin-top: 2.5rem; text-align: center;">
-                    <a class="entry" href="computers/index.html" style="font-size: 1.05rem; padding: 0.8rem 1.8rem; background: var(--plate); border: 1px solid var(--rule); border-radius: 4px; box-shadow: var(--shadow-plate);">
+                    <a class="entry" href="computers/index.html"
+                        style="font-size: 1.05rem; padding: 0.8rem 1.8rem; background: var(--plate); border: 1px solid var(--rule); border-radius: 4px; box-shadow: var(--shadow-plate);">
                         全13機種の技術諸元・レジスタ完全目録を見る (Computers Catalog) →
                     </a>
                 </div>
@@ -217,48 +259,56 @@ MSX は家庭用パーソナルコンピュータにとどまらず、各社が�
 
                 <div class="band-intro">
                     <p>
-MSX のソフトウェア環境は、ROM に焼き付けられた静的な BIOS だけではありません。CP/M 互換性を保ちながら MS-DOS FAT12 ファイルシステムを導入した MSX-DOS 1/2、その現代的発展形である Nextor、オープンソースの C-BIOS、UNIX V7 クローンの UZIX、そして BTRON の実身仮身モデルと超漢字思想を 8 ビット Z80 空間に凝縮した 8-bit BTRON for MSX まで、多彩なシステムが花開きました。
+                        MSX のソフトウェア環境は、ROM に焼き付けられた静的な BIOS だけではありません。CP/M 互換性を保ちながら MS-DOS FAT12 ファイルシステムを導入した MSX-DOS
+                        1/2、その現代的発展形である Nextor、オープンソースの C-BIOS、UNIX V7 クローンの UZIX、そして BTRON の実身仮身モデルと超漢字思想を 8 ビット Z80
+                        空間に凝縮した 8-bit BTRON for MSX まで、多彩なシステムが花開きました。
                     </p>
                     <p class="en">
-                        System software on MSX spans standard ROM BIOS vectors, CP/M-compatible MSX-DOS 1/2 with FAT12 disk structures, Albert Beevendorp's Nextor FAT16 evolution, the cleanroom open-source C-BIOS, the preemptive UNIX V7 clone UZIX, and the 8-bit BTRON subset implementing Real/Virtual body hypertext databuses on banked Z80 memory.
+                        System software on MSX spans standard ROM BIOS vectors, CP/M-compatible MSX-DOS 1/2 with FAT12
+                        disk structures, Albert Beevendorp's Nextor FAT16 evolution, the cleanroom open-source C-BIOS,
+                        the preemptive UNIX V7 clone UZIX, and the 8-bit BTRON subset implementing Real/Virtual body
+                        hypertext databuses on banked Z80 memory.
                     </p>
                 </div>
 
                 <div class="showcase flip">
                     <div class="plate-column">
                         <figure class="plate">
-                            <div class="field" style="padding: 1.2rem; background: var(--plate); display: block; overflow: hidden;">
-                                <div class="market-table-wrap" style="margin: 0; box-shadow: none; border: none; overflow: hidden;">
-                                <table class="market-table">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 32%;">システム名</th>
-                                            <th>カーネル規約・主要仕様</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><b>MSX-BIOS</b></td>
-                                            <td><code>$0000–$015B</code> ベクタ表・<code>CALSLT</code>・<code>ENASLT</code></td>
-                                        </tr>
-                                        <tr>
-                                            <td><b><span style="white-space: nowrap;">MSX-DOS&nbsp;2</span></b></td>
-                                            <td><code>INT 21h</code> BDOS 呼出・ディレクトリ・FAT16 SD 制御</td>
-                                        </tr>
-                                        <tr>
-                                            <td><b>C-BIOS</b></td>
-                                            <td>完全クリーンルーム MSX1/2/2+/TR オープン BIOS</td>
-                                        </tr>
-                                        <tr>
-                                            <td><b>UZIX</b></td>
-                                            <td>Z80 プリエンプティブ Unix V7・多重プロセス・fork</td>
-                                        </tr>
-                                        <tr>
-                                            <td><b>8-bit BTRON</b></td>
-                                            <td>実身仮身モデル・TAD 8-bit・µITRON タスク</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div class="field"
+                                style="padding: 1.2rem; background: var(--plate); display: block; overflow: hidden;">
+                                <div class="market-table-wrap"
+                                    style="margin: 0; box-shadow: none; border: none; overflow: hidden;">
+                                    <table class="market-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 32%;">システム名</th>
+                                                <th>カーネル規約・主要仕様</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><b>MSX-BIOS</b></td>
+                                                <td><code>$0000–$015B</code>
+                                                    ベクタ表・<code>CALSLT</code>・<code>ENASLT</code></td>
+                                            </tr>
+                                            <tr>
+                                                <td><b><span style="white-space: nowrap;">MSX-DOS&nbsp;2</span></b></td>
+                                                <td><code>INT 21h</code> BDOS 呼出・ディレクトリ・FAT16 SD 制御</td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>C-BIOS</b></td>
+                                                <td>完全クリーンルーム MSX1/2/2+/TR オープン BIOS</td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>UZIX</b></td>
+                                                <td>Z80 プリエンプティブ Unix V7・多重プロセス・fork</td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>8-bit BTRON</b></td>
+                                                <td>実身仮身モデル・TAD 8-bit・µITRON タスク</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                             <figcaption>
@@ -271,10 +321,12 @@ MSX のソフトウェア環境は、ROM に焼き付けられた静的な BIOS 
                         <p class="role">Firmware &amp; Kernel Architecture</p>
                         <h3 class="jp-title">BIOS 規約と 8-bit BTRON</h3>
                         <p>
-MSX-BIOS はスロット間インターフェース `CALSLT` ($001C) を通じて任意のページ・スロットへジャンプし、状態を安全に復帰させます。B-System における 8-bit BTRON は、このスロット機構とメモリマッパーを駆使し、Z80 上でウィンドウフレーム描画と実身仮身ハイパーテキストを実現しています。
+                            MSX-BIOS はスロット間インターフェース `CALSLT` ($001C) を通じて任意のページ・スロットへジャンプし、状態を安全に復帰させます。B-System における
+                            8-bit BTRON は、このスロット機構とメモリマッパーを駆使し、Z80 上でウィンドウフレーム描画と実身仮身ハイパーテキストを実現しています。
                         </p>
                         <a class="entry" href="systems/index.html">基本ソフト詳細解説 →</a>
-                        <a class="entry" href="../btron/b-system/apps/MSX.html" target="_blank">B-System B-MSX 実装仕様 →</a>
+                        <a class="entry" href="../btron/b-system/apps/MSX.html" target="_blank">B-System B-MSX 実装仕様
+                            →</a>
                     </div>
                 </div>
             </div>
@@ -291,10 +343,16 @@ MSX-BIOS はスロット間インターフェース `CALSLT` ($001C) を通じ�
 
                 <div class="band-intro">
                     <p>
-MSX の遊戯ソフトウェアは、ハードウェアの限界を突破する挑戦の歴史です。TMS9918A の 1 走査線あたり 4 スプライト制限をフリッカ分散で回避した擬似 3D レース、MegaROM バンク切り替えによる広大なマップ展開、そして Z80 の 16 ビット固定小数点演算によるリアルタイム 3 次元幾何学パイプライン Geo3D。実機フレームバッファから無装飾・真正解像度で抽出した 10 席のカートリッジを展示します。
+                        MSX の遊戯ソフトウェアは、ハードウェアの限界を突破する挑戦の歴史です。TMS9918A の 1 走査線あたり 4 スプライト制限をフリッカ分散で回避した擬似 3D レース、MegaROM
+                        バンク切り替えによる広大なマップ展開、そして Z80 の 16 ビット固定小数点演算によるリアルタイム 3 次元幾何学パイプライン
+                        Geo3D。実機フレームバッファから無装飾・真正解像度で抽出した 10 席のカートリッジを展示します。
                     </p>
                     <p class="en">
-                        Game cartridges on MSX pushed silicon constraints to their theoretical limits. Developers conquered sprite-per-line limitations through dynamic multiplexing, designed custom MegaROM banking hardware, and synthesized real-time 3D vector geometry through fixed-point arithmetic on the Z80. Presented below are ten titles captured directly from authentic framebuffers without artificial CSS alterations.
+                        Game cartridges on MSX pushed silicon constraints to their theoretical limits. Developers
+                        conquered sprite-per-line limitations through dynamic multiplexing, designed custom MegaROM
+                        banking hardware, and synthesized real-time 3D vector geometry through fixed-point arithmetic on
+                        the Z80. Presented below are ten titles captured directly from authentic framebuffers without
+                        artificial CSS alterations.
                     </p>
                 </div>
 
@@ -306,15 +364,15 @@ MSX の遊戯ソフトウェアは、ハードウェアの限界を突破する�
                     <div class="msx-grid">
                         <figure>
                             <div class="field">
-                                <img src="assets/screens/MSX_XRacing.png" width="538" height="543" class="authentic-frame"
-                                    alt="XRacing — MSX1 / TMS9918A 擬似3Dレース">
+                                <img src="assets/screens/MSX_XRacing.png" width="538" height="543"
+                                    class="authentic-frame" alt="XRacing — MSX1 / TMS9918A 擬似3Dレース">
                             </div>
                             <figcaption><b>XRacing</b>MSX1 · TMS9918A</figcaption>
                         </figure>
                         <figure>
                             <div class="field">
-                                <img src="assets/screens/MSX_Yazzier.png" width="538" height="543" class="authentic-frame"
-                                    alt="YAZZIER — MSX1 タイトルカード">
+                                <img src="assets/screens/MSX_Yazzier.png" width="538" height="543"
+                                    class="authentic-frame" alt="YAZZIER — MSX1 タイトルカード">
                             </div>
                             <figcaption><b>YAZZIER</b>MSX1 · title card</figcaption>
                         </figure>
@@ -328,36 +386,36 @@ MSX の遊戯ソフトウェアは、ハードウェアの限界を突破する�
 
                         <figure>
                             <div class="field">
-                                <img src="assets/screens/MSX_Bullrush.png" width="538" height="543" class="authentic-frame"
-                                    alt="BULLRUSH — MegaROM 高速アクション">
+                                <img src="assets/screens/MSX_Bullrush.png" width="538" height="543"
+                                    class="authentic-frame" alt="BULLRUSH — MegaROM 高速アクション">
                             </div>
                             <figcaption><b>BULLRUSH</b>MegaROM · ASCII 8K</figcaption>
                         </figure>
                         <figure>
                             <div class="field">
-                                <img src="assets/screens/MSX_NeonRevenant.png" width="538" height="543" class="authentic-frame"
-                                    alt="NEON REVENANT — Geo3D 3次元幾何学エンジン">
+                                <img src="assets/screens/MSX_NeonRevenant.png" width="538" height="543"
+                                    class="authentic-frame" alt="NEON REVENANT — Geo3D 3次元幾何学エンジン">
                             </div>
                             <figcaption><b>Neon Revenant</b>Geo3D · 3D Engine</figcaption>
                         </figure>
                         <figure>
                             <div class="field">
-                                <img src="assets/screens/MSX_NightRaven.png" width="538" height="543" class="authentic-frame"
-                                    alt="NIGHT RAVEN — Geo3D ハードウェアパイプライン">
+                                <img src="assets/screens/MSX_NightRaven.png" width="538" height="543"
+                                    class="authentic-frame" alt="NIGHT RAVEN — Geo3D ハードウェアパイプライン">
                             </div>
                             <figcaption><b>Night Raven</b>Geo3D · Hardware pipeline</figcaption>
                         </figure>
                         <figure>
                             <div class="field">
-                                <img src="assets/screens/MSX_DynamiteGoGo.png" width="538" height="543" class="authentic-frame"
-                                    alt="Dynamite Go! Go! — MSX2 / V9938 アクション">
+                                <img src="assets/screens/MSX_DynamiteGoGo.png" width="538" height="543"
+                                    class="authentic-frame" alt="Dynamite Go! Go! — MSX2 / V9938 アクション">
                             </div>
                             <figcaption><b>Dynamite Go! Go!</b>MSX2 · V9938</figcaption>
                         </figure>
                         <figure>
                             <div class="field">
-                                <img src="assets/screens/MSX_BadApple.png" width="538" height="543" class="authentic-frame"
-                                    alt="Bad Apple — MSX2+ / V9958 高速動画再生">
+                                <img src="assets/screens/MSX_BadApple.png" width="538" height="543"
+                                    class="authentic-frame" alt="Bad Apple — MSX2+ / V9958 高速動画再生">
                             </div>
                             <figcaption><b>Bad Apple</b>MSX2+ · V9958</figcaption>
                         </figure>
@@ -365,7 +423,8 @@ MSX の遊戯ソフトウェアは、ハードウェアの限界を突破する�
                 </div>
 
                 <div style="margin-top: 2.5rem; text-align: center;">
-                    <a class="entry" href="games/index.html" style="font-size: 1.05rem; padding: 0.8rem 1.8rem; background: var(--plate); border: 1px solid var(--rule); border-radius: 4px; box-shadow: var(--shadow-plate);">
+                    <a class="entry" href="games/index.html"
+                        style="font-size: 1.05rem; padding: 0.8rem 1.8rem; background: var(--plate); border: 1px solid var(--rule); border-radius: 4px; box-shadow: var(--shadow-plate);">
                         全カートリッジ技術解体を見る (Games Catalog) →
                     </a>
                 </div>
@@ -383,48 +442,61 @@ MSX の遊戯ソフトウェアは、ハードウェアの限界を突破する�
 
                 <div class="band-intro">
                     <p>
-MSX 向けプログラミングは、実機上の BASIC やアセンブラから、現代の PC 上での高度なクロスコンパイラ環境へと進化しました。中核を担う SDCC（Small Device C Compiler）は、レジスタ呼出規約 `__sdcccall(1)` による高速な Z80 コード生成を実現。Pasmo による直截なアセンブリと組み合わせることで、ROM カートリッジから MSX-DOS 実行ファイルまで、堅牢な C99/C89 開発が可能です。
+                        MSX 向けプログラミングは、実機上の BASIC やアセンブラから、現代の PC 上での高度なクロスコンパイラ環境へと進化しました。中核を担う SDCC（Small Device C
+                        Compiler）は、レジスタ呼出規約 `__sdcccall(1)` による高速な Z80 コード生成を実現。Pasmo による直截なアセンブリと組み合わせることで、ROM カートリッジから
+                        MSX-DOS 実行ファイルまで、堅牢な C99/C89 開発が可能です。
                     </p>
                     <p class="en">
-                        Cross-development for MSX centers around modern ANSI C compilers and fixed-address assemblers. SDCC provides aggressive peephole optimization and register-based parameter passing via __sdcccall(1), while Pasmo delivers instantaneous multi-target assembly producing raw ROM images, MSX-DOS .COM binaries, and BLOAD files with automated debugger symbol generation.
+                        Cross-development for MSX centers around modern ANSI C compilers and fixed-address assemblers.
+                        SDCC provides aggressive peephole optimization and register-based parameter passing via
+                        __sdcccall(1), while Pasmo delivers instantaneous multi-target assembly producing raw ROM
+                        images, MSX-DOS .COM binaries, and BLOAD files with automated debugger symbol generation.
                     </p>
                 </div>
 
                 <div class="showcase">
                     <div class="plate-column">
                         <figure class="plate">
-                            <div class="field" style="padding: 1.2rem; background: var(--plate); display: block; overflow: hidden;">
-                                <div class="market-table-wrap" style="margin: 0 0 1rem 0; box-shadow: none; border: none; overflow: hidden;">
-                                <table class="market-table">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 32%;">工程・ツール</th>
-                                            <th>配置・引数規約</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><b>コンパイル</b><br><code style="font-size:0.78rem;">sdcc -mz80</code></td>
-                                            <td><code>--code-loc 0x4020</code> (ヘッダ直後)<br><code>--data-loc 0xC000</code> (RAM ワークエリア)</td>
-                                        </tr>
-                                        <tr>
-                                            <td><b>ヘッダ注入</b><br><code style="font-size:0.78rem;">sdldz80</code></td>
-                                            <td><code>-Wl-b_HEADER=0x4000</code> (16B ROM 識別子)<br><code>crt0_msx.rel main.rel -o game.ihx</code></td>
-                                        </tr>
-                                        <tr>
-                                            <td><b>ROM 生成</b><br><code style="font-size:0.78rem;">hex2bin</code></td>
-                                            <td><code>-e rom game.ihx</code> (32 KiB フラット ROM)</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div class="field"
+                                style="padding: 1.2rem; background: var(--plate); display: block; overflow: hidden;">
+                                <div class="market-table-wrap"
+                                    style="margin: 0 0 1rem 0; box-shadow: none; border: none; overflow: hidden;">
+                                    <table class="market-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 32%;">工程・ツール</th>
+                                                <th>配置・引数規約</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><b>コンパイル</b><br><code style="font-size:0.78rem;">sdcc -mz80</code>
+                                                </td>
+                                                <td><code>--code-loc 0x4020</code>
+                                                    (ヘッダ直後)<br><code>--data-loc 0xC000</code> (RAM ワークエリア)</td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>ヘッダ注入</b><br><code style="font-size:0.78rem;">sdldz80</code></td>
+                                                <td><code>-Wl-b_HEADER=0x4000</code> (16B ROM
+                                                    識別子)<br><code>crt0_msx.rel main.rel -o game.ihx</code></td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>ROM 生成</b><br><code style="font-size:0.78rem;">hex2bin</code>
+                                                </td>
+                                                <td><code>-e rom game.ihx</code> (32 KiB フラット ROM)</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <div style="background: #14171a; color: #e6e8eb; padding: 0.85rem 1rem; border-radius: 3px; font-family: var(--mono-font); font-size: 0.77rem; line-height: 1.6; white-space: pre-wrap; word-break: break-all; overflow: hidden;">
-<span style="color:#788596;"># カートリッジワンショットビルド</span>
-<span style="color:#56c2c6;">sdcc</span> -mz80 --no-std-crt0 --opt-code-size \
-  --fomit-frame-pointer --code-loc 0x4020 \
-  --data-loc 0xC000 -Wl-b_HEADER=0x4000 \
-  crt0_msx.rel main.rel -o game.ihx &amp;&amp; \
-<span style="color:#56c2c6;">hex2bin</span> -e rom game.ihx</div>
+                                <div
+                                    style="background: #14171a; color: #e6e8eb; padding: 0.85rem 1rem; border-radius: 3px; font-family: var(--mono-font); font-size: 0.77rem; line-height: 1.6; white-space: pre-wrap; word-break: break-all; overflow: hidden;">
+                                    <span style="color:#788596;"># カートリッジワンショットビルド</span>
+                                    <span style="color:#56c2c6;">sdcc</span> -mz80 --no-std-crt0 --opt-code-size \
+                                    --fomit-frame-pointer --code-loc 0x4020 \
+                                    --data-loc 0xC000 -Wl-b_HEADER=0x4000 \
+                                    crt0_msx.rel main.rel -o game.ihx &amp;&amp; \
+                                    <span style="color:#56c2c6;">hex2bin</span> -e rom game.ihx
+                                </div>
                             </div>
                             <figcaption>
                                 <span><b>SDCC Toolchain Pipeline</b> — Free-standing Z80 Compiler</span>
@@ -436,7 +508,8 @@ MSX 向けプログラミングは、実機上の BASIC やアセンブラから
                         <p class="role">Development Toolchains</p>
                         <h3 class="jp-title">SDCC と Pasmo の黄金律</h3>
                         <p>
-標準 C ランタイムを排除し、独自の `crt0_msx.asm` によってカートリッジ識別子 `$4142`（"AB"）と初期化ルーチンを注入。VDP ポート叩きをインラインアセンブラで記述することで、実機 3.58 MHz の限界性能を引き出します。
+                            標準 C ランタイムを排除し、独自の `crt0_msx.asm` によってカートリッジ識別子 `$4142`（"AB"）と初期化ルーチンを注入。VDP
+                            ポート叩きをインラインアセンブラで記述することで、実機 3.58 MHz の限界性能を引き出します。
                         </p>
                         <a class="entry" href="development/index.html">開発環境手引き →</a>
                         <a class="entry" href="development/sdcc/index.html">SDCC 実装詳解 →</a>
@@ -456,10 +529,16 @@ MSX 向けプログラミングは、実機上の BASIC やアセンブラから
 
                 <div class="band-intro">
                     <p>
-MSX エミュレータは、過去の遺産を再現するだけでなく、現代のソフトウェア開発における不可欠の検証基盤です。オープンソース界で最も厳密なサイクル精度と Tcl 遠隔制御を誇る openMSX、洗練された GUI とマシンエディタを備えた blueMSX、そして B-System 内部に C99 純実装として組み込まれた確定性コア tronMSX。三つの基盤が開発者の足元を支えます。
+                        MSX エミュレータは、過去の遺産を再現するだけでなく、現代のソフトウェア開発における不可欠の検証基盤です。オープンソース界で最も厳密なサイクル精度と Tcl 遠隔制御を誇る
+                        openMSX、洗練された GUI とマシンエディタを備えた blueMSX、そして B-System 内部に C99 純実装として組み込まれた確定性コア
+                        tronMSX。三つの基盤が開発者の足元を支えます。
                     </p>
                     <p class="en">
-                        Emulation serves as the bedrock for modern MSX verification. openMSX establishes the reference standard with cycle-accurate VDP renderers, time-travel reverse debugging, and Tcl pipe automation. blueMSX offers dynamic slot-configuration editing and BiFi trace hooks. tronMSX embeds an uncompromising cleanroom C99 MSX2+ core inside B-System according to NASA/JPL Power of Ten reliability rules.
+                        Emulation serves as the bedrock for modern MSX verification. openMSX establishes the reference
+                        standard with cycle-accurate VDP renderers, time-travel reverse debugging, and Tcl pipe
+                        automation. blueMSX offers dynamic slot-configuration editing and BiFi trace hooks. tronMSX
+                        embeds an uncompromising cleanroom C99 MSX2+ core inside B-System according to NASA/JPL Power of
+                        Ten reliability rules.
                     </p>
                 </div>
 
@@ -475,7 +554,8 @@ MSX エミュレータは、過去の遺産を再現するだけでなく、現�
                         <span class="card-num">02</span>
                         <h4>blueMSX</h4>
                         <p class="role">Hardware Lab &amp; Debugger</p>
-                        <p>直感的なスロットエディタ、内蔵逆アセンブラ、メモリブレークポイント、および <code>ld b,b</code> / <code>ld d,d</code> デバッグフックをサポート。</p>
+                        <p>直感的なスロットエディタ、内蔵逆アセンブラ、メモリブレークポイント、および <code>ld b,b</code> / <code>ld d,d</code> デバッグフックをサポート。
+                        </p>
                         <a class="entry" href="emulators/blueMSX/index.html">デバッガとスロット設定 →</a>
                     </div>
                     <div class="card">
@@ -512,7 +592,8 @@ MSX エミュレータは、過去の遺産を再現するだけでなく、現�
                     <ul>
                         <li><a href="systems/btron/index.html">8-bit BTRON</a></li>
                         <li><a href="systems/msx-bios/index.html">MSX-BIOS</a></li>
-                        <li><a href="systems/msx-dos/index.html"><span style="white-space: nowrap;">MSX-DOS&nbsp;2</span></a></li>
+                        <li><a href="systems/msx-dos/index.html"><span
+                                    style="white-space: nowrap;">MSX-DOS&nbsp;2</span></a></li>
                         <li><a href="systems/c-bios/index.html">C-BIOS</a></li>
                         <li><a href="systems/uzix/index.html">UZIX (Unix V7)</a></li>
                         <li><a href="systems/index.html"><b>基本ソフト一覧 →</b></a></li>
@@ -524,7 +605,7 @@ MSX エミュレータは、過去の遺産を再現するだけでなく、現�
                         <li><a href="development/sdcc/index.html">SDCC Compiler</a></li>
                         <li><a href="development/pasmo/index.html">Pasmo Assembler</a></li>
                         <li><a href="development/index.html">Toolchain Overview</a></li>
-                        <li><a href="../btron/doc/txt/MSX-SOUND.txt">MSX Sound Spec</a></li>
+                        <li><a href="https://btron.pro/doc/txt/MSX-SOUND.txt">MSX Sound Spec</a></li>
                     </ul>
                 </div>
                 <div>
@@ -534,23 +615,37 @@ MSX エミュレータは、過去の遺産を再現するだけでなく、現�
                         <li><a href="emulators/blueMSX/index.html">blueMSX</a></li>
                         <li><a href="emulators/tronMSX/index.html">tronMSX (B-MSX)</a></li>
                         <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-System MSX App</a></li>
-                        <li><a href="https://btron.pro/btron/b-media/msx.html" target="_blank">B-MSX Book Spec</a></li>
+                        <li><a href="https://btron.pro/b-media/msx.html" target="_blank">B-MSX Book Spec</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="footer-bottom" style="text-align: center; margin-top: 4.5rem; padding-top: 3.5rem; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 0.84rem; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 1.6rem;">
-                <a href="sakazaki.svg" title="Sakazaki Clan Kamon — 二蓋笠 (Nigai-gasa)" style="display: inline-block; text-decoration: none; margin-bottom: 0.2rem;">
-                    <img src="sakazaki.svg" alt="Sakazaki Order Logo" style="width: 108px; height: auto; display: block; opacity: 0.88; transition: opacity 0.25s ease, transform 0.25s ease;">
+            <div class="footer-bottom"
+                style="text-align: center; margin-top: 4.5rem; padding-top: 3.5rem; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 0.84rem; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 1.6rem;">
+                <a href="sakazaki.svg" title="Sakazaki Clan Kamon — 二蓋笠 (Nigai-gasa)"
+                    style="display: inline-block; text-decoration: none; margin-bottom: 0.2rem;">
+                    <img src="sakazaki.svg" alt="Sakazaki Order Logo"
+                        style="width: 108px; height: auto; display: block; opacity: 0.88; transition: opacity 0.25s ease, transform 0.25s ease;">
                 </a>
                 <div class="footer-legal">
-                    <p style="margin: 0 0 0.85rem; font-weight: 500; letter-spacing: 0.04em; color: #b8c0c8; font-size: 0.81rem;">
+                    <p
+                        style="margin: 0 0 0.85rem; font-weight: 500; letter-spacing: 0.04em; color: #b8c0c8; font-size: 0.81rem;">
                         &copy; 2026 Cryptographics Telesystems, LLC. Ukraine. All rights reserved.
                     </p>
                     <p style="margin: 0 0 0.9rem; line-height: 1.75;">
-                        <b>TRADEMARK &amp; COMPLIANCE DISCLOSURE:</b> MSX&trade; is a registered trademark of MSX Licensing Corporation and ASCII Corporation. SONY&reg;, HitBit&trade;, and G-ZERO&trade; are trademarks or registered trademarks of Sony Group Corporation / Sony Corporation. Panasonic&reg; (Panasonic Holdings Corporation), Victor / JVC&reg; (JVCKENWOOD Corporation), Yamaha&reg; (Yamaha Corporation), and Hitachi&reg; (Hitachi, Ltd.) are trademarks of their respective proprietors. All manufacturer designations, hardware component identifiers, and registered software titles cited within this repository are the property of their respective trademark holders and are reproduced strictly under statutory fair use doctrine for non-commercial historical preservation, register-level hardware documentation, and cleanroom interoperability engineering.
+                        <b>TRADEMARK &amp; COMPLIANCE DISCLOSURE:</b> MSX&trade; is a registered trademark of MSX
+                        Licensing Corporation and ASCII Corporation. SONY&reg;, HitBit&trade;, and G-ZERO&trade; are
+                        trademarks or registered trademarks of Sony Group Corporation / Sony Corporation. Panasonic&reg;
+                        (Panasonic Holdings Corporation), Victor / JVC&reg; (JVCKENWOOD Corporation), Yamaha&reg;
+                        (Yamaha Corporation), and Hitachi&reg; (Hitachi, Ltd.) are trademarks of their respective
+                        proprietors. All manufacturer designations, hardware component identifiers, and registered
+                        software titles cited within this repository are the property of their respective trademark
+                        holders and are reproduced strictly under statutory fair use doctrine for non-commercial
+                        historical preservation, register-level hardware documentation, and cleanroom interoperability
+                        engineering.
                     </p>
                     <p style="margin: 0; line-height: 1.75; color: #69747e; font-size: 0.74rem;">
-                        msx.btron.pro &nbsp;·&nbsp; MSX Archival &amp; Technical Portal &nbsp;·&nbsp; Under ISC / MIT Licence &nbsp;·&nbsp; Conforming to DOCOPS &amp; PUBLISH Standards
+                        msx.btron.pro &nbsp;·&nbsp; MSX Archival &amp; Technical Portal &nbsp;·&nbsp; Under ISC / MIT
+                        Licence &nbsp;·&nbsp; Conforming to DOCOPS &amp; PUBLISH Standards
                     </p>
                 </div>
             </div>
@@ -558,4 +653,5 @@ MSX エミュレータは、過去の遺産を再現するだけでなく、現�
     </footer>
 
 </body>
+
 </html>
