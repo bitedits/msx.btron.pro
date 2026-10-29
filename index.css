@@ -1343,13 +1343,11 @@ body {
         footer {
             background: var(--ink);
             border-top: 0;
-            padding: clamp(3rem, 7vw, 5rem) clamp(1.25rem, 5vw, 3.5rem) 3rem;
+            padding: clamp(4rem, 8vw, 6rem) 0 3.5rem;
             color: #98a1a9;
         }
 
         .footer-columns {
-            max-width: 1180px;
-            margin: 0 auto;
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: clamp(1.8rem, 4vw, 3.5rem);
