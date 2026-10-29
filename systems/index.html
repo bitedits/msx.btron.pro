@@ -227,6 +227,7 @@
                             </td>
                             <td>
                                 <b>MSX-BIOS:</b> BIOS ROM (ジャンプテーブル・初期化ベクタ <code>$0000–$015B</code>)<br>
+                                <b>C-BIOS:</b> クリーンルーム BIOS ROM (ジャンプ表・カートリッジ探索)<br>
                                 <b>MSX-DOS 2:</b> RAM (BDOS コール <code>0005H</code>, TPA <code>0100H〜</code>)<br>
                                 <b>UZIX:</b> プロセス ユーザ空間 (Text &amp; Data, ポート <code>0xFC</code> 切替)<br>
                                 <b>8-bit BTRON:</b> BTRON コアランタイム / TAD ストリームパーサ
@@ -240,6 +241,7 @@
                             </td>
                             <td>
                                 <b>MSX-BIOS:</b> BASIC ROM / カートリッジ ROM (ヘッダ <code>"AB"</code> <code>$4000</code>)<br>
+                                <b>C-BIOS:</b> カートリッジ ROM (ヘッダ <code>"AB"</code> <code>$4000</code>) / MSX2 BIOS 拡張<br>
                                 <b>MSX-DOS 2:</b> RAM (TPA アプリケーション実行空間)<br>
                                 <b>UZIX:</b> プロセス ユーザ空間 (Heap &amp; ユーザスタック, ポート <code>0xFD</code> 切替)<br>
                                 <b>8-bit BTRON:</b> 実身レコードスワップ空間 (16KB マッパーセグメント)
@@ -253,6 +255,7 @@
                             </td>
                             <td>
                                 <b>MSX-BIOS:</b> カートリッジ拡張空間 / システムワークエリア<br>
+                                <b>C-BIOS:</b> カートリッジ拡張空間 / Sub-ROM プリミティブ実行空間<br>
                                 <b>MSX-DOS 2:</b> RAM (TPA 拡張 / マッパー動的バンク)<br>
                                 <b>UZIX:</b> カーネル常駐コード (VFS キャッシュ, システムコールハンドラ)<br>
                                 <b>8-bit BTRON:</b> ウィンドウ管理 / V9938 ハードウェアレンダラ
@@ -266,6 +269,7 @@
                             </td>
                             <td>
                                 <b>MSX-BIOS:</b> メイン RAM (システム変数 <code>$F380–$FFFF</code>, スタック)<br>
+                                <b>C-BIOS:</b> メイン RAM (システムワークエリア <code>$F380–$FFFF</code>, スタック)<br>
                                 <b>MSX-DOS 2:</b> RAM (MSX-DOS 2 カーネル作業域, ディスクバッファ)<br>
                                 <b>UZIX:</b> カーネルデータ (PCB 配列, Inode テーブル, 割込みスタック)<br>
                                 <b>8-bit BTRON:</b> μITRON イベントキュー, 仮身ポインタ, スタック
