@@ -280,6 +280,60 @@ int main(int argc, char **argv)
     }
     printf("  [PASS] 4b. Sticky Click-to-Capture & Click-to-Drop moved Terminal to (282, 36)\n");
 
+    /* 5. Test Zero-CPU Click Capture on Occluded Window & Fast Menu Popup (<= 3 frames!) */
+    /* 5a: Window 2 (282, 36) currently overlaps Window 1 (6, 16, 330, 188).
+     * Click Window 1 at (100, 160) and verify it promotes to front in <= 3 frames! */
+    msx_mouse_set(100, 160, 1);
+    step_and_monitor(3, "fast-swap-occluded-editor-down");
+
+    /* Verify Window 1 title bar at (200, 20) is immediately active blue (2) and overlap area (290, 90) is white paper (9) */
+    if (read_page0_pixel(200, 20) != 2 || read_page0_pixel(290, 90) != 9) {
+        fprintf(stderr, "FAIL: Fast HMMM swap on occluded Window 1 exceeded 3-frame budget: title=%u, overlap=%u\n",
+                read_page0_pixel(200, 20), read_page0_pixel(290, 90));
+        free(rom);
+        return 1;
+    }
+    msx_mouse_set(100, 160, 0);
+    step_and_monitor(4, "fast-swap-occluded-editor-up");
+
+    msx_mouse_set(410, 80, 1);
+    step_and_monitor(3, "fast-swap-back-to-term-down");
+    if (read_page0_pixel(410, 40) != 2) {
+        v9938_t *v = msx_get_v9938();
+        fprintf(stderr, "FAIL: Fast HMMM swap back to Window 2: title(410,40)=%u, w1_title(200,20)=%u, sx=%u, sy=%u, pc=0x%04X\n",
+                read_page0_pixel(410, 40), read_page0_pixel(200, 20),
+                v->vram[0x1FA01], v->vram[0x1FA00], msx_get_pc());
+        free(rom);
+        return 1;
+    }
+    msx_mouse_set(410, 80, 0);
+    step_and_monitor(3, "fast-swap-back-to-term-up");
+    printf("  [PASS] 5a. Zero-stall hardware HMMM focus swap on overlapping windows completed in <= 3 frames\n");
+
+    /* 5b: Fast Menu Popup Open & Close in <= 3 frames without desktop redraw */
+    msx_mouse_set(130, 6, 1); /* Click "Edit" menu (x=116..160) */
+    step_and_monitor(3, "fast-menu-open-down");
+    if (read_page0_pixel(200, 50) != 8) { /* Popup body is BTRON_COL_LIGHT_GRAY (8) over Editor's white paper */
+        fprintf(stderr, "FAIL: Menu popup did not open in <= 3 frames: pixel(200,50)=%u, pc=0x%04X\n",
+                read_page0_pixel(200, 50), msx_get_pc());
+        free(rom);
+        return 1;
+    }
+    msx_mouse_set(130, 6, 0);
+    step_and_monitor(3, "fast-menu-open-up");
+
+    msx_mouse_set(130, 6, 1);
+    step_and_monitor(3, "fast-menu-close-down");
+    if (read_page0_pixel(200, 50) != 9) { /* Restored Editor white paper (9) via HMMM */
+        fprintf(stderr, "FAIL: Menu popup close did not restore background in <= 3 frames: pixel(200,50)=%u\n",
+                read_page0_pixel(200, 50));
+        free(rom);
+        return 1;
+    }
+    msx_mouse_set(130, 6, 0);
+    step_and_monitor(2, "fast-menu-close-up");
+    printf("  [PASS] 5b. Fast menu popup open/close via HMMM scratch completed in <= 3 frames\n");
+
     write_ppm("/tmp/btron_feedback_harness.ppm", s_fb);
 
     printf("\n=== Feedback Loop Telemetry Summary ===\n");

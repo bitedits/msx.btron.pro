@@ -44,20 +44,7 @@ void app_browser_paint(Window *win)
         /* Icon: "[T]" for TAD document, "[A]" for Application */
         const char *badge = (b->type == BODY_TYPE_TAD) ? "[T]" : "[A]";
         font_draw_string(content_x + 12, item_y + 4, badge, BTRON_COL_TITLE_BLUE, BTRON_COL_LIGHT_GRAY);
-
-        /* Truncated clean title */
-        char label[22];
-        label[0] = '#';
-        label[1] = '0' + (char)(b->body_id);
-        label[2] = ' ';
-        uint8_t p = 3;
-        uint8_t max_label = (uint8_t)((content_w - 48) >> 3);
-        if (max_label > 20) max_label = 20;
-        for (uint8_t k = 0; b->title[k] != '\0' && p < max_label; k++) {
-            label[p++] = b->title[k];
-        }
-        label[p] = '\0';
-        font_draw_string(content_x + 36, item_y + 4, label, BTRON_COL_BLACK, BTRON_COL_LIGHT_GRAY);
+        font_draw_string(content_x + 36, item_y + 4, b->title, BTRON_COL_BLACK, BTRON_COL_LIGHT_GRAY);
     }
 }
 
@@ -70,28 +57,7 @@ void app_browser_on_click(Window *win, uint16_t local_x, uint16_t local_y)
         uint8_t item_idx = (uint8_t)((local_y - 24) / 20);
         const BMSX_RealBody *b = bmsx_get_body_by_index(item_idx);
         if (b) {
-            if (b->body_id == 1 || b->body_id == 2) {
-                /* Open in Editor */
-                app_editor_load_body(b->body_id);
-                Window *editor_win = wm_get_window(1);
-                if (editor_win) {
-                    editor_win->state = WIN_STATE_NORMAL;
-                    wm_set_active_window(1);
-                }
-            } else if (b->body_id == 3) {
-                Window *term = wm_get_window(2);
-                if (term) {
-                    term->state = WIN_STATE_NORMAL;
-                    wm_set_active_window(2);
-                }
-            } else if (b->body_id == 4) {
-                Window *cab = wm_get_window(4);
-                if (cab) {
-                    cab->state = WIN_STATE_NORMAL;
-                    wm_set_active_window(4);
-                }
-            }
-            wm_mark_dirty();
+            app_editor_load_body(b->body_id);
         }
     }
 }

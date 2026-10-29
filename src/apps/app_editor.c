@@ -18,9 +18,25 @@ void app_editor_init(void)
 
 void app_editor_load_body(ID body_id)
 {
+    if (body_id == 3 || body_id == 4) {
+        ID target_wid = (body_id == 3) ? 2 : 4;
+        Window *w = wm_get_window(target_wid);
+        if (w) {
+            if (w->state != WIN_STATE_NORMAL) {
+                w->state = WIN_STATE_NORMAL;
+                wm_set_active_window(target_wid);
+                wm_mark_window_dirty(target_wid);
+            } else {
+                wm_focus_window(target_wid);
+            }
+        }
+        return;
+    }
+
     s_current_doc_id = body_id;
     Window *win = wm_get_window(1);
     if (win) {
+        win->state = WIN_STATE_NORMAL;
         win->scroll_y = 0;
         const BMSX_RealBody *body = bmsx_get_real_body(body_id);
         if (body) {
@@ -31,7 +47,8 @@ void app_editor_load_body(ID body_id)
             }
             win->title[j] = '\0';
         }
-        wm_mark_dirty();
+        wm_set_active_window(1);
+        wm_mark_window_dirty(1);
     }
 }
 
@@ -82,12 +99,12 @@ void app_editor_on_click(Window *win, uint16_t local_x, uint16_t local_y)
             /* Scroll Up */
             if (win->scroll_y >= 20) win->scroll_y -= 20;
             else win->scroll_y = 0;
-            wm_mark_dirty();
+            wm_mark_window_dirty(win->win_id);
             return;
         } else if (local_y >= win->h - 30) {
             /* Scroll Down */
             win->scroll_y += 20;
-            wm_mark_dirty();
+            wm_mark_window_dirty(win->win_id);
             return;
         }
     }
@@ -102,25 +119,7 @@ void app_editor_on_click(Window *win, uint16_t local_x, uint16_t local_y)
                                             win->scroll_y, body->data, body->size,
                                             click_abs_x, click_abs_y, true);
         if (clicked_id > 0) {
-            /* Navigate to clicked Real Body! */
-            if (clicked_id == 3) {
-                /* Shell Terminal */
-                Window *term = wm_get_window(2);
-                if (term) {
-                    term->state = WIN_STATE_NORMAL;
-                    wm_set_active_window(2);
-                }
-            } else if (clicked_id == 4) {
-                /* Storage Cabinet */
-                Window *cab = wm_get_window(4);
-                if (cab) {
-                    cab->state = WIN_STATE_NORMAL;
-                    wm_set_active_window(4);
-                }
-            } else {
-                app_editor_load_body(clicked_id);
-            }
-            wm_mark_dirty();
+            app_editor_load_body(clicked_id);
         }
     }
 }

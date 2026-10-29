@@ -37,6 +37,11 @@ void vdp_save_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
     (void)x; (void)y; (void)w; (void)h;
 }
+void vdp_swap_pages_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
+    (void)x; (void)y; (void)w; (void)h;
+}
+void vdp_present_backbuffer(void) {}
 void vdp_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t c)
 {
     (void)x; (void)y; (void)w; (void)h; (void)c;

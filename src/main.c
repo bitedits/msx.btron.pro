@@ -26,7 +26,8 @@
 /* Real-time background task */
 static void task_system_monitor(void)
 {
-    /* Micro-ITRON periodic heartbeat */
+    /* Micro-ITRON periodic 1Hz heartbeat; yields remaining ticks to AsyncComp */
+    itron_task_sleep(60);
 }
 
 int main(void)
@@ -63,8 +64,9 @@ int main(void)
                             NULL, 0,
                             "Storage Cabinet");
 
-    /* Register Micro-ITRON System Task */
+    /* Register Micro-ITRON System & Asynchronous Compositor Tasks */
     itron_task_create(1, task_system_monitor, 1, "SysMon");
+    itron_task_create(2, wm_async_compositor_task, 2, "AsyncComp");
 
     /* 3. Window Manager & Desktop Setup */
     wm_init();
@@ -104,6 +106,7 @@ int main(void)
     vdp_present_backbuffer();
     vdp_set_draw_page(0);
     (void)wm_consume_dirty();
+    wm_request_async_underlay(2);
 
     /* 4. Main Event Loop */
     while (1) {
@@ -111,7 +114,6 @@ int main(void)
         itron_task_tick();
         input_poll();
 
-        bool need_present = false;
         bool trigger_click = false;
         ID   new_drag_win = 0;
 
@@ -133,7 +135,6 @@ int main(void)
         /* Global Window Focus Cycling: Tab key */
         static bool s_prev_tab = false;
         if (keys->tab && !s_prev_tab) {
-            if (s_dragging_win_id > 0) wm_end_drag(s_dragging_win_id);
             s_dragging_win_id = 0;
             s_drag_sticky = false;
             Window *curr = wm_get_active_window();
@@ -145,14 +146,12 @@ int main(void)
         /* Esc key drops any captured window or closes open menu */
         if (keys->esc) {
             if (s_dragging_win_id > 0) {
-                wm_end_drag(s_dragging_win_id);
                 s_dragging_win_id = 0;
                 s_drag_sticky = false;
                 s_drag_moved = false;
             }
             if (menu_is_open()) {
                 menu_close_popup();
-                need_present = true;
             }
         }
 
@@ -177,18 +176,9 @@ int main(void)
                 if (active && active->win_id == 2 && cursor_in_term) {
                     app_terminal_input_char(ch);
                 } else {
-                    if (ch == '1') {
-                        if (s_dragging_win_id > 0) wm_end_drag(s_dragging_win_id);
+                    if (ch == '1' || ch == '2' || ch == '3') {
                         s_dragging_win_id = 0;
-                        wm_focus_window(1);
-                    } else if (ch == '2') {
-                        if (s_dragging_win_id > 0) wm_end_drag(s_dragging_win_id);
-                        s_dragging_win_id = 0;
-                        wm_focus_window(2);
-                    } else if (ch == '3') {
-                        if (s_dragging_win_id > 0) wm_end_drag(s_dragging_win_id);
-                        s_dragging_win_id = 0;
-                        wm_focus_window(3);
+                        wm_focus_window((ID)(ch - '0'));
                     } else if (ch == ' ') {
                         /* Space outside terminal acts as a click at pointer position */
                         trigger_click = true;
@@ -257,27 +247,9 @@ int main(void)
                 s_drag_moved = false;
             } else {
                 if (!menu_handle_click(ptr->x, ptr->y)) {
-                    if (menu_is_open()) {
-                        menu_close_popup();
-                        need_present = true;
-                    } else {
-                        wm_handle_click(ptr->x, ptr->y, &new_drag_win);
-                    }
+                    wm_handle_click(ptr->x, ptr->y, &new_drag_win);
                 }
             }
-        }
-
-        if (wm_consume_dirty()) {
-            need_present = true;
-        }
-
-        /* Zero-Flicker Offscreen Composition & Atomic HMMM Presentation */
-        if (need_present) {
-            vdp_set_draw_page(1);
-            wm_draw_all();
-            menu_draw_bar();
-            vdp_present_backbuffer();
-            vdp_set_draw_page(0);
         }
 
         /* Initiate Window Capture / Hardware BitBlt Dragging if Title Bar was clicked */
@@ -323,7 +295,9 @@ int main(void)
             }
         }
 
-        /* Cooperative Task Dispatch slice */
-        itron_task_dispatch();
+        /* Cooperative Task Dispatch slice (yield click frame to foreground) */
+        if (!trigger_click) {
+            itron_task_dispatch();
+        }
     }
 }

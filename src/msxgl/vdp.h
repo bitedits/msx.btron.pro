@@ -66,6 +66,7 @@ void vdp_sync_pages(void);
 void vdp_present_backbuffer(void);
 void vdp_restore_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 void vdp_save_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+void vdp_swap_pages_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 
 /* Screen 7 & Palette setup */
 void vdp_init_screen7(void);

@@ -90,20 +90,9 @@ static void term_execute_cmd(const char *cmd)
         }
     } else if ((cmd[0] == 'o' && cmd[1] == 'p' && cmd[2] == 'e' && cmd[3] == 'n') ||
                (cmd[0] == 'e' && cmd[1] == 'd' && cmd[2] == 'i' && cmd[3] == 't')) {
-        char arg = (cmd[0] == 'o') ? cmd[5] : cmd[5];
-        if (arg == '1' || arg == '2') {
+        char arg = cmd[5];
+        if (arg >= '1' && arg <= '4') {
             app_editor_load_body(arg - '0');
-            Window *win = wm_get_window(1);
-            if (win) { win->state = WIN_STATE_NORMAL; wm_set_active_window(1); }
-            wm_mark_dirty();
-        } else if (arg == '3') {
-            Window *win = wm_get_window(3);
-            if (win) { win->state = WIN_STATE_NORMAL; wm_set_active_window(3); }
-            wm_mark_dirty();
-        } else if (arg == '4') {
-            Window *win = wm_get_window(4);
-            if (win) { win->state = WIN_STATE_NORMAL; wm_set_active_window(4); }
-            wm_mark_dirty();
         } else {
             term_append_line("Usage: open <1..4>");
         }
@@ -134,53 +123,52 @@ void app_terminal_init(void)
     term_append_line("----------------------------------");
 }
 
+static void draw_prompt_line(Window *win, bool clear_bg)
+{
+    uint16_t content_x = win->x + 2;
+    uint16_t content_y = win->y + 14;
+
+    char prompt[24];
+    prompt[0] = 'B'; prompt[1] = 'T'; prompt[2] = 'R'; prompt[3] = 'O';
+    prompt[4] = 'N'; prompt[5] = '>'; prompt[6] = ' ';
+    uint8_t p = 7;
+    for (uint8_t k = 0; k < s_cmd_len && p < 17; k++) {
+        prompt[p++] = s_cmd_buf[k];
+    }
+    prompt[p++] = '_';
+    prompt[p] = '\0';
+
+    uint8_t prompt_line = (s_line_count < TERM_MAX_LINES) ? s_line_count : TERM_MAX_LINES;
+    uint16_t py = content_y + 4 + (prompt_line * 12);
+    if (clear_bg) {
+        vdp_fill_rect(content_x + 6, py, win->w - 16, 12, BTRON_COL_BLACK);
+    }
+    font_draw_string(content_x + 6, py, prompt, BTRON_COL_WHITE, BTRON_COL_BLACK);
+}
+
 void app_terminal_paint(Window *win)
 {
     if (!win) return;
 
     uint16_t content_x = win->x + 2;
     uint16_t content_y = win->y + 14;
-    uint16_t content_w = win->w - 4;
-    uint16_t content_h = win->h - 16;
 
     /* Fill terminal interior with pure Black */
-    vdp_fill_rect(content_x, content_y, content_w, content_h, BTRON_COL_BLACK);
+    vdp_fill_rect(content_x, content_y, win->w - 4, win->h - 16, BTRON_COL_BLACK);
 
-    /* Render history lines in Bright Green (clipped to window width) */
-    uint8_t max_chars = (uint8_t)((content_w - 12) >> 3);
-    if (max_chars > TERM_LINE_LEN - 1) max_chars = TERM_LINE_LEN - 1;
-    char line_buf[TERM_LINE_LEN];
+    /* Render history lines in Bright Green */
     for (uint8_t i = 0; i < s_line_count; i++) {
-        uint8_t c = 0;
-        while (s_term_lines[i][c] != '\0' && c < max_chars) {
-            line_buf[c] = s_term_lines[i][c];
-            c++;
-        }
-        line_buf[c] = '\0';
+        s_term_lines[i][18] = '\0';
         font_draw_string(content_x + 6, content_y + 4 + (i * 12),
-                         line_buf, BTRON_COL_BRIGHT_GREEN, BTRON_COL_BLACK);
+                         s_term_lines[i], BTRON_COL_BRIGHT_GREEN, BTRON_COL_BLACK);
     }
 
-    /* Render current command line prompt */
-    char prompt[40];
-    prompt[0] = 'B'; prompt[1] = 'T'; prompt[2] = 'R'; prompt[3] = 'O';
-    prompt[4] = 'N'; prompt[5] = '>'; prompt[6] = ' ';
-    uint8_t p = 7;
-    for (uint8_t k = 0; k < s_cmd_len && p < 36; k++) {
-        prompt[p++] = s_cmd_buf[k];
-    }
-    prompt[p++] = '_'; /* Blinking block cursor */
-    prompt[p] = '\0';
-
-    uint8_t prompt_line = (s_line_count < TERM_MAX_LINES) ? s_line_count : (TERM_MAX_LINES);
-    font_draw_string(content_x + 6, content_y + 4 + (prompt_line * 12),
-                     prompt, BTRON_COL_WHITE, BTRON_COL_BLACK);
+    draw_prompt_line(win, false);
 }
 
 void app_terminal_on_click(Window *win, uint16_t local_x, uint16_t local_y)
 {
     (void)win; (void)local_x; (void)local_y;
-    /* Click gives focus */
 }
 
 void app_terminal_input_char(char c)
@@ -190,39 +178,18 @@ void app_terminal_input_char(char c)
 
     if (c == '\r' || c == '\n') {
         s_cmd_buf[s_cmd_len] = '\0';
-        term_execute_cmd(s_cmd_buf);
         s_cmd_len = 0;
+        term_execute_cmd(s_cmd_buf);
         s_cmd_buf[0] = '\0';
-        wm_mark_dirty();
+        wm_mark_window_dirty(2);
     } else {
         if (c == 0x08) {
-            /* Backspace */
             if (s_cmd_len > 0) s_cmd_len--;
         } else if (c >= 32 && c <= 126 && s_cmd_len < 28) {
             s_cmd_buf[s_cmd_len++] = c;
             s_cmd_buf[s_cmd_len] = '\0';
         }
-
-        uint16_t content_x = win->x + 2;
-        uint16_t content_y = win->y + 14;
-        uint16_t content_w = win->w - 4;
-
-        /* Render only prompt line */
-        char prompt[40];
-        prompt[0] = 'B'; prompt[1] = 'T'; prompt[2] = 'R'; prompt[3] = 'O';
-        prompt[4] = 'N'; prompt[5] = '>'; prompt[6] = ' ';
-        uint8_t p = 7;
-        for (uint8_t k = 0; k < s_cmd_len && p < 36; k++) {
-            prompt[p++] = s_cmd_buf[k];
-        }
-        prompt[p++] = '_'; /* Blinking block cursor */
-        prompt[p] = '\0';
-
-        uint8_t prompt_line = (s_line_count < TERM_MAX_LINES) ? s_line_count : (TERM_MAX_LINES);
-        /* Clear just the prompt line */
-        vdp_fill_rect(content_x + 6, content_y + 4 + (prompt_line * 12), content_w - 12, 12, BTRON_COL_BLACK);
-        font_draw_string(content_x + 6, content_y + 4 + (prompt_line * 12),
-                         prompt, BTRON_COL_WHITE, BTRON_COL_BLACK);
+        draw_prompt_line(win, true);
     }
 }
 

@@ -78,7 +78,7 @@ void itron_task_dispatch(void)
 {
     /* Round-robin scheduling across READY tasks */
     for (UH count = 0; count < MAX_TASKS; count++) {
-        s_current_task_idx = (s_current_task_idx + 1) % MAX_TASKS;
+        if (++s_current_task_idx >= MAX_TASKS) s_current_task_idx = 0;
         if (s_tasks[s_current_task_idx].state == TSK_READY &&
             s_tasks[s_current_task_idx].entry != NULL) {
             

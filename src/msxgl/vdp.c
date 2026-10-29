@@ -37,26 +37,6 @@ uint16_t vdp_get_draw_y_offset(void)
     return s_draw_y_offset;
 }
 
-void vdp_flip_page(void)
-{
-    vdp_wait_cmd();
-    msx_wait_vblank();
-    /* Instantaneous VBlank swap of visible scanout buffer */
-    vdp_set_display_page(s_draw_page);
-
-    /* Direct all subsequent composition to the offscreen backbuffer */
-    vdp_set_draw_page(1 - s_disp_page);
-}
-
-void vdp_sync_pages(void)
-{
-    vdp_wait_cmd();
-    /* High-speed hardware VRAM-to-VRAM copy from display page to backbuffer */
-    uint16_t src_y = (s_disp_page == 0) ? 0 : 256;
-    uint16_t dst_y = (s_draw_page == 0) ? 0 : 256;
-    vdp_cmd_hmmm(0, src_y, 0, dst_y, SCREEN_WIDTH, SCREEN_HEIGHT, 0x00);
-}
-
 void vdp_present_backbuffer(void)
 {
     vdp_wait_cmd();
@@ -65,30 +45,47 @@ void vdp_present_backbuffer(void)
     vdp_wait_cmd();
 }
 
-void vdp_restore_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+static void vdp_xfer_underlay(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool save)
 {
-    if (w == 0 || h == 0) return;
-    if (x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT) return;
+    if (w == 0 || h == 0 || x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT) return;
     if (x + w > SCREEN_WIDTH) w = SCREEN_WIDTH - x;
     if (y + h > SCREEN_HEIGHT) h = SCREEN_HEIGHT - y;
     uint16_t ax = x & (uint16_t)~1u;
     uint16_t aw = (uint16_t)(((x + w + 1u) & (uint16_t)~1u) - ax);
     if (ax + aw > SCREEN_WIDTH) aw = SCREEN_WIDTH - ax;
     if (aw == 0) return;
-    vdp_cmd_hmmm(ax, (uint16_t)(256u + y), ax, y, aw, h, 0x00);
+    uint16_t sy = save ? y : (uint16_t)(256u + y);
+    uint16_t dy = save ? (uint16_t)(256u + y) : y;
+    vdp_cmd_hmmm(ax, sy, ax, dy, aw, h, 0x00);
+}
+
+void vdp_restore_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
+    vdp_xfer_underlay(x, y, w, h, false);
 }
 
 void vdp_save_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
+    vdp_xfer_underlay(x, y, w, h, true);
+}
+
+void vdp_swap_pages_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
     if (w == 0 || h == 0) return;
-    if (x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT) return;
-    if (x + w > SCREEN_WIDTH) w = SCREEN_WIDTH - x;
-    if (y + h > SCREEN_HEIGHT) h = SCREEN_HEIGHT - y;
     uint16_t ax = x & (uint16_t)~1u;
     uint16_t aw = (uint16_t)(((x + w + 1u) & (uint16_t)~1u) - ax);
-    if (ax + aw > SCREEN_WIDTH) aw = SCREEN_WIDTH - ax;
     if (aw == 0) return;
-    vdp_cmd_hmmm(ax, y, ax, (uint16_t)(256u + y), aw, h, 0x00);
+    uint16_t cur_y = y;
+    uint16_t rem_h = h;
+    while (rem_h > 0) {
+        uint16_t sh = (rem_h > 44u) ? 44u : rem_h;
+        /* Swap via offscreen scanlines Y = 212..255 */
+        vdp_cmd_hmmm(ax, cur_y, ax, 212u, aw, sh, 0x00);
+        vdp_cmd_hmmm(ax, (uint16_t)(256u + cur_y), ax, cur_y, aw, sh, 0x00);
+        vdp_cmd_hmmm(ax, 212u, ax, (uint16_t)(256u + cur_y), aw, sh, 0x00);
+        cur_y += sh;
+        rem_h -= sh;
+    }
 }
 
 void vdp_write_reg(uint8_t reg, uint8_t val)
@@ -97,19 +94,6 @@ void vdp_write_reg(uint8_t reg, uint8_t val)
     msx_out(PORT_VDP_REG, val);
     msx_out(PORT_VDP_REG, 0x80 | (reg & 0x3F));
     msx_ei();
-}
-
-uint8_t vdp_read_status(uint8_t reg)
-{
-    msx_di();
-    msx_out(PORT_VDP_REG, reg);
-    msx_out(PORT_VDP_REG, 0x80 | 15);
-    uint8_t val = msx_in(PORT_VDP_REG);
-    /* Reset status pointer to S#0 */
-    msx_out(PORT_VDP_REG, 0x00);
-    msx_out(PORT_VDP_REG, 0x80 | 15);
-    msx_ei();
-    return val;
 }
 
 void vdp_wait_cmd(void)
@@ -152,20 +136,6 @@ void vdp_set_vram_write_line(uint8_t byte_x, uint16_t eff_y)
     }
     msx_out(PORT_VDP_REG, byte_x);
     msx_out(PORT_VDP_REG, (uint8_t)((eff_y & 0x3F) | 0x40));
-    msx_ei();
-}
-
-void vdp_set_vram_read_addr(uint32_t addr)
-{
-    uint8_t r14 = (uint8_t)((addr >> 14) & 0x07);
-    msx_di();
-    if (r14 != s_last_r14) {
-        s_last_r14 = r14;
-        msx_out(PORT_VDP_REG, r14);
-        msx_out(PORT_VDP_REG, 0x80 | 14);
-    }
-    msx_out(PORT_VDP_REG, (uint8_t)(addr & 0xFF));
-    msx_out(PORT_VDP_REG, (uint8_t)((addr >> 8) & 0x3F));
     msx_ei();
 }
 
@@ -281,52 +251,6 @@ void vdp_cmd_hmmm(uint16_t sx, uint16_t sy, uint16_t dx, uint16_t dy, uint16_t n
     msx_ei();
 }
 
-void vdp_cmd_lmmm(uint16_t sx, uint16_t sy, uint16_t dx, uint16_t dy, uint16_t nx, uint16_t ny, uint8_t arg, uint8_t op)
-{
-    vdp_wait_cmd();
-
-    msx_di();
-    vdp_write_reg(17, 32);
-    msx_out(PORT_VDP_INDIR, (uint8_t)(sx & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((sx >> 8) & 0x01));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(sy & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((sy >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(dx & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((dx >> 8) & 0x01));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(dy & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((dy >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(nx & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((nx >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(ny & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((ny >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, 0x00);
-    msx_out(PORT_VDP_INDIR, arg);
-    msx_out(PORT_VDP_INDIR, (uint8_t)(0x90 | (op & 0x0F))); /* CMD: LMMM */
-    msx_ei();
-}
-
-void vdp_cmd_ymmm(uint16_t sy, uint16_t dx, uint16_t dy, uint16_t ny, uint8_t arg)
-{
-    vdp_wait_cmd();
-
-    msx_di();
-    vdp_write_reg(17, 34); /* Start at R#34 (SY) */
-    msx_out(PORT_VDP_INDIR, (uint8_t)(sy & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((sy >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(dx & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((dx >> 8) & 0x01));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(dy & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((dy >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, 0x00); /* NX unused */
-    msx_out(PORT_VDP_INDIR, 0x00);
-    msx_out(PORT_VDP_INDIR, (uint8_t)(ny & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((ny >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, 0x00);
-    msx_out(PORT_VDP_INDIR, arg);
-    msx_out(PORT_VDP_INDIR, 0xE0); /* CMD: YMMM */
-    msx_ei();
-}
-
 void vdp_copy_rect(uint16_t sx, uint16_t sy, uint16_t dx, uint16_t dy, uint16_t w, uint16_t h)
 {
     if (w == 0 || h == 0) return;
@@ -342,58 +266,6 @@ void vdp_copy_rect(uint16_t sx, uint16_t sy, uint16_t dx, uint16_t dy, uint16_t 
         dy += h - 1;
     }
     vdp_cmd_hmmm(sx, sy + s_draw_y_offset, dx, dy + s_draw_y_offset, w, h, arg);
-}
-
-void vdp_scroll_rect_up(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t delta_y, uint8_t fill_color)
-{
-    if (w == 0 || h <= delta_y) {
-        vdp_fill_rect(x, y, w, h, fill_color);
-        return;
-    }
-    vdp_cmd_hmmm(x, y + delta_y + s_draw_y_offset, x, y + s_draw_y_offset, w, h - delta_y, 0x00);
-    vdp_fill_rect(x, y + h - delta_y, w, delta_y, fill_color);
-}
-
-void vdp_cmd_lmmv(uint16_t dx, uint16_t dy, uint16_t nx, uint16_t ny, uint8_t color, uint8_t op)
-{
-    vdp_wait_cmd();
-
-    uint16_t eff_dy = dy + s_draw_y_offset;
-    msx_di();
-    vdp_write_reg(17, 36);
-    msx_out(PORT_VDP_INDIR, (uint8_t)(dx & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((dx >> 8) & 0x01));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(eff_dy & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((eff_dy >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(nx & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((nx >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(ny & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((ny >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, color);
-    msx_out(PORT_VDP_INDIR, 0x00);
-    msx_out(PORT_VDP_INDIR, (uint8_t)(0x90 | (op & 0x0F)));  /* LMMV */
-    msx_ei();
-}
-
-void vdp_cmd_line(uint16_t dx, uint16_t dy, uint16_t maj_len, uint16_t min_len, uint8_t color, uint8_t arg, uint8_t op)
-{
-    vdp_wait_cmd();
-
-    uint16_t eff_dy = dy + s_draw_y_offset;
-    msx_di();
-    vdp_write_reg(17, 36);
-    msx_out(PORT_VDP_INDIR, (uint8_t)(dx & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((dx >> 8) & 0x01));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(eff_dy & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((eff_dy >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(maj_len & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((maj_len >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(min_len & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((min_len >> 8) & 0x03));
-    msx_out(PORT_VDP_INDIR, color);
-    msx_out(PORT_VDP_INDIR, arg);
-    msx_out(PORT_VDP_INDIR, (uint8_t)(0x70 | (op & 0x0F)));  /* LINE */
-    msx_ei();
 }
 
 void vdp_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t color)
@@ -445,6 +317,7 @@ void vdp_draw_bevel_box(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
     /* Bottom and Right borders (shadow) */
     vdp_draw_hline(x, y + h - 1, w, dark_col);
     vdp_draw_vline(x + w - 1, y, h, dark_col);
+    vdp_wait_cmd();
 }
 
 void vdp_init_sprites(void)
