@@ -25,7 +25,7 @@ const uint8_t g_doc_nortia_letter_tad[] = {
 
     /* 3. Vector line */
     TAD_SEG_VECTOR, BTRON_COL_TITLE_BLUE,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
 
     TAD_SEG_NEWLINE,
 
@@ -54,21 +54,21 @@ const uint8_t g_doc_nortia_letter_tad[] = {
     TAD_SEG_NEWLINE,
 
     TAD_SEG_TEXT, TAD_LANG_LATIN, BTRON_COL_CHARCOAL, BTRON_COL_WHITE,
-    34, 0,
+    33, 0,
     '-',' ','R','e','a','l','/','V','i','r','t',' ','B','o','d','y',' ','H','y','p',
     'e','r','d','a','t','a',' ','M','o','d','e','l',0,
 
     TAD_SEG_NEWLINE,
 
     TAD_SEG_TEXT, TAD_LANG_LATIN, BTRON_COL_CHARCOAL, BTRON_COL_WHITE,
-    38, 0,
+    31, 0,
     '-',' ','m','I','T','R','O','N',' ','R','e','a','l','-','T','i','m','e',' ','T',
     'a','s','k',' ','K','e','r','n','e','l',0,
 
     TAD_SEG_NEWLINE,
 
     TAD_SEG_TEXT, TAD_LANG_LATIN, BTRON_COL_CHARCOAL, BTRON_COL_WHITE,
-    38, 0,
+    32, 0,
     '-',' ','M','u','l','t','i','l','i','n','g','u','a','l',':',' ','K','a','n','j',
     'i',' ','&',' ','T','i','b','e','t','a','n',0,
 
@@ -76,15 +76,15 @@ const uint8_t g_doc_nortia_letter_tad[] = {
 
     /* 6. Vector line */
     TAD_SEG_VECTOR, BTRON_COL_MED_GRAY,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
 
     TAD_SEG_NEWLINE,
 
     /* 7. Hypermedia Links */
     TAD_SEG_LINK,
     1, 0,   /* target Real Body ID: 1 (Heart Sutra) */
-    17,
-    'H','e','a','r','t',' ','S','u','t','r','a',' ','(','T','A','D',')',
+    18,
+    'H','e','a','r','t',' ','S','u','t','r','a',' ','(','T','A','D',')',0,
 
     TAD_SEG_NEWLINE,
 
@@ -97,8 +97,8 @@ const uint8_t g_doc_nortia_letter_tad[] = {
 
     TAD_SEG_LINK,
     4, 0,   /* target Real Body ID: 4 (Cabinet) */
-    15,
-    'S','t','o','r','a','g','e',' ','C','a','b','i','n','e','t',
+    16,
+    'S','t','o','r','a','g','e',' ','C','a','b','i','n','e','t',0,
 
     TAD_SEG_NEWLINE,
 

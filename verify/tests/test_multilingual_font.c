@@ -15,6 +15,8 @@
 void msx_out(uint8_t port, uint8_t val) { (void)port; (void)val; }
 uint8_t msx_in(uint8_t port) { (void)port; return 0xFF; }
 void vdp_set_vram_write_addr(uint32_t addr) { (void)addr; }
+void vdp_set_vram_write_line(uint8_t byte_x, uint16_t eff_y) { (void)byte_x; (void)eff_y; }
+uint16_t vdp_get_draw_y_offset(void) { return 0; }
 
 #define TEST_PASS(msg) printf("  [PASS] %s\n", msg)
 #define TEST_FAIL(msg) do { fprintf(stderr, "  [FAIL] %s\n", msg); return 1; } while(0)

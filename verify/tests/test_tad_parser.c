@@ -85,11 +85,11 @@ int main(void)
     while (tad_read_next_segment(&reader, &seg)) {
         seg_count++;
     }
-    if (seg_count < 4) {
-        fprintf(stderr, "Heart Sutra segment count = %d, expected >= 4\n", seg_count);
+    if (seg_count != 16) {
+        fprintf(stderr, "Heart Sutra segment count = %d, expected 16\n", seg_count);
         TEST_FAIL("Heart Sutra document segment count");
     }
-    TEST_PASS("Heart Sutra TAD document integrity verified");
+    TEST_PASS("Heart Sutra TAD document integrity verified (16 segments)");
 
     /* 3. Verification of NORTIA Letter TAD Document */
     tad_reader_init(&reader, g_doc_nortia_letter_tad, g_doc_nortia_letter_tad_len);
@@ -97,11 +97,11 @@ int main(void)
     while (tad_read_next_segment(&reader, &seg)) {
         seg_count++;
     }
-    if (seg_count < 4) {
-        fprintf(stderr, "NORTIA Letter segment count = %d, expected >= 4\n", seg_count);
+    if (seg_count != 24) {
+        fprintf(stderr, "NORTIA Letter segment count = %d, expected 24\n", seg_count);
         TEST_FAIL("NORTIA Letter document segment count");
     }
-    TEST_PASS("NORTIA Letter TAD document integrity verified");
+    TEST_PASS("NORTIA Letter TAD document integrity verified (24 segments)");
 
     /* 4. Truncated & Corrupted Stream Handling */
     static const uint8_t truncated_stream[] = { TAD_SEG_TEXT, TAD_LANG_LATIN, 0x01, 0x02, 50, 0 }; /* claims 50 bytes, ends early */

@@ -145,6 +145,9 @@ EMU_CORE_OBJS = \
 	$(EMU_DIR)/bios.test.o \
 	$(EMU_DIR)/geo3d.test.o
 
+$(EMU_DIR)/%.test.o: $(EMU_DIR)/%.c
+	$(CC) $(CFLAGS) -I$(BTRON_DIR)/include -I$(EMU_DIR) -c $< -o $@
+
 # C Verification Test Binaries
 $(BUILD_DIR)/test_itron_scheduler: verify/tests/test_itron_scheduler.c src/kernel/itron_task.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -Isrc $^ -o $@
@@ -161,21 +164,33 @@ $(BUILD_DIR)/test_multilingual_font: verify/tests/test_multilingual_font.c src/f
 $(BUILD_DIR)/test_vdp_bitblt: verify/tests/test_vdp_bitblt.c $(EMU_DIR)/v9938.test.o | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -I$(BTRON_DIR)/include -I$(EMU_DIR) $^ -o $@
 
+$(BUILD_DIR)/test_vdp_page_flip: verify/tests/test_vdp_page_flip.c $(EMU_DIR)/v9938.test.o | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -I$(BTRON_DIR)/include -I$(EMU_DIR) $^ -o $@
+
 $(BUILD_DIR)/test_btron_boot: verify/tests/test_btron_boot.c $(EMU_CORE_OBJS) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -I$(BTRON_DIR)/include -I$(EMU_DIR) $^ -o $@
 
 $(BUILD_DIR)/test_btron_input: verify/tests/test_btron_input.c $(EMU_CORE_OBJS) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -I$(BTRON_DIR)/include -I$(EMU_DIR) $^ -o $@
 
-test-c: $(BUILD_DIR)/test_itron_scheduler $(BUILD_DIR)/test_bmsx_body $(BUILD_DIR)/test_tad_parser $(BUILD_DIR)/test_multilingual_font $(BUILD_DIR)/test_vdp_bitblt $(BUILD_DIR)/test_btron_boot $(BUILD_DIR)/test_btron_input $(TARGET_ROM)
+$(BUILD_DIR)/test_window_manager: verify/tests/test_window_manager.c src/gui/window.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -Isrc $^ -o $@
+
+$(BUILD_DIR)/test_feedback_harness: verify/tests/test_feedback_harness.c $(EMU_CORE_OBJS) | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -I$(BTRON_DIR)/include -I$(EMU_DIR) $^ -o $@
+
+test-c: $(BUILD_DIR)/test_itron_scheduler $(BUILD_DIR)/test_bmsx_body $(BUILD_DIR)/test_tad_parser $(BUILD_DIR)/test_multilingual_font $(BUILD_DIR)/test_vdp_bitblt $(BUILD_DIR)/test_vdp_page_flip $(BUILD_DIR)/test_window_manager $(BUILD_DIR)/test_btron_boot $(BUILD_DIR)/test_btron_input $(BUILD_DIR)/test_feedback_harness $(TARGET_ROM)
 	@echo "=== Running C Verification Test Suite ==="
 	./$(BUILD_DIR)/test_itron_scheduler
 	./$(BUILD_DIR)/test_bmsx_body
 	./$(BUILD_DIR)/test_tad_parser
 	./$(BUILD_DIR)/test_multilingual_font
 	./$(BUILD_DIR)/test_vdp_bitblt
+	./$(BUILD_DIR)/test_vdp_page_flip
+	./$(BUILD_DIR)/test_window_manager
 	./$(BUILD_DIR)/test_btron_boot $(TARGET_ROM) 300 /tmp/btron_stabilization.ppm
 	./$(BUILD_DIR)/test_btron_input $(TARGET_ROM)
+	./$(BUILD_DIR)/test_feedback_harness $(TARGET_ROM)
 	@echo "All C stabilization tests PASSED."
 
 test: $(TARGET_ROM) test-c

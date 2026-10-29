@@ -4,7 +4,6 @@
 
 #include "menu.h"
 #include "window.h"
-#include "compositor.h"
 #include "../apps/app_editor.h"
 #include "../msxgl/vdp.h"
 #include "../msxgl/core.h"
@@ -101,12 +100,14 @@ bool menu_handle_click(uint16_t x, uint16_t y)
                 } else {
                     s_open_menu_idx = (int8_t)i;
                 }
-                menu_draw_bar();
+                wm_mark_dirty();
                 return true;
             }
         }
-        s_open_menu_idx = -1;
-        menu_draw_bar();
+        if (s_open_menu_idx != -1) {
+            s_open_menu_idx = -1;
+            wm_mark_dirty();
+        }
         return true;
     }
 
@@ -204,15 +205,13 @@ bool menu_handle_click(uint16_t x, uint16_t y)
                 }
             }
             s_open_menu_idx = -1;
-            comp_repair_rect(popup_x, popup_y, popup_w, popup_h);
-            menu_draw_bar();
+            wm_mark_dirty();
             return true;
         }
 
         /* Click outside closed the popup */
         s_open_menu_idx = -1;
-        comp_repair_rect(popup_x, popup_y, popup_w, popup_h);
-        menu_draw_bar();
+        wm_mark_dirty();
         return true;
     }
 

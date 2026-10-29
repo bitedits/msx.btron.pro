@@ -25,13 +25,13 @@ const uint8_t g_doc_heart_sutra_tad[] = {
 
     /* 3. Vector Separator Line */
     TAD_SEG_VECTOR, BTRON_COL_TITLE_BLUE,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
 
     TAD_SEG_NEWLINE,
 
     /* 4. Tibetan Opening Title */
     TAD_SEG_TEXT, TAD_LANG_TIBETAN, BTRON_COL_BLACK, BTRON_COL_WHITE,
-    69, 0,
+    98, 0,
     /* ༄༅། །ཤེས་རབ་ཀྱི་ཕ་རོལ་ཏུ་ཕྱིན་པའི་སྙིང་པོ་བཞུགས་སོ། ། */
     0xE0, 0xBC, 0x84, 0xE0, 0xBC, 0x85, 0xE0, 0xBC, 0x8D, ' ',
     0xE0, 0xBC, 0x8D, 0xE0, 0xBD, 0x84, 0xE0, 0xBD, 0xBA, 0xE0, 0xBD, 0xA6,
@@ -47,7 +47,7 @@ const uint8_t g_doc_heart_sutra_tad[] = {
 
     /* 5. Tibetan Core Verse: Form is emptiness, emptiness is form */
     TAD_SEG_TEXT, TAD_LANG_TIBETAN, BTRON_COL_DARK_RED, BTRON_COL_WHITE,
-    55, 0,
+    107, 0,
     /* གཟུགས་སྟོང་པའོ། སྟོང་པ་ཉིད་གཟུགས་སོ། ། */
     0xE0, 0xBD, 0x82, 0xE0, 0xBD, 0x9F, 0xE0, 0xBD, 0xB4, 0xE0, 0xBD, 0x82, 0xE0, 0xBD, 0xA6,
     0xE0, 0xBC, 0x8B, 0xE0, 0xBD, 0xA6, 0xE0, 0xBD, 0x9F, 0xE0, 0xBD, 0xBC, 0xE0, 0xBD, 0x84,
@@ -63,7 +63,7 @@ const uint8_t g_doc_heart_sutra_tad[] = {
 
     /* 6. Tibetan Mantra */
     TAD_SEG_TEXT, TAD_LANG_TIBETAN, BTRON_COL_TITLE_BLUE, BTRON_COL_WHITE,
-    49, 0,
+    83, 0,
     /* ཏདྱ་ཐཱ། ཨོཾ་ག་ཏེ་ག་ཏེ་པཱ་ར་ག་ཏེ་བོ་དྷི་སྭཱ་ཧཱ། */
     0xE0, 0xBD, 0x8F, 0xE0, 0xBD, 0x91, 0xE0, 0xBD, 0xBB, 0xE0, 0xBC, 0x8B, 0xE0, 0xBD, 0x90,
     0xE0, 0xBD, 0xB1, 0xE0, 0xBC, 0x8D, ' ',
@@ -78,15 +78,15 @@ const uint8_t g_doc_heart_sutra_tad[] = {
 
     /* 7. Vector Separator Line */
     TAD_SEG_VECTOR, BTRON_COL_MED_GRAY,
-    0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
 
     TAD_SEG_NEWLINE,
 
     /* 8. Virtual Body Link to NORTIA Letter (Real Body ID = 2) */
     TAD_SEG_LINK,
     2, 0,   /* target Real Body ID: 2 */
-    17,     /* length */
-    'N','O','R','T','I','A',' ','T','A','D',' ','R','e','p','o','r','t',
+    18,     /* length */
+    'N','O','R','T','I','A',' ','T','A','D',' ','R','e','p','o','r','t',0,
 
     TAD_SEG_NEWLINE,
 

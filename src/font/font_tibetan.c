@@ -115,22 +115,24 @@ void font_draw_tibetan_glyph(uint16_t x, uint16_t y, uint16_t codepoint, uint8_t
 {
     if (x + 8 > SCREEN_WIDTH || y + 16 > SCREEN_HEIGHT) return;
 
+    uint8_t byte_x = (uint8_t)(x >> 1);
+    uint16_t eff_y = y + vdp_get_draw_y_offset();
+    uint8_t pair[4];
+    pair[0] = (uint8_t)((bg_col << 4) | (bg_col & 0x0F));
+    pair[1] = (uint8_t)((bg_col << 4) | (fg_col & 0x0F));
+    pair[2] = (uint8_t)((fg_col << 4) | (bg_col & 0x0F));
+    pair[3] = (uint8_t)((fg_col << 4) | (fg_col & 0x0F));
+
     /* Check 8x16 table */
     const uint8_t *bmp8 = font_tibetan_get_glyph8x16(codepoint);
     if (bmp8) {
-        uint16_t byte_x = x / 2;
         for (uint8_t row = 0; row < 16; row++) {
             uint8_t bits = bmp8[row];
-            uint32_t addr = ((uint32_t)(y + row) * 256) + byte_x;
-            vdp_set_vram_write_addr(addr);
-
-            for (uint8_t col = 0; col < 4; col++) {
-                uint8_t p0 = (bits & 0x80) ? fg_col : bg_col;
-                bits <<= 1;
-                uint8_t p1 = (bits & 0x80) ? fg_col : bg_col;
-                bits <<= 1;
-                msx_out(PORT_VDP_DATA, (uint8_t)((p0 << 4) | (p1 & 0x0F)));
-            }
+            vdp_set_vram_write_line(byte_x, eff_y + row);
+            msx_out(PORT_VDP_DATA, pair[bits >> 6]);
+            msx_out(PORT_VDP_DATA, pair[(bits >> 4) & 3]);
+            msx_out(PORT_VDP_DATA, pair[(bits >> 2) & 3]);
+            msx_out(PORT_VDP_DATA, pair[bits & 3]);
         }
         return;
     }
@@ -138,27 +140,19 @@ void font_draw_tibetan_glyph(uint16_t x, uint16_t y, uint16_t codepoint, uint8_t
     /* Check 16x16 table */
     const uint8_t *bmp16 = font_tibetan_get_glyph16x16(codepoint);
     if (bmp16 && x + 16 <= SCREEN_WIDTH) {
-        uint16_t byte_x = x / 2;
         for (uint8_t row = 0; row < 16; row++) {
             uint8_t b0 = bmp16[row * 2];
             uint8_t b1 = bmp16[row * 2 + 1];
-            uint32_t addr = ((uint32_t)(y + row) * 256) + byte_x;
-            vdp_set_vram_write_addr(addr);
+            vdp_set_vram_write_line(byte_x, eff_y + row);
+            msx_out(PORT_VDP_DATA, pair[b0 >> 6]);
+            msx_out(PORT_VDP_DATA, pair[(b0 >> 4) & 3]);
+            msx_out(PORT_VDP_DATA, pair[(b0 >> 2) & 3]);
+            msx_out(PORT_VDP_DATA, pair[b0 & 3]);
 
-            for (uint8_t col = 0; col < 4; col++) {
-                uint8_t p0 = (b0 & 0x80) ? fg_col : bg_col;
-                b0 <<= 1;
-                uint8_t p1 = (b0 & 0x80) ? fg_col : bg_col;
-                b0 <<= 1;
-                msx_out(PORT_VDP_DATA, (uint8_t)((p0 << 4) | (p1 & 0x0F)));
-            }
-            for (uint8_t col = 0; col < 4; col++) {
-                uint8_t p0 = (b1 & 0x80) ? fg_col : bg_col;
-                b1 <<= 1;
-                uint8_t p1 = (b1 & 0x80) ? fg_col : bg_col;
-                b1 <<= 1;
-                msx_out(PORT_VDP_DATA, (uint8_t)((p0 << 4) | (p1 & 0x0F)));
-            }
+            msx_out(PORT_VDP_DATA, pair[b1 >> 6]);
+            msx_out(PORT_VDP_DATA, pair[(b1 >> 4) & 3]);
+            msx_out(PORT_VDP_DATA, pair[(b1 >> 2) & 3]);
+            msx_out(PORT_VDP_DATA, pair[b1 & 3]);
         }
     }
 }

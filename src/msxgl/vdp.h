@@ -45,14 +45,27 @@ extern "C" {
 #define VDP_OP_TNOT             0x0C
 
 /* Color packing helper (two 4-bit nibbles for Screen 7) */
-#define COLOR_PAIR(left, right) (((left) << 4) | ((right) & 0x0F))
+#define COLOR_PAIR(left, right) ((uint8_t)(((uint8_t)(left) << 4) | ((uint8_t)(right) & 0x0F)))
 
 /* Core VDP control */
 void vdp_write_reg(uint8_t reg, uint8_t val);
 uint8_t vdp_read_status(uint8_t reg);
 void vdp_wait_cmd(void);
 void vdp_set_vram_write_addr(uint32_t addr);
+void vdp_set_vram_write_line(uint8_t byte_x, uint16_t eff_y);
 void vdp_set_vram_read_addr(uint32_t addr);
+
+/* Double Buffering & Page Flipping */
+void vdp_set_draw_page(uint8_t page);
+void vdp_set_display_page(uint8_t page);
+uint8_t vdp_get_draw_page(void);
+uint8_t vdp_get_display_page(void);
+uint16_t vdp_get_draw_y_offset(void);
+void vdp_flip_page(void);
+void vdp_sync_pages(void);
+void vdp_present_backbuffer(void);
+void vdp_restore_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+void vdp_save_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 
 /* Screen 7 & Palette setup */
 void vdp_init_screen7(void);

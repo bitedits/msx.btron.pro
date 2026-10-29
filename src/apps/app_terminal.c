@@ -95,22 +95,24 @@ static void term_execute_cmd(const char *cmd)
             app_editor_load_body(arg - '0');
             Window *win = wm_get_window(1);
             if (win) { win->state = WIN_STATE_NORMAL; wm_set_active_window(1); }
-            wm_draw_all();
+            wm_mark_dirty();
         } else if (arg == '3') {
             Window *win = wm_get_window(3);
             if (win) { win->state = WIN_STATE_NORMAL; wm_set_active_window(3); }
-            wm_draw_all();
+            wm_mark_dirty();
         } else if (arg == '4') {
             Window *win = wm_get_window(4);
             if (win) { win->state = WIN_STATE_NORMAL; wm_set_active_window(4); }
-            wm_draw_all();
+            wm_mark_dirty();
         } else {
             term_append_line("Usage: open <1..4>");
         }
     } else if (cmd[0] == 't' && cmd[1] == 'i' && cmd[2] == 'l') {
         wm_tile_windows();
+        wm_mark_dirty();
     } else if (cmd[0] == 'c' && cmd[1] == 'a' && cmd[2] == 's') {
         wm_cascade_windows();
+        wm_mark_dirty();
     } else if (cmd[0] == 'r' && cmd[1] == 'e' && cmd[2] == 'b') {
         msx_reboot();
     } else if (cmd[0] == 'h' && cmd[1] == 'e' && cmd[2] == 'l') {
@@ -144,10 +146,19 @@ void app_terminal_paint(Window *win)
     /* Fill terminal interior with pure Black */
     vdp_fill_rect(content_x, content_y, content_w, content_h, BTRON_COL_BLACK);
 
-    /* Render history lines in Bright Green */
+    /* Render history lines in Bright Green (clipped to window width) */
+    uint8_t max_chars = (uint8_t)((content_w - 12) >> 3);
+    if (max_chars > TERM_LINE_LEN - 1) max_chars = TERM_LINE_LEN - 1;
+    char line_buf[TERM_LINE_LEN];
     for (uint8_t i = 0; i < s_line_count; i++) {
+        uint8_t c = 0;
+        while (s_term_lines[i][c] != '\0' && c < max_chars) {
+            line_buf[c] = s_term_lines[i][c];
+            c++;
+        }
+        line_buf[c] = '\0';
         font_draw_string(content_x + 6, content_y + 4 + (i * 12),
-                         s_term_lines[i], BTRON_COL_BRIGHT_GREEN, BTRON_COL_BLACK);
+                         line_buf, BTRON_COL_BRIGHT_GREEN, BTRON_COL_BLACK);
     }
 
     /* Render current command line prompt */
@@ -182,7 +193,7 @@ void app_terminal_input_char(char c)
         term_execute_cmd(s_cmd_buf);
         s_cmd_len = 0;
         s_cmd_buf[0] = '\0';
-        app_terminal_paint(win);
+        wm_mark_dirty();
     } else {
         if (c == 0x08) {
             /* Backspace */

@@ -31,7 +31,7 @@ void app_editor_load_body(ID body_id)
             }
             win->title[j] = '\0';
         }
-        wm_draw_window(win);
+        wm_mark_dirty();
     }
 }
 
@@ -82,12 +82,12 @@ void app_editor_on_click(Window *win, uint16_t local_x, uint16_t local_y)
             /* Scroll Up */
             if (win->scroll_y >= 20) win->scroll_y -= 20;
             else win->scroll_y = 0;
-            wm_draw_window(win);
+            wm_mark_dirty();
             return;
         } else if (local_y >= win->h - 30) {
             /* Scroll Down */
             win->scroll_y += 20;
-            wm_draw_window(win);
+            wm_mark_dirty();
             return;
         }
     }
@@ -120,6 +120,7 @@ void app_editor_on_click(Window *win, uint16_t local_x, uint16_t local_y)
             } else {
                 app_editor_load_body(clicked_id);
             }
+            wm_mark_dirty();
         }
     }
 }

@@ -154,31 +154,30 @@ void font_draw_kanji(uint16_t x, uint16_t y, uint16_t jis_or_id, uint8_t fg_col,
         bitmap = s_embedded_kanji[0].bitmap;
     }
 
-    uint16_t byte_x = x / 2;
+    uint8_t byte_x = (uint8_t)(x >> 1);
+    uint16_t eff_y = y + vdp_get_draw_y_offset();
+    uint8_t pair[4];
+    pair[0] = (uint8_t)((bg_col << 4) | (bg_col & 0x0F));
+    pair[1] = (uint8_t)((bg_col << 4) | (fg_col & 0x0F));
+    pair[2] = (uint8_t)((fg_col << 4) | (bg_col & 0x0F));
+    pair[3] = (uint8_t)((fg_col << 4) | (fg_col & 0x0F));
 
     /* Render 16 rows * 16 pixels = 8 bytes per row */
     for (uint8_t row = 0; row < 16; row++) {
         uint8_t b0 = bitmap[row * 2];
         uint8_t b1 = bitmap[row * 2 + 1];
-        uint32_t addr = ((uint32_t)(y + row) * 256) + byte_x;
-        vdp_set_vram_write_addr(addr);
+        vdp_set_vram_write_line(byte_x, eff_y + row);
 
         /* First 8 pixels from b0 (4 VRAM bytes) */
-        for (uint8_t col = 0; col < 4; col++) {
-            uint8_t p0 = (b0 & 0x80) ? fg_col : bg_col;
-            b0 <<= 1;
-            uint8_t p1 = (b0 & 0x80) ? fg_col : bg_col;
-            b0 <<= 1;
-            msx_out(PORT_VDP_DATA, (uint8_t)((p0 << 4) | (p1 & 0x0F)));
-        }
+        msx_out(PORT_VDP_DATA, pair[b0 >> 6]);
+        msx_out(PORT_VDP_DATA, pair[(b0 >> 4) & 3]);
+        msx_out(PORT_VDP_DATA, pair[(b0 >> 2) & 3]);
+        msx_out(PORT_VDP_DATA, pair[b0 & 3]);
 
         /* Next 8 pixels from b1 (4 VRAM bytes) */
-        for (uint8_t col = 0; col < 4; col++) {
-            uint8_t p0 = (b1 & 0x80) ? fg_col : bg_col;
-            b1 <<= 1;
-            uint8_t p1 = (b1 & 0x80) ? fg_col : bg_col;
-            b1 <<= 1;
-            msx_out(PORT_VDP_DATA, (uint8_t)((p0 << 4) | (p1 & 0x0F)));
-        }
+        msx_out(PORT_VDP_DATA, pair[b1 >> 6]);
+        msx_out(PORT_VDP_DATA, pair[(b1 >> 4) & 3]);
+        msx_out(PORT_VDP_DATA, pair[(b1 >> 2) & 3]);
+        msx_out(PORT_VDP_DATA, pair[b1 & 3]);
     }
 }

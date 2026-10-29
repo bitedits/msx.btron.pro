@@ -70,7 +70,7 @@ void input_poll(void)
     s_keys.esc   = !(row7 & (1u << 2)); /* Esc: Row 7, Col 2 */
     s_keys.bs    = !(row7 & (1u << 5)); /* BS: Row 7, Col 5 */
 
-    /* 2. Scan Joystick / Mouse Port 1 via PSG Reg 14 */
+    /* 2. Scan Joystick / Mouse Port 1 via PSG Reg 14 + Proportional Host Mouse (0x2C..0x2E) */
     uint8_t joy1 = scan_joystick(0);
     bool joy_trga = !(joy1 & 0x01); /* Trigger A / Left click */
     bool joy_up   = !(joy1 & 0x02); /* Up */
@@ -79,55 +79,90 @@ void input_poll(void)
     bool joy_right= !(joy1 & 0x10); /* Right */
     bool joy_trgb = !(joy1 & 0x20); /* Trigger B / Right click */
 
+    /* Read 1:1 Proportional Host Mouse Coordinates from tronMSX ports 0x2C..0x2E */
+    uint8_t m_xl = msx_in(0x2C);
+    uint8_t m_xh = msx_in(0x2D);
+    uint8_t m_y  = msx_in(0x2E);
+    static uint16_t s_last_host_x = 0xFFFFu;
+    static uint8_t  s_last_host_y = 0xFFu;
+    bool host_btn_left  = false;
+    bool host_btn_right = false;
+    bool host_moved     = false;
+
+    if ((m_xh & 0xF8u) == 0x80u && m_y < SCREEN_HEIGHT) {
+        uint16_t hx = (uint16_t)m_xl | ((uint16_t)(m_xh & 0x01u) << 8);
+        uint8_t  hy = m_y;
+        host_btn_left  = (m_xh & 0x02u) != 0;
+        host_btn_right = (m_xh & 0x04u) != 0;
+        if (hx != s_last_host_x || hy != s_last_host_y) {
+            s_pointer.x = hx;
+            s_pointer.y = hy;
+            s_last_host_x = hx;
+            s_last_host_y = hy;
+            host_moved = true;
+        }
+    }
+
     /* Precision Pointer Motion:
-     * Keyboard arrow keys: precision micro-stepping (1 px on tap, 2 px when held)
-     * Joystick / Host Mouse: 3 px horizontally, 2 px vertically */
+     * Keyboard arrow keys:
+     * - Tap (< 3 frames): 2 px precision step
+     * - Initial hold (3..8 frames): 4 px step
+     * - Sustained hold (> 8 frames): 8 px fast traversal
+     *
+     * Joystick:
+     * - 4 px step horizontally, 3 px vertically */
     static uint8_t s_kbd_hold_x = 0;
     static uint8_t s_kbd_hold_y = 0;
 
-    uint8_t delta_x = 0;
-    uint8_t delta_y = 0;
+    if (!host_moved) {
+        uint8_t delta_x = 0;
+        uint8_t delta_y = 0;
 
-    if (kbd_left || kbd_right) {
-        s_kbd_hold_x++;
-        delta_x = (s_kbd_hold_x < 5) ? 1 : 2; /* 1 pixel precision tap, 2 px smooth hold */
-    } else if (joy_left || joy_right) {
-        s_kbd_hold_x = 0;
-        delta_x = 3;
-    } else {
-        s_kbd_hold_x = 0;
+        if (kbd_left || kbd_right) {
+            s_kbd_hold_x++;
+            if (s_kbd_hold_x < 3) delta_x = 2;
+            else if (s_kbd_hold_x < 8) delta_x = 4;
+            else delta_x = 8;
+        } else if (joy_left || joy_right) {
+            s_kbd_hold_x = 0;
+            delta_x = 4;
+        } else {
+            s_kbd_hold_x = 0;
+        }
+
+        if (kbd_up || kbd_down) {
+            s_kbd_hold_y++;
+            if (s_kbd_hold_y < 3) delta_y = 2;
+            else if (s_kbd_hold_y < 8) delta_y = 3;
+            else delta_y = 6;
+        } else if (joy_up || joy_down) {
+            s_kbd_hold_y = 0;
+            delta_y = 3;
+        } else {
+            s_kbd_hold_y = 0;
+        }
+
+        if (kbd_left || joy_left) {
+            if (s_pointer.x > delta_x) s_pointer.x -= delta_x;
+            else s_pointer.x = 0;
+        }
+        if (kbd_right || joy_right) {
+            if (s_pointer.x + delta_x < SCREEN_WIDTH - 1) s_pointer.x += delta_x;
+            else s_pointer.x = SCREEN_WIDTH - 1;
+        }
+        if (kbd_up || joy_up) {
+            if (s_pointer.y > delta_y) s_pointer.y -= delta_y;
+            else s_pointer.y = 0;
+        }
+        if (kbd_down || joy_down) {
+            if (s_pointer.y + delta_y < (uint8_t)(SCREEN_HEIGHT - 1)) s_pointer.y += delta_y;
+            else s_pointer.y = (uint8_t)(SCREEN_HEIGHT - 1);
+        }
     }
 
-    if (kbd_up || kbd_down) {
-        s_kbd_hold_y++;
-        delta_y = (s_kbd_hold_y < 5) ? 1 : 2; /* 1 pixel precision tap, 2 px smooth hold */
-    } else if (joy_up || joy_down) {
-        s_kbd_hold_y = 0;
-        delta_y = 2;
-    } else {
-        s_kbd_hold_y = 0;
-    }
-
-    if (kbd_left || joy_left) {
-        if (s_pointer.x > delta_x) s_pointer.x -= delta_x;
-        else s_pointer.x = 0;
-    }
-    if (kbd_right || joy_right) {
-        if (s_pointer.x + delta_x < SCREEN_WIDTH - 1) s_pointer.x += delta_x;
-        else s_pointer.x = SCREEN_WIDTH - 1;
-    }
-    if (kbd_up || joy_up) {
-        if (s_pointer.y > delta_y) s_pointer.y -= delta_y;
-        else s_pointer.y = 0;
-    }
-    if (kbd_down || joy_down) {
-        if (s_pointer.y + delta_y < (uint8_t)(SCREEN_HEIGHT - 1)) s_pointer.y += delta_y;
-        else s_pointer.y = (uint8_t)(SCREEN_HEIGHT - 1);
-    }
-
-    /* Left click button: Joystick Trigger A (host mouse left click) */
-    s_pointer.btn_left  = joy_trga;
-    s_pointer.btn_right = joy_trgb;
+    /* Primary click: Joystick Trigger A or Proportional Host Mouse Left Button */
+    s_pointer.btn_left  = joy_trga || host_btn_left;
+    s_pointer.btn_right = joy_trgb || host_btn_right;
 
     /* 3. Read alphanumeric keys per standard MSX Keyboard Matrix */
     s_keys.ascii_char = 0;

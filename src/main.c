@@ -16,7 +16,6 @@
 #include "font/font_tibetan.h"
 #include "gui/window.h"
 #include "gui/menu.h"
-#include "gui/compositor.h"
 #include "apps/app_editor.h"
 #include "apps/app_terminal.h"
 #include "apps/app_browser.h"
@@ -97,9 +96,14 @@ int main(void)
     /* Set Shell Terminal as initial active window */
     wm_set_active_window(2);
 
-    /* Initial Desktop Render */
+    /* Initial Desktop Render via Offscreen Page 1 -> Atomic HMMM Present to Page 0 */
+    vdp_set_display_page(0);
+    vdp_set_draw_page(1);
     wm_draw_all();
     menu_draw_bar();
+    vdp_present_backbuffer();
+    vdp_set_draw_page(0);
+    (void)wm_consume_dirty();
 
     /* 4. Main Event Loop */
     while (1) {
@@ -107,23 +111,52 @@ int main(void)
         itron_task_tick();
         input_poll();
 
+        bool need_present = false;
+        bool trigger_click = false;
+        ID   new_drag_win = 0;
+
         const PointerState *ptr = input_get_pointer();
         const KeyState *keys = input_get_keys();
+        Window *active = wm_get_active_window();
+
+        /* Window Capture & Dragging state */
+        static ID s_dragging_win_id = 0;
+        static int16_t s_drag_offset_x = 0;
+        static int16_t s_drag_offset_y = 0;
+        static bool s_drag_moved = false;
+        static bool s_drag_sticky = false;
+
+        bool cursor_in_term = (active && active->win_id == 2 && s_dragging_win_id == 0 &&
+                               ptr->x >= active->x && ptr->x < active->x + active->w &&
+                               ptr->y >= active->y && ptr->y < active->y + active->h);
 
         /* Global Window Focus Cycling: Tab key */
         static bool s_prev_tab = false;
         if (keys->tab && !s_prev_tab) {
+            if (s_dragging_win_id > 0) wm_end_drag(s_dragging_win_id);
+            s_dragging_win_id = 0;
+            s_drag_sticky = false;
             Window *curr = wm_get_active_window();
             ID next_id = (curr && curr->win_id < 3) ? (curr->win_id + 1) : 1;
-            Window *next_win = wm_get_window(next_id);
-            if (next_win) {
-                comp_activate_window(next_win);
-            }
+            wm_focus_window(next_id);
         }
         s_prev_tab = keys->tab;
 
+        /* Esc key drops any captured window or closes open menu */
+        if (keys->esc) {
+            if (s_dragging_win_id > 0) {
+                wm_end_drag(s_dragging_win_id);
+                s_dragging_win_id = 0;
+                s_drag_sticky = false;
+                s_drag_moved = false;
+            }
+            if (menu_is_open()) {
+                menu_close_popup();
+                need_present = true;
+            }
+        }
+
         /* Keyboard input routing with single-press edge detection and auto-repeat */
-        Window *active = wm_get_active_window();
         static char s_prev_char = 0;
         static uint8_t s_char_repeat = 0;
         char ch = keys->ascii_char;
@@ -141,18 +174,25 @@ int main(void)
             }
 
             if (fire_char) {
-                if (active && active->win_id == 2) {
+                if (active && active->win_id == 2 && cursor_in_term) {
                     app_terminal_input_char(ch);
                 } else {
-                    /* If terminal not focused:
-                     * 1=Editor, 3=Browser
-                     * Any other key activates Terminal and enters the character */
                     if (ch == '1') {
-                        comp_activate_window(wm_get_window(1));
+                        if (s_dragging_win_id > 0) wm_end_drag(s_dragging_win_id);
+                        s_dragging_win_id = 0;
+                        wm_focus_window(1);
+                    } else if (ch == '2') {
+                        if (s_dragging_win_id > 0) wm_end_drag(s_dragging_win_id);
+                        s_dragging_win_id = 0;
+                        wm_focus_window(2);
                     } else if (ch == '3') {
-                        comp_activate_window(wm_get_window(3));
-                    } else {
-                        comp_activate_window(wm_get_window(2));
+                        if (s_dragging_win_id > 0) wm_end_drag(s_dragging_win_id);
+                        s_dragging_win_id = 0;
+                        wm_focus_window(3);
+                    } else if (ch == ' ') {
+                        /* Space outside terminal acts as a click at pointer position */
+                        trigger_click = true;
+                    } else if (active && active->win_id == 2 && s_dragging_win_id == 0) {
                         app_terminal_input_char(ch);
                     }
                 }
@@ -166,10 +206,11 @@ int main(void)
         static bool s_prev_enter = false;
         if (keys->enter) {
             if (!s_prev_enter) {
-                if (active && active->win_id == 2) {
+                if (active && active->win_id == 2 && cursor_in_term) {
                     app_terminal_input_char('\r');
                 } else {
-                    comp_activate_window(wm_get_window(2));
+                    /* Enter outside terminal acts as a click at pointer position */
+                    trigger_click = true;
                 }
             }
             s_prev_enter = true;
@@ -191,7 +232,7 @@ int main(void)
                     fire_bs = true;
                 }
             }
-            if (fire_bs && active && active->win_id == 2) {
+            if (fire_bs && active && active->win_id == 2 && s_dragging_win_id == 0) {
                 app_terminal_input_char(0x08);
             }
             s_prev_bs = true;
@@ -200,52 +241,85 @@ int main(void)
             s_bs_repeat = 0;
         }
 
-        /* Window Dragging tracking */
-        static ID s_dragging_win_id = 0;
-        static int16_t s_drag_offset_x = 0;
-        static int16_t s_drag_offset_y = 0;
-
-        /* Check Mouse / Pointer Click */
+        /* Check Mouse / Pointer Click (Joy Trg A, host mouse click, or 'Z' key outside terminal) */
         if (input_is_clicked()) {
-            if (!menu_handle_click(ptr->x, ptr->y)) {
-                if (menu_is_open()) {
-                    menu_close_popup();
-                } else {
-                    ID drag_win = 0;
-                    wm_handle_click(ptr->x, ptr->y, &drag_win);
-                    if (drag_win > 0) {
-                        Window *dw = wm_get_window(drag_win);
-                        if (dw && dw->state == WIN_STATE_NORMAL) {
-                            s_dragging_win_id = drag_win;
-                            s_drag_offset_x = (int16_t)(ptr->x - dw->x);
-                            s_drag_offset_y = (int16_t)(ptr->y - dw->y);
-                            comp_drag_start(dw);
-                        }
+            if (!(cursor_in_term && (ch == 'z' || ch == 'Z'))) {
+                trigger_click = true;
+            }
+        }
+
+        /* Process Unified Click or Sticky Window Drop */
+        if (trigger_click) {
+            if (s_dragging_win_id > 0 && s_drag_sticky) {
+                /* Clicking while a window is sticky-captured drops it */
+                s_dragging_win_id = 0;
+                s_drag_sticky = false;
+                s_drag_moved = false;
+            } else {
+                if (!menu_handle_click(ptr->x, ptr->y)) {
+                    if (menu_is_open()) {
+                        menu_close_popup();
+                        need_present = true;
+                    } else {
+                        wm_handle_click(ptr->x, ptr->y, &new_drag_win);
                     }
                 }
             }
         }
 
-        /* Continuous Hardware BitBlt Window Dragging while button is held */
-        if (s_dragging_win_id > 0) {
+        if (wm_consume_dirty()) {
+            need_present = true;
+        }
+
+        /* Zero-Flicker Offscreen Composition & Atomic HMMM Presentation */
+        if (need_present) {
+            vdp_set_draw_page(1);
+            wm_draw_all();
+            menu_draw_bar();
+            vdp_present_backbuffer();
+            vdp_set_draw_page(0);
+        }
+
+        /* Initiate Window Capture / Hardware BitBlt Dragging if Title Bar was clicked */
+        if (new_drag_win > 0) {
+            Window *dw = wm_get_window(new_drag_win);
+            if (dw && dw->state == WIN_STATE_NORMAL) {
+                s_dragging_win_id = new_drag_win;
+                s_drag_offset_x = (int16_t)(ptr->x - dw->x);
+                s_drag_offset_y = (int16_t)(ptr->y - dw->y);
+                s_drag_moved = false;
+                s_drag_sticky = !ptr->btn_left;
+                wm_begin_drag(new_drag_win);
+            }
+        } else if (s_dragging_win_id > 0) {
             Window *win = wm_get_window(s_dragging_win_id);
-            if (ptr->btn_left) {
-                if (win && win->state == WIN_STATE_NORMAL) {
-                    int16_t target_x = (int16_t)ptr->x - s_drag_offset_x;
-                    int16_t target_y = (int16_t)ptr->y - s_drag_offset_y;
+            if (win && win->state == WIN_STATE_NORMAL) {
+                int16_t target_x = (int16_t)ptr->x - s_drag_offset_x;
+                int16_t target_y = (int16_t)ptr->y - s_drag_offset_y;
 
-                    if (target_x < 2) target_x = 2;
-                    if (target_x + (int16_t)win->w > 510) target_x = 510 - (int16_t)win->w;
-                    if (target_y < 14) target_y = 14;
-                    if (target_y + (int16_t)win->h > 210) target_y = 210 - (int16_t)win->h;
+                if (target_x < 2) target_x = 2;
+                if (target_x + (int16_t)win->w > 510) target_x = 510 - (int16_t)win->w;
+                if (target_y < 14) target_y = 14;
+                if (target_y + (int16_t)win->h > 210) target_y = 210 - (int16_t)win->h;
 
-                    comp_drag_move(win, (uint16_t)target_x, (uint16_t)target_y);
+                if (wm_move_window_bitblt(s_dragging_win_id, (uint16_t)target_x, (uint16_t)target_y)) {
+                    s_drag_moved = true;
+                }
+
+                if (!ptr->btn_left && !s_drag_sticky) {
+                    if (s_drag_moved) {
+                        /* Standard press-drag-release completed */
+                        s_dragging_win_id = 0;
+                        s_drag_moved = false;
+                    } else {
+                        /* Quick click on title bar: enter sticky window capture mode! */
+                        s_drag_sticky = true;
+                    }
                 }
             } else {
-                if (win) {
-                    comp_drag_end(win);
-                }
                 s_dragging_win_id = 0;
+                s_drag_sticky = false;
+                s_drag_moved = false;
             }
         }
 

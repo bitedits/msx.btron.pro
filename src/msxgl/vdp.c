@@ -5,6 +5,92 @@
 #include "vdp.h"
 #include "core.h"
 
+static uint8_t  s_draw_page = 0;
+static uint8_t  s_disp_page = 0;
+static uint16_t s_draw_y_offset = 0;
+
+void vdp_set_draw_page(uint8_t page)
+{
+    s_draw_page = page & 1;
+    s_draw_y_offset = (s_draw_page == 0) ? 0 : 256;
+}
+
+void vdp_set_display_page(uint8_t page)
+{
+    s_disp_page = page & 1;
+    /* In Screen 7, R#2 bit 5 selects Page 0 (0x1F) or Page 1 (0x3F) */
+    vdp_write_reg(2, (s_disp_page == 0) ? 0x1F : 0x3F);
+}
+
+uint8_t vdp_get_draw_page(void)
+{
+    return s_draw_page;
+}
+
+uint8_t vdp_get_display_page(void)
+{
+    return s_disp_page;
+}
+
+uint16_t vdp_get_draw_y_offset(void)
+{
+    return s_draw_y_offset;
+}
+
+void vdp_flip_page(void)
+{
+    vdp_wait_cmd();
+    msx_wait_vblank();
+    /* Instantaneous VBlank swap of visible scanout buffer */
+    vdp_set_display_page(s_draw_page);
+
+    /* Direct all subsequent composition to the offscreen backbuffer */
+    vdp_set_draw_page(1 - s_disp_page);
+}
+
+void vdp_sync_pages(void)
+{
+    vdp_wait_cmd();
+    /* High-speed hardware VRAM-to-VRAM copy from display page to backbuffer */
+    uint16_t src_y = (s_disp_page == 0) ? 0 : 256;
+    uint16_t dst_y = (s_draw_page == 0) ? 0 : 256;
+    vdp_cmd_hmmm(0, src_y, 0, dst_y, SCREEN_WIDTH, SCREEN_HEIGHT, 0x00);
+}
+
+void vdp_present_backbuffer(void)
+{
+    vdp_wait_cmd();
+    /* Atomic hardware VRAM-to-VRAM BitBlt from Page 1 (offscreen backbuffer) to Page 0 (display) */
+    vdp_cmd_hmmm(0, 256, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0x00);
+    vdp_wait_cmd();
+}
+
+void vdp_restore_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
+    if (w == 0 || h == 0) return;
+    if (x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT) return;
+    if (x + w > SCREEN_WIDTH) w = SCREEN_WIDTH - x;
+    if (y + h > SCREEN_HEIGHT) h = SCREEN_HEIGHT - y;
+    uint16_t ax = x & (uint16_t)~1u;
+    uint16_t aw = (uint16_t)(((x + w + 1u) & (uint16_t)~1u) - ax);
+    if (ax + aw > SCREEN_WIDTH) aw = SCREEN_WIDTH - ax;
+    if (aw == 0) return;
+    vdp_cmd_hmmm(ax, (uint16_t)(256u + y), ax, y, aw, h, 0x00);
+}
+
+void vdp_save_underlay_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
+    if (w == 0 || h == 0) return;
+    if (x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT) return;
+    if (x + w > SCREEN_WIDTH) w = SCREEN_WIDTH - x;
+    if (y + h > SCREEN_HEIGHT) h = SCREEN_HEIGHT - y;
+    uint16_t ax = x & (uint16_t)~1u;
+    uint16_t aw = (uint16_t)(((x + w + 1u) & (uint16_t)~1u) - ax);
+    if (ax + aw > SCREEN_WIDTH) aw = SCREEN_WIDTH - ax;
+    if (aw == 0) return;
+    vdp_cmd_hmmm(ax, y, ax, (uint16_t)(256u + y), aw, h, 0x00);
+}
+
 void vdp_write_reg(uint8_t reg, uint8_t val)
 {
     msx_di();
@@ -39,19 +125,45 @@ void vdp_wait_cmd(void)
     vdp_write_reg(15, 0);
 }
 
+static uint8_t s_last_r14 = 0xFF;
+
 void vdp_set_vram_write_addr(uint32_t addr)
 {
+    uint8_t r14 = (uint8_t)((addr >> 14) & 0x07);
     msx_di();
-    vdp_write_reg(14, (uint8_t)((addr >> 14) & 0x07));
+    if (r14 != s_last_r14) {
+        s_last_r14 = r14;
+        msx_out(PORT_VDP_REG, r14);
+        msx_out(PORT_VDP_REG, 0x80 | 14);
+    }
     msx_out(PORT_VDP_REG, (uint8_t)(addr & 0xFF));
     msx_out(PORT_VDP_REG, (uint8_t)(((addr >> 8) & 0x3F) | 0x40));
     msx_ei();
 }
 
+void vdp_set_vram_write_line(uint8_t byte_x, uint16_t eff_y)
+{
+    uint8_t r14 = (uint8_t)(eff_y >> 6);
+    msx_di();
+    if (r14 != s_last_r14) {
+        s_last_r14 = r14;
+        msx_out(PORT_VDP_REG, r14);
+        msx_out(PORT_VDP_REG, 0x80 | 14);
+    }
+    msx_out(PORT_VDP_REG, byte_x);
+    msx_out(PORT_VDP_REG, (uint8_t)((eff_y & 0x3F) | 0x40));
+    msx_ei();
+}
+
 void vdp_set_vram_read_addr(uint32_t addr)
 {
+    uint8_t r14 = (uint8_t)((addr >> 14) & 0x07);
     msx_di();
-    vdp_write_reg(14, (uint8_t)((addr >> 14) & 0x07));
+    if (r14 != s_last_r14) {
+        s_last_r14 = r14;
+        msx_out(PORT_VDP_REG, r14);
+        msx_out(PORT_VDP_REG, 0x80 | 14);
+    }
     msx_out(PORT_VDP_REG, (uint8_t)(addr & 0xFF));
     msx_out(PORT_VDP_REG, (uint8_t)((addr >> 8) & 0x3F));
     msx_ei();
@@ -112,8 +224,14 @@ void vdp_init_screen7(void)
 
     vdp_init_btron_palette();
 
-    /* Clear screen to desktop background color (BTRON Light Gray = 8) */
-    vdp_fill_rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, BTRON_COL_LIGHT_GRAY);
+    s_draw_page = 0;
+    s_disp_page = 0;
+    s_draw_y_offset = 0;
+
+    /* Clear both Page 0 and Page 1 to desktop background color (BTRON Light Gray = 8) */
+    uint8_t gray_pair = COLOR_PAIR(BTRON_COL_LIGHT_GRAY, BTRON_COL_LIGHT_GRAY);
+    vdp_cmd_hmmv(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, gray_pair);
+    vdp_cmd_hmmv(0, 256, SCREEN_WIDTH, SCREEN_HEIGHT, gray_pair);
 }
 
 void vdp_cmd_hmmv(uint16_t dx, uint16_t dy, uint16_t nx, uint16_t ny, uint8_t color_byte)
@@ -223,7 +341,7 @@ void vdp_copy_rect(uint16_t sx, uint16_t sy, uint16_t dx, uint16_t dy, uint16_t 
         sy += h - 1;
         dy += h - 1;
     }
-    vdp_cmd_hmmm(sx, sy, dx, dy, w, h, arg);
+    vdp_cmd_hmmm(sx, sy + s_draw_y_offset, dx, dy + s_draw_y_offset, w, h, arg);
 }
 
 void vdp_scroll_rect_up(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t delta_y, uint8_t fill_color)
@@ -232,7 +350,7 @@ void vdp_scroll_rect_up(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t
         vdp_fill_rect(x, y, w, h, fill_color);
         return;
     }
-    vdp_cmd_hmmm(x, y + delta_y, x, y, w, h - delta_y, 0x00);
+    vdp_cmd_hmmm(x, y + delta_y + s_draw_y_offset, x, y + s_draw_y_offset, w, h - delta_y, 0x00);
     vdp_fill_rect(x, y + h - delta_y, w, delta_y, fill_color);
 }
 
@@ -240,12 +358,13 @@ void vdp_cmd_lmmv(uint16_t dx, uint16_t dy, uint16_t nx, uint16_t ny, uint8_t co
 {
     vdp_wait_cmd();
 
+    uint16_t eff_dy = dy + s_draw_y_offset;
     msx_di();
     vdp_write_reg(17, 36);
     msx_out(PORT_VDP_INDIR, (uint8_t)(dx & 0xFF));
     msx_out(PORT_VDP_INDIR, (uint8_t)((dx >> 8) & 0x01));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(dy & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((dy >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(eff_dy & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((eff_dy >> 8) & 0x03));
     msx_out(PORT_VDP_INDIR, (uint8_t)(nx & 0xFF));
     msx_out(PORT_VDP_INDIR, (uint8_t)((nx >> 8) & 0x03));
     msx_out(PORT_VDP_INDIR, (uint8_t)(ny & 0xFF));
@@ -260,12 +379,13 @@ void vdp_cmd_line(uint16_t dx, uint16_t dy, uint16_t maj_len, uint16_t min_len, 
 {
     vdp_wait_cmd();
 
+    uint16_t eff_dy = dy + s_draw_y_offset;
     msx_di();
     vdp_write_reg(17, 36);
     msx_out(PORT_VDP_INDIR, (uint8_t)(dx & 0xFF));
     msx_out(PORT_VDP_INDIR, (uint8_t)((dx >> 8) & 0x01));
-    msx_out(PORT_VDP_INDIR, (uint8_t)(dy & 0xFF));
-    msx_out(PORT_VDP_INDIR, (uint8_t)((dy >> 8) & 0x03));
+    msx_out(PORT_VDP_INDIR, (uint8_t)(eff_dy & 0xFF));
+    msx_out(PORT_VDP_INDIR, (uint8_t)((eff_dy >> 8) & 0x03));
     msx_out(PORT_VDP_INDIR, (uint8_t)(maj_len & 0xFF));
     msx_out(PORT_VDP_INDIR, (uint8_t)((maj_len >> 8) & 0x03));
     msx_out(PORT_VDP_INDIR, (uint8_t)(min_len & 0xFF));
@@ -284,21 +404,21 @@ void vdp_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t color
     if (y + h > SCREEN_HEIGHT) h = SCREEN_HEIGHT - y;
 
     uint8_t color_pair = COLOR_PAIR(color, color);
-    vdp_cmd_hmmv(x, y, w, h, color_pair);
+    vdp_cmd_hmmv(x, y + s_draw_y_offset, w, h, color_pair);
 }
 
 void vdp_draw_hline(uint16_t x, uint16_t y, uint16_t len, uint8_t color)
 {
     if (len == 0 || y >= SCREEN_HEIGHT || x >= SCREEN_WIDTH) return;
     if (x + len > SCREEN_WIDTH) len = SCREEN_WIDTH - x;
-    vdp_cmd_hmmv(x, y, len, 1, COLOR_PAIR(color, color));
+    vdp_cmd_hmmv(x, y + s_draw_y_offset, len, 1, COLOR_PAIR(color, color));
 }
 
 void vdp_draw_vline(uint16_t x, uint16_t y, uint16_t len, uint8_t color)
 {
     if (len == 0 || x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT) return;
     if (y + len > SCREEN_HEIGHT) len = SCREEN_HEIGHT - y;
-    vdp_cmd_hmmv(x, y, 1, len, COLOR_PAIR(color, color));
+    vdp_cmd_hmmv(x, y + s_draw_y_offset, 1, len, COLOR_PAIR(color, color));
 }
 
 void vdp_draw_rect_outline(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t color)
@@ -348,6 +468,10 @@ void vdp_init_sprites(void)
     };
 
     vdp_set_sprite_pattern(0, arrow_cursor_pat);
+
+    /* Terminate Sprite Attribute Table at Plane 1 (Y = 216 stops Sprite Mode 2 scan) */
+    vdp_set_vram_write_addr(0x1FA04UL);
+    msx_out(PORT_VDP_DATA, 216);
 }
 
 void vdp_set_sprite_pattern(uint8_t pat_idx, const uint8_t *pattern16)
@@ -363,12 +487,17 @@ void vdp_set_sprite_pattern(uint8_t pat_idx, const uint8_t *pattern16)
 
 void vdp_set_sprite_pos(uint8_t plane, uint16_t x, uint8_t y, uint8_t pat_idx, uint8_t color)
 {
-    /* 1. Sprite Color Table (Mode 2): 0x1F800 + plane * 16 */
-    uint32_t sct_addr = 0x1F800UL + ((uint32_t)plane * 16);
-    vdp_set_vram_write_addr(sct_addr);
+    static uint8_t s_last_col = 0xFF;
     uint8_t col_attr = (color & 0x0F);
-    for (uint8_t line = 0; line < 16; line++) {
-        msx_out(PORT_VDP_DATA, col_attr);
+
+    /* 1. Sprite Color Table (Mode 2): 0x1F800 + plane * 16 */
+    if (plane != 0 || col_attr != s_last_col) {
+        uint32_t sct_addr = 0x1F800UL + ((uint32_t)plane * 16);
+        vdp_set_vram_write_addr(sct_addr);
+        for (uint8_t line = 0; line < 16; line++) {
+            msx_out(PORT_VDP_DATA, col_attr);
+        }
+        if (plane == 0) s_last_col = col_attr;
     }
 
     /* 2. Sprite Attribute Table (Mode 2): 0x1FA00 + plane * 4
@@ -379,4 +508,7 @@ void vdp_set_sprite_pos(uint8_t plane, uint16_t x, uint8_t y, uint8_t pat_idx, u
     msx_out(PORT_VDP_DATA, (uint8_t)((x >> 1) & 0xFF));
     msx_out(PORT_VDP_DATA, pat_idx);
     msx_out(PORT_VDP_DATA, 0x00);
+    if (plane == 0) {
+        msx_out(PORT_VDP_DATA, 216); /* Plane 1 Y = 216 terminator */
+    }
 }

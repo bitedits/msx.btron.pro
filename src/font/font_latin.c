@@ -116,21 +116,21 @@ void font_draw_char(uint16_t x, uint16_t y, char c, uint8_t fg_col, uint8_t bg_c
     if (c < 32 || c > 126) c = ' ';
 
     const uint8_t *glyph = s_font8x8[(uint8_t)c - 32];
-    uint16_t byte_x = x / 2;
+    uint8_t byte_x = (uint8_t)(x >> 1);
+    uint16_t eff_y = y + vdp_get_draw_y_offset();
+    uint8_t pair[4];
+    pair[0] = (uint8_t)((bg_col << 4) | (bg_col & 0x0F));
+    pair[1] = (uint8_t)((bg_col << 4) | (fg_col & 0x0F));
+    pair[2] = (uint8_t)((fg_col << 4) | (bg_col & 0x0F));
+    pair[3] = (uint8_t)((fg_col << 4) | (fg_col & 0x0F));
 
     for (uint8_t row = 0; row < 8; row++) {
         uint8_t bits = glyph[row];
-        uint32_t addr = ((uint32_t)(y + row) * 256) + byte_x;
-        vdp_set_vram_write_addr(addr);
-
-        /* 8 pixels = 4 bytes (2 pixels per byte: high nibble, low nibble) */
-        for (uint8_t col = 0; col < 4; col++) {
-            uint8_t p0 = (bits & 0x80) ? fg_col : bg_col;
-            bits <<= 1;
-            uint8_t p1 = (bits & 0x80) ? fg_col : bg_col;
-            bits <<= 1;
-            msx_out(PORT_VDP_DATA, (uint8_t)((p0 << 4) | (p1 & 0x0F)));
-        }
+        vdp_set_vram_write_line(byte_x, eff_y + row);
+        msx_out(PORT_VDP_DATA, pair[bits >> 6]);
+        msx_out(PORT_VDP_DATA, pair[(bits >> 4) & 3]);
+        msx_out(PORT_VDP_DATA, pair[(bits >> 2) & 3]);
+        msx_out(PORT_VDP_DATA, pair[bits & 3]);
     }
 }
 

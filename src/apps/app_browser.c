@@ -51,7 +51,9 @@ void app_browser_paint(Window *win)
         label[1] = '0' + (char)(b->body_id);
         label[2] = ' ';
         uint8_t p = 3;
-        for (uint8_t k = 0; b->title[k] != '\0' && p < 18; k++) {
+        uint8_t max_label = (uint8_t)((content_w - 48) >> 3);
+        if (max_label > 20) max_label = 20;
+        for (uint8_t k = 0; b->title[k] != '\0' && p < max_label; k++) {
             label[p++] = b->title[k];
         }
         label[p] = '\0';
@@ -89,7 +91,7 @@ void app_browser_on_click(Window *win, uint16_t local_x, uint16_t local_y)
                     wm_set_active_window(4);
                 }
             }
-            wm_draw_all();
+            wm_mark_dirty();
         }
     }
 }
