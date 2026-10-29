@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>tronMSX — B-System内蔵確定性C99コア | msx.btron.pro</title>
-    <meta name="description" content="tronMSX (B-MSX) の完全技術仕様。NASA/JPL Power of Ten 準拠 C99 クリーンルーム実装、Hitachi HD64180 CPU チップエミュレーション (hd64180.c)、ASCII R800 / Z80、BTRON ウィンドウ直接描画、および 44.1 kHz PCM 合成規約。">
+    <meta name="description" content="tronMSX (B-MSX) の完全技術仕様。NASA/JPL Power of Ten 準拠 C99 クリーンルーム実装、全ソースモジュール (z80, r800, hd64180, v9938, psg, opll, y8950, pcm, scc, slots, dsk, geo3d, tronmsx) のシリコン仕様、ゼロコピー描画、および 44.1 kHz PCM 合成規約。">
     <link rel="stylesheet" href="../../index.css?v=3">
 </head>
 <body>
@@ -32,12 +32,12 @@
     </nav>
 
     <div class="setting-hero">
-        <div class="setting-hero-badge">tronmsx.h · Cleanroom ANSI C99 · Hitachi HD64180 Core · NASA/JPL Power of Ten · Zero Dynamic Allocation</div>
+        <div class="setting-hero-badge">tronmsx.h · Cleanroom ANSI C99 · All Silicon Modules · NASA/JPL Power of Ten · Zero Dynamic Allocation</div>
         <h1>tronMSX (Emulators)</h1>
         <div class="subtitle">
-            B-System に組み込まれた、Hitachi HD64180 / R800 / Z80 確定性実行・ゼロコピー描画・44.1 kHz PCM 合成を備えた純 C99 MSX2+ コア。
+            B-System に組み込まれた、全シリコンモジュール確定性実行・ゼロコピー描画・44.1 kHz PCM 合成を備えた純 C99 MSX2+ コア。
             <span class="subtitle-en">
-                "Technical specification of tronMSX, the embedded cleanroom C99 MSX2+ core within B-System. Built under strict NASA/JPL rules with zero dynamic allocation, featuring the newly actualized Hitachi HD64180 CPU chip (hd64180.c) alongside ASCII R800 and Z80 pipelines."
+                "Definitive technical specification of tronMSX, the embedded cleanroom C99 MSX2+ core within B-System. Fully actualized across all silicon source modules (z80, r800, hd64180, v9938, psg, opll, y8950, pcm, scc, slots, dsk, geo3d, and msx_app) under strict NASA/JPL Power of Ten rules."
             </span>
         </div>
     </div>
@@ -46,121 +46,364 @@
         <a href="../../emulators/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 摸擬目録へ戻る (Emulators Index)</a>
 
         <div class="tagline-card">
-            <strong>確定性とクリーンルームの結晶</strong> — tronMSX は、BTRON 3.20（B-System）のウィンドウ空間上で直接動作する MSX2+ エミュレーションコアです。NASA/JPL「Power of Ten」規則に厳格に従い、ブート後の動的ヒープ確保（<code>malloc</code>）を完全に禁止し、全ループを有界（Bounded）に抑え、静的メモリ空間のみで稼働します。新たに統合された <strong>Hitachi HD64180 コア（<code>hd64180.c</code>）</strong> により、日立 HC-90 / HC-95 ワークステーションの 6.144 MHz 拡張命令セット（<code>MLT</code>, <code>IN0</code>/<code>OUT0</code>, <code>TST</code>, <code>PRT</code> タイマー）を完全再現。描画フレームバッファは BTRON ウィンドウマネージャのプレーンへゼロコピー転送され、音響は VirtIO-Sound / SDL2 へ 44.1 kHz 16-bit PCM として送出されます。<br>
+            <strong>全シリコンチップの確定性 C99 統合</strong> — tronMSX（B-MSX Rev 1.05）は、BTRON 3.20（B-System）のウィンドウ空間上で直接動作する、外部共有ライブラリ非依存の確定論的 MSX2+ / turbo R / 日立ワークステーション エミュレーションコアです。航空宇宙水準の NASA/JPL「Power of Ten」規則に厳格に従い、ブート完了後の動的ヒープ確保（<code>malloc</code>）を完全に禁止し、全ループを有界（Bounded）に抑え、静的メモリ構造体のみで稼働します。CPU、VDP、音源、スロット、ディスク、3D 幾何学アクセラレータに至る全ソースモジュールの詳細を以下に完全公開します。<br>
             <span class="tagline-en">
-                "tronMSX is an uncompromising cleanroom C99 MSX2+ engine embedded inside B-System. Adhering strictly to NASA/JPL Power of Ten rules, it forbids post-boot heap allocations and enforces bounded execution times. The architecture now incorporates the full Hitachi HD64180 CPU emulation unit (hd64180.c), executing 8-bit multiplies, internal I/O, MMU registers, and PRT reload timers for Hitachi HC-90/95 workstations without external dependencies."
+                "tronMSX is an uncompromising cleanroom C99 MSX2+ engine embedded inside B-System. Adhering strictly to NASA/JPL Power of Ten rules, it forbids post-boot heap allocations and enforces bounded execution times across all hardware modules. Every silicon unit—CPU, VDP, sound chips, slot bus, FDC, and 3D geometry engine—operates deterministically without third-party dependencies."
             </span>
         </div>
 
-        <!-- 01 / Silicon Units -->
+        <!-- 01 / Silicon Units Overview -->
         <section class="doc-section">
             <div class="band-head">
                 <span class="band-index">01 / Silicon Units</span>
-                <h2 class="jp-title">1. C99 コア構造とシリコンチップ分割 (Silicon Core Units)</h2>
+                <h2 class="jp-title">1. 全ソースモジュールとシリコン分割一覧 (Silicon Source Modules Matrix)</h2>
                 <p class="band-eyebrow">Modular Chip Emulation · Static Struct Allocation · BTRON Kernel Integration</p>
             </div>
             <div class="doc-summary">
-                tronMSX を構成する C99 純実装シリコンチップモジュールの一覧です。<br>
-                <span class="summary-en">"Modular organization of C99 chip emulation cores, isolating CPU, VDP, sound chips, FDC, and 3D geometry pipeline into deterministic units."</span>
+                <code>../btron/src/emulators/msx/</code> 内に実装されている全 16 シリコンモジュールの一覧です。<br>
+                <span class="summary-en">"Master registry of C99 source modules composing tronMSX, mapping hardware targets to deterministic C99 units."</span>
             </div>
 
             <div class="market-table-wrap">
                 <table class="market-table">
                     <thead>
                         <tr>
-                            <th style="width: 32%;">ソースファイル (Source Module)</th>
-                            <th style="width: 68%;">エミュレーション対象チップと技術仕様 (Hardware Target &amp; Silicon Architecture)</th>
+                            <th style="width: 30%;">ソースファイル (Source)</th>
+                            <th style="width: 25%;">エミュレーション対象</th>
+                            <th style="width: 45%;">技術仕様と役割 (Technical Role &amp; Silicon Architecture)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>tronmsx.c / tronmsx.h</code></td>
+                            <td>トップレベルマシン統合</td>
+                            <td>全チップ結線、60Hz フレームループ駆動、確定同期、ステートマシン管理。</td>
+                        </tr>
+                        <tr>
+                            <td><code>z80.c / z80.h</code></td>
+                            <td>Zilog Z80A CPU (3.58 MHz)</td>
+                            <td>命令デコード、M1 サイクル、非公開命令、IM0/1/2、R レジスタ。zexall 適合。</td>
+                        </tr>
+                        <tr>
+                            <td><code>r800.c / r800.h</code></td>
+                            <td>ASCII R800 CPU (28.6 MHz 相当)</td>
+                            <td>16 ビット乗算命令（<code>MULUB</code>, <code>MULUW</code>）、高速バス調停、turbo R 統合。</td>
+                        </tr>
+                        <tr>
+                            <td><code>hd64180.c / hd64180.h</code></td>
+                            <td>Hitachi HD64180 CPU (6.144 MHz)</td>
+                            <td>日立 HC-90/95 向け CPU。8 ビット乗算（<code>MLT</code>）、内部 I/O、MMU、PRT タイマー。</td>
+                        </tr>
+                        <tr>
+                            <td><code>v9938.c / vdp.c</code></td>
+                            <td>Yamaha V9938 / V9958 / V9968</td>
+                            <td>SCREEN 0〜8、128KB VRAM、パレット、32 枚スプライト、HMMV/LINE コマンド。</td>
+                        </tr>
+                        <tr>
+                            <td><code>psg.c / audio.c</code></td>
+                            <td>AY-3-8910 / YM2149 (PSG)</td>
+                            <td>3ch 矩形波・ノイズ・エンベロープ合成、14 Hz 直流阻止、44.1 kHz PCM 出力。</td>
+                        </tr>
+                        <tr>
+                            <td><code>opll.c / fm_int.h</code></td>
+                            <td>Yamaha YM2413 (MSX-MUSIC)</td>
+                            <td>2 オペレータ 9ch FM 合成、リズムモード、15 種内蔵音色スケッチ、128 段減衰器。</td>
+                        </tr>
+                        <tr>
+                            <td><code>y8950.c</code></td>
+                            <td>Yamaha Y8950 (MSX-AUDIO)</td>
+                            <td>9ch FM 音源合成、ADPCM-B 音声録音再生エンジン、キーボードコネクタ制御。</td>
+                        </tr>
+                        <tr>
+                            <td><code>pcm.c</code></td>
+                            <td>MSX turbo R 8-bit PCM</td>
+                            <td>15,700 Hz サンプリング、ポート 03H/02H スルーリミッタ（最大 48 段/刻み）、8 ビット DAC。</td>
+                        </tr>
+                        <tr>
+                            <td><code>scc.c</code></td>
+                            <td>Konami SCC 音源チップ</td>
+                            <td>5 本の波形テーブルメモリ（各 32 バイト）、周波数分周カウンタ、周期 9 未満無音化。</td>
+                        </tr>
+                        <tr>
+                            <td><code>slots.c / ppi.c</code></td>
+                            <td>PPI 8255 &amp; スロット階層</td>
+                            <td>基本スロット（0xA8）、拡張サブスロット（0xFFFF 反転）、MegaROM マッパー（最大 4MB）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>dsk.c</code></td>
+                            <td>WD2793 / MB89311 FDC</td>
+                            <td>720 KiB RAW フロッピーディスクイメージ仮想化、トラック/セクタステートマシン。</td>
+                        </tr>
+                        <tr>
+                            <td><code>kbd.c / msx_kbd.h</code></td>
+                            <td>キーボード &amp; ジョイスティック</td>
+                            <td>PPI ポート C 走査、PSG ポート B マルチプレクサ、ジョイスティック/マウス追従。</td>
+                        </tr>
+                        <tr>
+                            <td><code>rtc.c / s1985.c / t9769c.c</code></td>
+                            <td>MSX エンジン &amp; RTC チップ</td>
+                            <td>Ricoh RP5C01 リアルタイムクロック、Yamaha S1985、Toshiba T9769C 統合ゲートアレイ。</td>
+                        </tr>
+                        <tr>
+                            <td><code>geo3d.c / geo3d.h</code></td>
+                            <td>Geo3D 幾何学アクセラレータ</td>
+                            <td>16 ビット固定小数点 3 次元行列演算、同次座標クリッピング、Screen 7/8 レンダラ。</td>
+                        </tr>
+                        <tr>
+                            <td><code>msx_app.c / msx_body.h</code></td>
+                            <td>B-System ワークベンチ統合</td>
+                            <td>3D ベベルメニュー、ゼロコピー GDEV 描画、Fast-Forward（450〜900フレーム瞬時スキップ）。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 02 / CPU Subsystem -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / CPU Cores</span>
+                <h2 class="jp-title">2. CPU サブシステム解体 (CPU Subsystem: z80, r800, hd64180)</h2>
+                <p class="band-eyebrow">Z80A · ASCII R800 · Hitachi HD64180 · zexall Conformance</p>
+            </div>
+            <div class="doc-summary">
+                3 大プロセッサコア（Z80, R800, HD64180）の実装構造と機械語拡張仕様です。<br>
+                <span class="summary-en">"Deep dive into the heterogeneous CPU emulation engines covering instruction decoding, M1 cycles, hardware multipliers, and MMU paging."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 32%;">CPU モジュール (Module)</th>
+                            <th style="width: 68%;">内部アーキテクチャと C99 実装詳細 (Internal Architecture &amp; C99 Details)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>
-                                <b>hd64180.c / hd64180.h</b><br>
-                                <span style="font-size: 0.8rem; color: var(--tron-teal);">新世代日立 CPU コア</span>
-                            </td>
-                            <td>
-                                <b>Hitachi HD64180 (6.144 MHz):</b> 日立 HC-90 / HC-95 向け CPU。8 ビット乗算（<code>MLT BC/DE/HL/SP</code>）、内部 I/O レジスタ（<code>IN0</code>/<code>OUT0</code>）、非破壊論理積（<code>TST</code>/<code>TSTIO</code>）、低消費電力スリープ（<code>SLP</code>）、プログラマブル・リロードタイマ（PRT ch0/1）、および MMU レジスタ群（CBAR, CBR, BBR, ICR）を完全エミュレート。
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
                                 <b>z80.c / z80.h</b><br>
-                                <span style="font-size: 0.8rem; color: var(--ink-3);">標準 Z80 CPU コア</span>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">Zilog Z80A (3.58 MHz)</span>
                             </td>
                             <td>
-                                <b>Zilog Z80A (3.58 MHz):</b> 全非公開命令（Undocumented opcodes）、フラグ計算、割込みモード IM1/IM2、リフレッシュレジスタ（R）の完全エミュレーション。zexall テスト適合。
+                                <b>完全命令セットとサイクル正確性:</b><br>
+                                全 256 主命令に加え、プレフィックス <code>CB</code>, <code>ED</code>, <code>DD</code>, <code>FD</code>, <code>DDCB</code>, <code>FDCB</code> を完全網羅。パリティフラグ計算は 8 ビット XOR ルックアップ、M1 サイクルウェイト、非公開命令（IXH, IXL, SLL 等）、および割込みモード IM0/1/2 を忠実に再現。<code>zexall.c</code> ハーネスにより Zilog 公式挙動テストに全数合格。
                             </td>
                         </tr>
                         <tr>
                             <td>
                                 <b>r800.c / r800.h</b><br>
-                                <span style="font-size: 0.8rem; color: var(--ink-3);">turbo R RISC 風 CPU</span>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">ASCII R800 (28.6 MHz 相当)</span>
                             </td>
                             <td>
-                                <b>ASCII R800 (28.6 MHz 相当):</b> MSX turbo R 向けプロセッサ。16 ビット符号なしハードウェア乗算命令（<code>MULUB</code> 8×8→16, <code>MULUW</code> 16×16→32）およびパイプラインバス調替。
+                                <b>16 ビットハードウェア乗算と RISC 風パイプライン:</b><br>
+                                MSX turbo R に搭載された 16 ビットプロセッサ。新設された 2 種の符号なし乗算命令を C99 で直値計算：
+                                <ul style="margin: 0.35rem 0 0 1.25rem; font-size: 0.82rem; line-height: 1.6;">
+                                    <li><code>MULUB A, B</code> (ED C1): 8 ビット乗算 <code>HL = A × B</code> (17 サイクル)。</li>
+                                    <li><code>MULUW HL, BC</code> (ED C3): 16 ビット乗算 <code>DE:HL = HL × BC</code> (17 サイクル)。</li>
+                                </ul>
+                                乗算オーバーフローはフラグに反映されず、バス調替（T9769C）との連携で turbo R の 16 ビット DMA を高速実行。
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <b>v9938.c / vdp.c</b><br>
-                                <span style="font-size: 0.8rem; color: var(--ink-3);">ヤマハ VDP レンダラ</span>
+                                <b>hd64180.c / hd64180.h</b><br>
+                                <span style="font-size: 0.8rem; color: var(--tron-teal);">Hitachi HD64180 (6.144 MHz)</span>
                             </td>
                             <td>
-                                <b>TMS9918A / V9938 / V9958:</b> SCREEN 0〜8、VRAM 128 KiB アクセス、カラーパレット、32 枚スプライトプレーン、ハードウェアコマンド（HMMV, LMMV, HMMC, YMMM, LINE）。標準ポート <code>0x98–0x9B</code> およびワークステーション <code>0x88–0x8B</code> 両対応。
+                                <b>内部 I/O レジスタ・MMU・8 ビット乗算 (日立 HC-90/95):</b><br>
+                                <code>hd64180_state_t</code> により 64 バイト内部 I/O を管理。<code>ICR (0x3F)</code> によるベースポート動的切替、<code>CBAR (0x3A)</code> / <code>CBR (0x38)</code> / <code>BBR (0x39)</code> による 1 MiB 物理アドレス MMU 変換、および 2ch PRT タイマー（<code>TMDR0/1</code>, <code>RLDR0/1</code>, <code>TCR</code>）。<br>
+                                拡張命令群：<code>MLT BC/DE/HL/SP</code>（8ビット乗算 17サイクル）、<code>IN0 / OUT0</code>（内部ポート直接 I/O）、<code>TST / TSTIO</code>（非破壊論理積）、<code>SLP</code>（スリープ 8サイクル）、<code>OOTIM / OOTIMR</code>（ブロック内部出力）。
                             </td>
                         </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 03 / Video & Blitter Subsystem -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / Video Subsystem</span>
+                <h2 class="jp-title">3. ビデオ表示および描画エンジン (Video Subsystem: v9938.c, vdp.c)</h2>
+                <p class="band-eyebrow">Yamaha V9938/V9958 · 128 KiB VRAM · Hardware Blitter Engine</p>
+            </div>
+            <div class="doc-summary">
+                MSX2/MSX2+/turbo R の描画を担う VDP コアおよびハードウェアアクセラレーション仕様です。<br>
+                <span class="summary-en">"Rasterization architecture for Yamaha V9938/V9958 processors, detailing VRAM layouts, palette tables, and hardware blitter commands."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 32%;">VDP 描画機能 (Subsystem)</th>
+                            <th style="width: 68%;">ハードウェア仕様と C99 レンダリング実装 (Implementation Details)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>VRAM 空間と多重画面モード</b></td>
+                            <td>
+                                128 KiB VRAM を静的配列として確保。SCREEN 0（40/80 桁テキスト）、SCREEN 1（32 桁テキスト）、SCREEN 2（高解像度グラフィック）、SCREEN 3（マルチカラー）、SCREEN 4（スプライト 2）、SCREEN 5（256×212 16色）、SCREEN 6（512×212 4色）、SCREEN 7（512×212 16色）、SCREEN 8（256×212 256色RGB）、および V9958 自然画 SCREEN 10/11/12（YJK/YAE）をピクセルパーフェクト描画。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>VDP コマンドエンジン</b></td>
+                            <td>
+                                描画負荷をオフロードするハードウェアコマンド群を C99 で完全実装：
+                                <ul style="margin: 0.35rem 0 0 1.25rem; font-size: 0.82rem; line-height: 1.6;">
+                                    <li><code>HMMV / LMMV</code>: 高速矩形塗りつぶし・論理演算塗りつぶし。</li>
+                                    <li><code>HMMC / LMMC</code>: CPU から VRAM への高速バーストデータ転送。</li>
+                                    <li><code>YMMM / HMMM</code>: VRAM 内部矩形コピー（高速スクロール）。</li>
+                                    <li><code>LINE</code>: ブレゼンハムのアルゴリズムに基づくハードウェア線分描画。</li>
+                                    <li><code>SRCH</code>: カラー境界探索（ペイントアルゴリズム用）。</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>パレットとスプライト面</b></td>
+                            <td>
+                                16 本の 9 ビットパレットレジスタ（GRB 各 3 ビット、512 色中 16 色同時発色）。32 枚のスプライトプレーン（8×8 / 16×16、拡大表示対応）、走査線あたり 8 枚制限、第 5 スプライトフラグ（<code>ST_5S</code>）および衝突検出フラグ（<code>ST_C</code>）を正確にモデリング。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>二重 I/O ポート対応</b></td>
+                            <td>
+                                標準ポート <code>0x98–0x9B</code>（データ、ステータス/レジスタ、パレット、間接レジスタ）に加え、ワークステーション（HC-90/95、HC-95 FDD 等）で採用されたエイリアスポート <code>0x88–0x8B</code> の双方へシームレスに応答。
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 04 / Sound Subsystem -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">04 / Sound Subsystem</span>
+                <h2 class="jp-title">4. 音源合成サブシステム (Sound Subsystem: psg, opll, y8950, pcm, scc)</h2>
+                <p class="band-eyebrow">AY-3-8910 · YM2413 OPLL · Y8950 · turboR PCM · Konami SCC</p>
+            </div>
+            <div class="doc-summary">
+                PSG、FM 音源、PCM、および SCC 波形メモリ音源の C99 リアルタイム合成仕様です。<br>
+                <span class="summary-en">"Audio synthesis engines producing deterministic 44.1 kHz 16-bit PCM streams across PSG, OPLL FM, SCC wavetables, and turbo R PCM."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 32%;">音源チップ (Sound Chip)</th>
+                            <th style="width: 68%;">物理仕様・合成アルゴリズム・PCM 送出規約 (Synthesis Architecture)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         <tr>
                             <td>
                                 <b>psg.c / audio.c</b><br>
-                                <span style="font-size: 0.8rem; color: var(--ink-3);">PSG 音響合成ユニット</span>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">AY-3-8910 / YM2149</span>
                             </td>
                             <td>
-                                <b>AY-3-8910 / YM2149:</b> 1,789,772 Hz クロック、16 段階対数減衰（左5ビットシフト）、14 Hz 直流阻止ハイパスフィルタ、VirtIO-Sound 44.1 kHz 16-bit PCM 送出。
+                                <b>整数固定小数点 PSG 合成 (1,789,772 Hz):</b><br>
+                                3 つのトーンジェネレータ（<code>f = PSG_HZ / (16·TP)</code>）、17 ビット擬似乱数シフトレジスタ（初期値 <code>0x0ACE</code>、<code>f = PSG_HZ / (16·NP)</code>）、および 32 ステップエンベロープシーケンサ（YM2149 規約）。16 段階対数音量テーブル（0〜8160）を適用し、14 Hz ハイパスフィルタで直流成分を阻止。VirtIO-Sound へ 735 サンプル/フレーム（60Hz）送出。
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <b>opll.c / y8950.c</b><br>
-                                <span style="font-size: 0.8rem; color: var(--ink-3);">FM 音源合成ユニット</span>
+                                <b>scc.c</b><br>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">Konami SCC / SCC+</span>
                             </td>
                             <td>
-                                <b>YM2413 (MSX-MUSIC) &amp; Y8950 (MSX-AUDIO):</b> 2 オペレータ 9ch FM 変調、128 段 × 0.375 dB 減衰器、6.1 Hz ビブラート、3.7 Hz トレモロ。
+                                <b>波形メモリ音源 (5 チャンネル):</b><br>
+                                <code>0x9800–0x987F</code> に配置された 5 本の 32 バイト波形 RAM（32 サンプル/周期）。周波数分周カウンタ <code>f = 3579545 / (32·period)</code> により波形テーブルを巡回参照。周期 9 未満の超音波設定時は無音化。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>opll.c / fm_int.h</b><br>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">Yamaha YM2413 (MSX-MUSIC)</span>
+                            </td>
+                            <td>
+                                <b>2 オペレータ 9ch FM 音源合成:</b><br>
+                                I/O ポート <code>0x7C/0x7D</code>。15 種類のクリーンルーム内蔵パッチスケッチと 1 ユーザー音色。リズムモード選択時はチャンネル 6〜8 がバスドラム、スネア、タム、シンバル、ハイハットの 5 パーカッションへ転換（各リズム音声を 2 回重ねる +6 dB ブースト仕様）。128 段階 × 0.375 dB 減衰器。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>y8950.c</b><br>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">Yamaha Y8950 (MSX-AUDIO)</span>
+                            </td>
+                            <td>
+                                <b>FM-AUDIO &amp; ADPCM-B:</b><br>
+                                I/O ポート <code>0xC8/0xC9</code>。9 チャンネル FM 合成に加え、ADPCM 音声サンプリング/再生レジスタを保持。
                             </td>
                         </tr>
                         <tr>
                             <td>
                                 <b>pcm.c</b><br>
-                                <span style="font-size: 0.8rem; color: var(--ink-3);">turboR PCM サウンド</span>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">MSX turbo R PCM</span>
                             </td>
                             <td>
-                                <b>MSX turbo R PCM:</b> 15,700 Hz サンプリング、ポート 03H/02H スルーリミッタ制御（最大 48 段/刻み）、8 ビット DAC 出力。
+                                <b>15,700 Hz 8-bit DAC:</b><br>
+                                I/O ポート <code>0xA4/0xA5</code>。ポート 03H は次刻み出力、02H は即時出力。刻みあたり最大 48 段階のスルーリミッタを介して 44,100 Hz PCM バッファへアップサンプリング（0xFF 出力時は +8128）。
                             </td>
                         </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 05 / Slot, Bus & Storage Subsystem -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">05 / Bus &amp; Storage</span>
+                <h2 class="jp-title">5. バス調停・スロット・外部記憶サブシステム (Bus &amp; Storage: slots, dsk, rtc)</h2>
+                <p class="band-eyebrow">PPI 8255 · Subslots · MegaROM Mappers · WD2793 FDC · Ricoh RP5C01</p>
+            </div>
+            <div class="doc-summary">
+                スロット階層、MegaROM バンク切替、フロッピー仮想化、および周辺 LSI の仕様です。<br>
+                <span class="summary-en">"Bus multiplexing architectures handling primary slots, secondary subslots, MegaROM bank sniffers, and raw disk image FDC controllers."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 32%;">サブシステム (Module)</th>
+                            <th style="width: 68%;">バス制御プロトコルとハードウェア動作 (Bus Control Architecture)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                         <tr>
                             <td>
-                                <b>slots.c / bios.c</b><br>
-                                <span style="font-size: 0.8rem; color: var(--ink-3);">スロット制御・C-BIOS</span>
+                                <b>slots.c / ppi.c</b><br>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">スロット多重化 &amp; MegaROM</span>
                             </td>
                             <td>
-                                <b>PPI 8255 &amp; Subslots:</b> 基本スロット（ポート 0xA8）、拡張サブスロット（0xFFFF 反転）、および MegaROM マッパー（Flat, Konami, ASCII 8K/16K 最大 4 MiB）。C-BIOS 自動装填。
+                                <b>スロット階層とマッパー嗅知:</b><br>
+                                PPI 8255 ポート A（<code>0xA8</code>）による 4 ページの基本スロット選択（Slot 0: BIOS, Slot 1: Cart A, Slot 2: Cart B, Slot 3: RAM）。各基本スロットの <code>0xFFFF</code> に配置された二次スロットレジスタ（反転リード/ライト）。<br>
+                                カートリッジマッパー：Flat 32K、ASCII 8K（<code>0x6000–0x7800</code>）、ASCII 16K（<code>0x6000/0x7000</code>）、Konami（8K バンク）、Konami SCC を自動検出。最大 4 MiB までの MegaROM を動的バンキング。
                             </td>
                         </tr>
                         <tr>
                             <td>
                                 <b>dsk.c</b><br>
-                                <span style="font-size: 0.8rem; color: var(--ink-3);">フロッピーディスク仮想化</span>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">WD2793 / MB89311 FDC</span>
                             </td>
                             <td>
-                                <b>WD2793 / MB89311 FDC:</b> 720 KiB RAW ディスクイメージ（2DD, 80 トラック 9 セクタ）のステートマシンシミュレーション。HC-95 FDD ネイティブサポート。
+                                <b>フロッピーコントローラステートマシン:</b><br>
+                                720 KiB RAW ディスクファイル（2DD、両面 80 トラック、9 セクタ/トラック、512 バイト/セクタ）を仮想ドライブ A/B にマウント。シーク、ステップ、セクタ読込、セクタ書込コマンドを C99 ステートマシンで正確に模倣。HC-95 FDD ネイティブサポート。
                             </td>
                         </tr>
                         <tr>
                             <td>
-                                <b>geo3d.c</b><br>
-                                <span style="font-size: 0.8rem; color: var(--ink-3);">3D 幾何学アクセラレータ</span>
+                                <b>s1985.c / t9769c.c / rtc.c</b><br>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">MSX エンジン &amp; RTC</span>
                             </td>
                             <td>
-                                <b>Geo3D パイプライン:</b> 16-bit 固定小数点 3 次元マトリクス乗算、同次座標クリッピング、V9938 SCREEN 7/8 高速ポリゴンラスタライザ。
+                                <b>MSX エンジン LSI と時計:</b><br>
+                                Yamaha S1985（MSX2 用システムコントローラ）、Toshiba T9769B/C（MSX2+/turbo R 用統合 LSI、クロック切替とスロット制御）。Ricoh RP5C01 リアルタイムクロック（I/O ポート <code>0xB4/0xB5</code>、4 ビット 26 レジスタバンク、不揮発性 RAM 領域）。
                             </td>
                         </tr>
                     </tbody>
@@ -168,79 +411,43 @@
             </div>
         </section>
 
-        <!-- 02 / HD64180 Architecture -->
+        <!-- 06 / Geo3D Engine -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">02 / HD64180 Silicon</span>
-                <h2 class="jp-title">2. 日立 HD64180 チップアーキテクチャ (Hitachi HD64180 Core Specification)</h2>
-                <p class="band-eyebrow">hd64180.c Implementation · 64-Byte Internal I/O · PRT Timers · MMU Paging</p>
+                <span class="band-index">06 / Geo3D</span>
+                <h2 class="jp-title">6. Geo3D 3次元幾何学コプロセッサ (Geo3D Geometry Accelerator: geo3d.c)</h2>
+                <p class="band-eyebrow">Fixed-Point 3D Pipeline · muldiv Algorithm · Cohen-Sutherland Clipping</p>
             </div>
             <div class="doc-summary">
-                <code>../btron/src/emulators/msx/hd64180.c</code> に実装された HD64180 内部 I/O レジスタおよびタイマー制御構造です。<br>
-                <span class="summary-en">"Hardware registers and state machine structures governing the 64-byte internal I/O space, MMU base mapping, and dual PRT reload timers."</span>
+                Tang Nano 20K FPGA や B-System 上で 3D ゲーム（Neon Revenant, Night Raven）を駆動する演算パイプラインです。<br>
+                <span class="summary-en">"Real-time 3D geometry pipeline performing 16-bit fixed-point matrix transforms, homogeneous clipping, and polygon rendering."</span>
             </div>
 
             <div class="market-table-wrap">
                 <table class="market-table">
                     <thead>
                         <tr>
-                            <th style="width: 32%;">レジスタ / 構造体メンバ</th>
-                            <th style="width: 68%;">I/O アドレスと機能仕様 (Register Function &amp; Paging Behavior)</th>
+                            <th style="width: 32%;">幾何学演算ステージ</th>
+                            <th style="width: 68%;">アルゴリズム設計と C99 最適化 (Algorithmic Architecture)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
+                            <td><b>libgcc 非依存 64 ビット muldiv</b></td>
                             <td>
-                                <b>ICR (Interrupt Control)</b><br>
-                                <code>Internal Reg 0x3F</code>
-                            </td>
-                            <td>
-                                <b>I/O ベースアドレス設定:</b> Bit 7–6 が内部 64 バイト I/O レジスタブロックの先頭アドレスを指定（<code>0x00</code>, <code>0x40</code>, <code>0x80</code>, <code>0xC0</code>）。<code>hd64180_is_internal_io()</code> により外部ポートアクセスと瞬時弁別。
+                                ベアメタルおよび PS2 実行環境において <code>libgcc</code> の <code>__divdi3</code>（64 ビット除算ルーチン）呼び出しを完全排除。シフト、比較、減算のみで構成されるカスタム 64 ビット <code>muldiv(a, b, c) = (a * b) / c</code> をインライン展開。
                             </td>
                         </tr>
                         <tr>
+                            <td><b>コーエン・サザーランド同次クリッピング</b></td>
                             <td>
-                                <b>CBAR (Common/Bank Area)</b><br>
-                                <code>Internal Reg 0x3A</code>
-                            </td>
-                            <td>
-                                <b>MMU 領域境界設定:</b> 上位 4 ビット（CA）が Common Area 1 の開始境界アドレス、下位 4 ビット（BA）が Bank Area の開始境界アドレスを設定。リセット時デフォルト値は <code>0xF0</code>（Common Area = F000H–FFFFH）。
+                                視体積外部のポリゴン頂点を高速除外。4 ビットアウトコード（<code>INSIDE</code>, <code>LEFT</code>, <code>RIGHT</code>, <code>BOTTOM</code>, <code>TOP</code>）を用い、画面境界における線分交点を高速交差計算。
                             </td>
                         </tr>
                         <tr>
+                            <td><b>V9938 SCREEN 7/8 ラスタライザ連携</b></td>
                             <td>
-                                <b>CBR / BBR (Base Registers)</b><br>
-                                <code>Internal Reg 0x38 / 0x39</code>
-                            </td>
-                            <td>
-                                <b>MMU 物理アドレスベース:</b> Common Area Base Register (CBR) および Bank Area Base Register (BBR)。Z80 の 64 KiB 論理空間を 1 MiB の物理空間へ線形マッピング。
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <b>TMDR0 / TMDR1</b><br>
-                                <code>Reg 0x0C–0x0D / 0x14–0x15</code>
-                            </td>
-                            <td>
-                                <b>16 ビットタイマデータレジスタ:</b> PRT (Programmable Reload Timer) チャンネル 0 および 1 のダウンカウンタ現在値。CPU クロック 20 分周（または 10 分周）で減算カウント。
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <b>RLDR0 / RLDR1</b><br>
-                                <code>Reg 0x0E–0x0F / 0x16–0x17</code>
-                            </td>
-                            <td>
-                                <b>16 ビットタイマリロードレジスタ:</b> TMDR がアンダーフロー（0x0000）に達した際に自動再装填されるプリセット値。定期タイマー割込みの生成基盤。
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <b>TCR (Timer Control)</b><br>
-                                <code>Internal Reg 0x10</code>
-                            </td>
-                            <td>
-                                <b>タイマ制御レジスタ:</b> TIF0 / TIF1（タイマ割込みフラグ、0 書込でクリア）、TIE0 / TIE1（割込み許可）、TDE0 / TDE1（ダウンカウント動作許可）。
+                                投影変換された頂点座標を V9938 の <code>LINE</code> および <code>HMMV</code> ハードウェアコマンドへダイレクトパイプライン投入。Z80 の負荷を極小化し、30〜60 fps の 3D ワイヤーフレーム/ポリゴン描画を実現。
                             </td>
                         </tr>
                     </tbody>
@@ -248,116 +455,60 @@
             </div>
         </section>
 
-        <!-- 03 / Extended Instructions -->
+        <!-- 07 / B-System Integration & Frame Execution -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">03 / Opcode Extensions</span>
-                <h2 class="jp-title">3. HD64180 拡張命令セット実装 (Extended Instruction Set)</h2>
-                <p class="band-eyebrow">0xED Prefix Extensions · MLT 8-bit Multiply · IN0/OUT0 · TST · SLP</p>
+                <span class="band-index">07 / GUI &amp; App Integration</span>
+                <h2 class="jp-title">7. B-System GUI 統合とフレーム実行 (B-System GUI Integration: msx_app.c)</h2>
+                <p class="band-eyebrow">Fast-Forward Skipping · Zero-Copy Framebuffer · Dynamic Machine Sniffing</p>
             </div>
             <div class="doc-summary">
-                <code>hd64180_check_ext()</code> によりディスパッチされる、Z80 に対する拡張機械語命令仕様です。<br>
-                <span class="summary-en">"Deterministic emulation of HD64180-specific opcodes trapped under the ED prefix, detailing cycle penalties and register side effects."</span>
+                B-System ワークベンチ空間と tronMSX を結ぶ、ウィンドウマネージャ統合レイヤ仕様です。<br>
+                <span class="summary-en">"Workbench window integration handling event routing, cascade menus, fast-forwarding, and direct framebuffer compositing."</span>
             </div>
 
             <div class="market-table-wrap">
                 <table class="market-table">
                     <thead>
                         <tr>
-                            <th style="width: 25%;">機械語コード (Opcode)</th>
-                            <th style="width: 25%;">ニーモニック (Mnemonic)</th>
-                            <th style="width: 15%;">所要サイクル</th>
-                            <th style="width: 35%;">演算動作とハードウェア仕様 (Operation &amp; Flags)</th>
+                            <th style="width: 32%;">統合機能 (Feature)</th>
+                            <th style="width: 68%;">B-System ワークベンチ連携動作 (Workbench Behavior)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>ED 4C</code></td>
-                            <td><code>MLT BC</code></td>
-                            <td>17 サイクル</td>
-                            <td>8ビット符号なし乗算: <code>BC = B × C</code>。フラグ変化なし。</td>
+                            <td><b>早送り (Fast-Forward)</b></td>
+                            <td>
+                                <code>msx_app_fast_forward(int frames)</code> により、C-BIOS 初期化やハードウェア診断待機（450〜900 フレーム）を描画遅延なしで瞬時スキップ。ゲームタイトル画面へ 0 秒で到達。
+                            </td>
                         </tr>
                         <tr>
-                            <td><code>ED 5C</code></td>
-                            <td><code>MLT DE</code></td>
-                            <td>17 サイクル</td>
-                            <td>8ビット符号なし乗算: <code>DE = D × E</code>。フラグ変化なし。</td>
+                            <td><b>ゼロコピー GDEV 描画</b></td>
+                            <td>
+                                VDP の 256×212 ピクセルバッファから B-System の GDEV グラフィックプレーンへ直接ダイレクトスケーリング転送。中間メモリコピーを完全排除。
+                            </td>
                         </tr>
                         <tr>
-                            <td><code>ED 6C</code></td>
-                            <td><code>MLT HL</code></td>
-                            <td>17 サイクル</td>
-                            <td>8ビット符号なし乗算: <code>HL = H × L</code>。フラグ変化なし。</td>
-                        </tr>
-                        <tr>
-                            <td><code>ED 7C</code></td>
-                            <td><code>MLT SP</code></td>
-                            <td>17 サイクル</td>
-                            <td>8ビット符号なし乗算: <code>SP = SPh × SPl</code>。スタックポインタ各バイトを乗算。</td>
-                        </tr>
-                        <tr>
-                            <td><code>ED 00..38 (m)</code></td>
-                            <td><code>IN0 r, (m)</code></td>
-                            <td>12 サイクル</td>
-                            <td>内部ポート <code>m</code> からレジスタ <code>r</code> へ直接入力。S, Z, H=0, P/V (パリティ), N=0 を更新。</td>
-                        </tr>
-                        <tr>
-                            <td><code>ED 01..39 (m)</code></td>
-                            <td><code>OUT0 (m), r</code></td>
-                            <td>13 サイクル</td>
-                            <td>レジスタ <code>r</code> の値を内部ポート <code>m</code> へ直接出力。</td>
-                        </tr>
-                        <tr>
-                            <td><code>ED 04..3C</code></td>
-                            <td><code>TST r</code></td>
-                            <td>7 サイクル</td>
-                            <td>非破壊論理積: <code>A &amp; r</code>。結果を保持せず、S, Z, H=1, P/V, N=0, C=0 を更新。</td>
-                        </tr>
-                        <tr>
-                            <td><code>ED 34</code></td>
-                            <td><code>TST (HL)</code></td>
-                            <td>13 サイクル</td>
-                            <td>非破壊論理積: <code>A &amp; (HL)</code>。メモリ内容と A の論理積をテスト。</td>
-                        </tr>
-                        <tr>
-                            <td><code>ED 64 (imm)</code></td>
-                            <td><code>TST imm</code></td>
-                            <td>9 サイクル</td>
-                            <td>非破壊論理積: <code>A &amp; imm</code>。即値バイトと A の論理積をテスト。</td>
-                        </tr>
-                        <tr>
-                            <td><code>ED 74 (imm)</code></td>
-                            <td><code>TSTIO imm</code></td>
-                            <td>12 サイクル</td>
-                            <td>ポート論理積: <code>(Port C) &amp; imm</code>。C レジスタが示すポートの入力と即値をテスト。</td>
-                        </tr>
-                        <tr>
-                            <td><code>ED 76</code></td>
-                            <td><code>SLP</code></td>
-                            <td>8 サイクル</td>
-                            <td>スリープモード移行: CPU クロックを停止し、外部割込み（INT0/1/2）の到来まで待機。</td>
-                        </tr>
-                        <tr>
-                            <td><code>ED 83 / 93</code></td>
-                            <td><code>OOTIM / OOTIMR</code></td>
-                            <td>15 サイクル</td>
-                            <td>内部ブロック転送出力: <code>OUT0 (C), (HL); HL++; B--</code>。OOTIMR は B=0 まで反復実行。</td>
+                            <td><b>機械自動嗅知 (Machine Sniffing)</b></td>
+                            <td>
+                                装填された ROM カートリッジの容量・シグネチャを走査し、MSX1 (TMS9918)、MSX2 JP (V9938)、MSX2+ (V9958)、turbo R (R800)、および日立 HC-90 / HC-95 (HD64180) の最適マシン構成を自動展開。
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- 04 / NASA JPL Rules & Determinism -->
+        <!-- 08 / NASA JPL Rules & Determinism -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">04 / Verification</span>
-                <h2 class="jp-title">4. NASA/JPL Power of Ten 検証と確定性 (Verification &amp; Determinism)</h2>
+                <span class="band-index">08 / Verification</span>
+                <h2 class="jp-title">8. NASA/JPL Power of Ten 検証と確定性 (Verification &amp; Determinism)</h2>
                 <p class="band-eyebrow">Zero Heap Allocations · Bounded Execution Loops · Headless Automated Testing</p>
             </div>
             <div class="doc-summary">
                 航空宇宙・高信頼性システム工学規約に準拠した tronMSX の堅牢性メトリクスです。<br>
-                <span class="summary-en">"High-assurance software engineering compliance under NASA/JPL rules, guaranteeing bounded execution times and zero heap faults."</span>
+                <span class="summary-en">"High-assurance software engineering compliance under NASA/JPL rules, guaranteeing bounded execution times and zero heap faults across all modules."</span>
             </div>
 
             <div class="market-table-wrap">
@@ -379,7 +530,7 @@
                         </tr>
                         <tr>
                             <td><b>規則 3: 初期化後のヒープ確保禁止</b></td>
-                            <td>ブート完了後の <code>malloc</code> / <code>calloc</code> / <code>free</code> 呼出を完全禁止。全状態（<code>hd64180_state_t</code>, VRAM 128KB, ワークエリア）を静的構造体として事前割当。</td>
+                            <td>ブート完了後の <code>malloc</code> / <code>calloc</code> / <code>free</code> 呼出を完全禁止。全状態（<code>s_cpu</code>, <code>g_hd64180_state</code>, VRAM 128KB, ワークエリア）を静的構造体として事前割当。</td>
                         </tr>
                         <tr>
                             <td><b>規則 4: 関数の長さを 60 行以内に制限</b></td>
@@ -387,18 +538,18 @@
                         </tr>
                         <tr>
                             <td><b>規則 5: ポインタ検証とアサーション</b></td>
-                            <td>全パブリック API（<code>hd64180_init</code>, <code>hd64180_step</code> 等）の先頭で非 NULL ポインタを厳格検証。不正メモリアクセスを即時抑止。</td>
+                            <td>全パブリック API（<code>hd64180_init</code>, <code>z80_step</code>, <code>v9938_cycle</code> 等）の先頭で非 NULL ポインタを厳格検証。不正メモリアクセスを即時抑止。</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- 05 / Links -->
+        <!-- 09 / Links -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">05 / Links</span>
-                <h2 class="jp-title">5. B-System 実装への接続 (B-System B-MSX Connection)</h2>
+                <span class="band-index">09 / Links</span>
+                <h2 class="jp-title">9. B-System 実装への接続 (B-System B-MSX Connection)</h2>
                 <p class="band-eyebrow">Reference Implementations &amp; Technical Specs</p>
             </div>
             <div class="related-grid">
