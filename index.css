@@ -1694,7 +1694,7 @@ body {
     letter-spacing: 0.04em;
     color: var(--ink);
     border-right: 1px solid var(--rule);
-    white-space: nowrap;
+    white-space: normal;
 }
 .market-table th:last-child {
     border-right: none;

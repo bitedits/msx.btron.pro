@@ -118,54 +118,80 @@
                 <table class="market-table">
                     <thead>
                         <tr>
-                            <th>システム名 (System)</th>
-                            <th>カーネル種別 (Kernel Type)</th>
-                            <th>最小メモリ / スロット</th>
-                            <th>ストレージ / ファイルシステム</th>
-                            <th>主要ハードウェア要件</th>
-                            <th>B-MSX C99 エミュレーション</th>
+                            <th style="width: 38%;">基本システム・カーネル規約 (System &amp; Kernel Architecture)</th>
+                            <th style="width: 62%;">記憶階層・動作環境・B-MSX 連携 (Storage, Hardware &amp; B-MSX Specification)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><b>8-bit BTRON</b></td>
-                            <td>協調型ハイパーメディア＋確定論的 μITRON キュー</td>
-                            <td>64 KiB RAM + 128 KiB マッパー</td>
-                            <td>BMSX 実身仮身ネットワーク / TAD レコード</td>
-                            <td>MSX2 (V9938), 漢字ROM レベル1/2, マウス</td>
-                            <td>ウィンドウ内直接描画、Geo3D 連携、リアル身仮身管理</td>
+                            <td>
+                                <b>8-bit BTRON</b><br>
+                                <span style="font-size: 0.82rem; color: var(--ink-3); line-height: 1.5; display: block; margin-top: 0.25rem;">
+                                    協調型ハイパーメディア＋確定論的 μITRON タスクキュー<br>
+                                    要件: 64 KiB RAM + 128 KiB メモリマッパー
+                                </span>
+                            </td>
+                            <td>
+                                <b>記録形式:</b> BMSX 実身仮身ネットワーク / 8-bit TAD レコードストリーム<br>
+                                <b>主要ハード:</b> MSX2 (V9938), 漢字ROM (ポート 0xD8–0xDB), マウス<br>
+                                <b>B-MSX 連携:</b> GDEV ウィンドウ内直接描画、Geo3D パイプライン連携、確定同期
+                            </td>
                         </tr>
                         <tr>
-                            <td><b>MSX-BIOS</b></td>
-                            <td>ハードウェア抽象化ジャンプテーブル (HAL)</td>
-                            <td>16 KiB ROM (Slot 0) + 16 KiB RAM</td>
-                            <td>カセットテープ (CMT 1200/2400 baud), ROM</td>
-                            <td>MSX1 (TMS9918A), PSG (AY-3-8910)</td>
-                            <td>C-BIOS 相互置換、早送り (Fast-Forward) 対応</td>
+                            <td>
+                                <b>MSX-BIOS</b><br>
+                                <span style="font-size: 0.82rem; color: var(--ink-3); line-height: 1.5; display: block; margin-top: 0.25rem;">
+                                    ハードウェア抽象化ジャンプテーブル (HAL)<br>
+                                    要件: 16 KiB ROM (Slot 0) + 16 KiB RAM
+                                </span>
+                            </td>
+                            <td>
+                                <b>記録形式:</b> カセット CMT (1200/2400 baud), ROM カートリッジ (ヘッダ "AB")<br>
+                                <b>主要ハード:</b> MSX1 (TMS9918A), PSG (AY-3-8910)<br>
+                                <b>B-MSX 連携:</b> C-BIOS 相互置換、早送り (Fast-Forward 450フレーム)
+                            </td>
                         </tr>
                         <tr>
-                            <td><b>MSX-DOS 2 &amp; Nextor</b></td>
-                            <td>CP/M 2.2 互換 BDOS + MS-DOS 階層ファイルシステム</td>
-                            <td>64 KiB RAM + 64 KiB マッパー + Disk ROM</td>
-                            <td>FAT12 (フロッピー 720KB), FAT16 (Nextor SD 最大 2GB)</td>
-                            <td>MSX2+, フロッピー / IDE / SD インターフェース</td>
-                            <td>WD2793 FDC エミュレーション、DOS コール互換レイヤ</td>
+                            <td>
+                                <b>MSX-DOS 2 &amp; Nextor</b><br>
+                                <span style="font-size: 0.82rem; color: var(--ink-3); line-height: 1.5; display: block; margin-top: 0.25rem;">
+                                    CP/M 2.2 互換 BDOS + MS-DOS 階層ディレクトリ<br>
+                                    要件: 64 KiB RAM + 64 KiB マッパー + Disk ROM
+                                </span>
+                            </td>
+                            <td>
+                                <b>記録形式:</b> FAT12 (2DD 720KB), FAT16 (Nextor SD 最大 2GB / 65,524 クラスタ)<br>
+                                <b>主要ハード:</b> MSX2+, フロッピー / IDE / SD インターフェース<br>
+                                <b>B-MSX 連携:</b> WD2793 FDC エミュレーション、DOS コール互換レイヤ
+                            </td>
                         </tr>
                         <tr>
-                            <td><b>C-BIOS</b></td>
-                            <td>クリーンルーム互換 BIOS (BASIC 排除)</td>
-                            <td>16 KiB / 32 KiB ROM</td>
-                            <td>ROM カートリッジ直結 (Auto-run)</td>
-                            <td>MSX1 / MSX2 / MSX2+ / turboR (TMS9918A〜V9958)</td>
-                            <td>B-MSX 標準同梱、著作権完全フリー、瞬時ブート</td>
+                            <td>
+                                <b>C-BIOS</b><br>
+                                <span style="font-size: 0.82rem; color: var(--ink-3); line-height: 1.5; display: block; margin-top: 0.25rem;">
+                                    完全クリーンルーム互換 BIOS (BASIC 排除)<br>
+                                    要件: 16 KiB / 32 KiB ROM
+                                </span>
+                            </td>
+                            <td>
+                                <b>記録形式:</b> カートリッジ自動起動 (Auto-run)<br>
+                                <b>主要ハード:</b> MSX1 / MSX2 / MSX2+ / turboR (TMS9918A〜V9958)<br>
+                                <b>B-MSX 連携:</b> B-MSX 標準同梱、完全著作権フリー、瞬時ブート
+                            </td>
                         </tr>
                         <tr>
-                            <td><b>UZIX</b></td>
-                            <td>プリエンプティブ Unix Version 7 カーネル</td>
-                            <td>128 KiB〜512 KiB メモリマッパー</td>
-                            <td>Unix V7 ファイルシステム (512B ブロック, Inode)</td>
-                            <td>MSX2 (80桁テキスト), タイマー割込み (60Hz)</td>
-                            <td>マッパーポート 0xFC–0xFF 空間分離、多重タスク実行</td>
+                            <td>
+                                <b>UZIX (Unix V7)</b><br>
+                                <span style="font-size: 0.82rem; color: var(--ink-3); line-height: 1.5; display: block; margin-top: 0.25rem;">
+                                    プリエンプティブ Unix Version 7 カーネル<br>
+                                    要件: 128 KiB〜512 KiB メモリマッパー
+                                </span>
+                            </td>
+                            <td>
+                                <b>記録形式:</b> Unix V7 ファイルシステム (512B ブロック, Inode)<br>
+                                <b>主要ハード:</b> MSX2 (80桁テキスト), タイマー割込み (60Hz)<br>
+                                <b>B-MSX 連携:</b> マッパーポート 0xFC–0xFF 空間分離、多重タスク実行
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -188,41 +214,62 @@
                 <table class="market-table">
                     <thead>
                         <tr>
-                            <th>システム</th>
-                            <th>Page 0 (0x0000–0x3FFF)</th>
-                            <th>Page 1 (0x4000–0x7FFF)</th>
-                            <th>Page 2 (0x8000–0xBFFF)</th>
-                            <th>Page 3 (0xC000–0xFFFF)</th>
+                            <th style="width: 32%;">ページ・番地 (Page / Address)</th>
+                            <th style="width: 68%;">各 OS における空間割当・制御仕様 (OS Partitioning &amp; Paging Roles)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><b>MSX-BIOS</b></td>
-                            <td>BIOS ROM (ジャンプ表・初期化)</td>
-                            <td>BASIC ROM / カートリッジ ROM</td>
-                            <td>カートリッジ拡張 / ワークエリア</td>
-                            <td>メイン RAM (システム変数 $F380–$FFFF, スタック)</td>
+                            <td>
+                                <b>Page 0</b><br>
+                                <code>0000H–3FFFH</code><br>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">16 KiB スロット/マッパー</span>
+                            </td>
+                            <td>
+                                <b>MSX-BIOS:</b> BIOS ROM (ジャンプテーブル・初期化ベクタ <code>$0000–$015B</code>)<br>
+                                <b>MSX-DOS 2:</b> RAM (BDOS コール <code>0005H</code>, TPA <code>0100H〜</code>)<br>
+                                <b>UZIX:</b> プロセス ユーザ空間 (Text &amp; Data, ポート <code>0xFC</code> 切替)<br>
+                                <b>8-bit BTRON:</b> BTRON コアランタイム / TAD ストリームパーサ
+                            </td>
                         </tr>
                         <tr>
-                            <td><b>MSX-DOS 2</b></td>
-                            <td>RAM (BDOS コール 0005H, TPA 0100H〜)</td>
-                            <td>RAM (TPA アプリケーション実行空間)</td>
-                            <td>RAM (TPA 拡張 / マッパー動的バンク)</td>
-                            <td>RAM (MSX-DOS 2 カーネル作業域, ディスクバッファ)</td>
+                            <td>
+                                <b>Page 1</b><br>
+                                <code>4000H–7FFFH</code><br>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">16 KiB スロット/マッパー</span>
+                            </td>
+                            <td>
+                                <b>MSX-BIOS:</b> BASIC ROM / カートリッジ ROM (ヘッダ <code>"AB"</code> <code>$4000</code>)<br>
+                                <b>MSX-DOS 2:</b> RAM (TPA アプリケーション実行空間)<br>
+                                <b>UZIX:</b> プロセス ユーザ空間 (Heap &amp; ユーザスタック, ポート <code>0xFD</code> 切替)<br>
+                                <b>8-bit BTRON:</b> 実身レコードスワップ空間 (16KB マッパーセグメント)
+                            </td>
                         </tr>
                         <tr>
-                            <td><b>UZIX</b></td>
-                            <td>プロセス ユーザ空間 (Text &amp; Data)</td>
-                            <td>プロセス ユーザ空間 (Heap &amp; Stack)</td>
-                            <td>カーネル常駐コード (VFS, ドライバ)</td>
-                            <td>カーネルデータ (PCB, Inode 表, 割込みスタック)</td>
+                            <td>
+                                <b>Page 2</b><br>
+                                <code>8000H–BFFFH</code><br>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">16 KiB スロット/マッパー</span>
+                            </td>
+                            <td>
+                                <b>MSX-BIOS:</b> カートリッジ拡張空間 / システムワークエリア<br>
+                                <b>MSX-DOS 2:</b> RAM (TPA 拡張 / マッパー動的バンク)<br>
+                                <b>UZIX:</b> カーネル常駐コード (VFS キャッシュ, システムコールハンドラ)<br>
+                                <b>8-bit BTRON:</b> ウィンドウ管理 / V9938 ハードウェアレンダラ
+                            </td>
                         </tr>
                         <tr>
-                            <td><b>8-bit BTRON</b></td>
-                            <td>BTRON コアランタイム / TAD パーサ</td>
-                            <td>実身レコードスワップ空間 (16KB マッパー)</td>
-                            <td>ウィンドウ管理 / V9938 レンダラ</td>
-                            <td>μITRON イベントキュー, 仮身ポインタ, スタック</td>
+                            <td>
+                                <b>Page 3</b><br>
+                                <code>C000H–FFFFH</code><br>
+                                <span style="font-size: 0.8rem; color: var(--ink-3);">16 KiB スロット/マッパー</span>
+                            </td>
+                            <td>
+                                <b>MSX-BIOS:</b> メイン RAM (システム変数 <code>$F380–$FFFF</code>, スタック)<br>
+                                <b>MSX-DOS 2:</b> RAM (MSX-DOS 2 カーネル作業域, ディスクバッファ)<br>
+                                <b>UZIX:</b> カーネルデータ (PCB 配列, Inode テーブル, 割込みスタック)<br>
+                                <b>8-bit BTRON:</b> μITRON イベントキュー, 仮身ポインタ, スタック
+                            </td>
                         </tr>
                     </tbody>
                 </table>
