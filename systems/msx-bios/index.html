@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MSX-BIOS — ベクタジャンプ表とシステム領域 | msx.btron.pro</title>
-    <meta name="description" content="MSX-BIOS の完全仕様。$0000–$015B ベクタジャンプテーブル (CALSLT, ENASLT, RDSLT, WRSLT, CHGET, CHPUT)、システム作業領域ワークエリア ($F380–$FFFF)、および VDP レジスタ退避領域。">
+    <meta name="description" content="MSX-BIOS の完全技術仕様。$0000–$015B ベクタジャンプテーブル (CALSLT, ENASLT, RDSLT, WRSLT, CHGET, CHPUT, VDP)、システム作業領域ワークエリア ($F380–$FFFF)、C-BIOS/B-MSX C99 コア統合、HD64180/R800 拡張、および音源合成規約。">
     <link rel="stylesheet" href="../../index.css?v=3">
 </head>
 <body>
@@ -18,7 +18,7 @@
                 <li><a href="../../emulators/index.html">Emulators</a></li>
                 <li><a href="../../games/index.html">Games</a></li>
                 <li><a href="../../systems/index.html" class="active">Systems</a></li>
-                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+                <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
             </ul>
         </div>
     </nav>
@@ -32,12 +32,12 @@
     </nav>
 
     <div class="setting-hero">
-        <div class="setting-hero-badge">MSX Standards Technical Data Book · Jump Vector Table · System Variables</div>
+        <div class="setting-hero-badge">MSX Standards Technical Data Book · Jump Vector Table · System Variables · B-MSX C99 Integration</div>
         <h1>MSX-BIOS (Systems)</h1>
         <div class="subtitle">
-            ハードウェア抽象化の根幹を成すジャンプベクタ群、スロット間呼出機構、およびシステム作業領域辞書。
+            ハードウェア抽象化の根幹を成すジャンプベクタ群、スロット間呼出機構、システム作業領域辞書、および B-MSX C99 確定性実行規約。
             <span class="subtitle-en">
-                "Definitive technical specification of standard MSX-BIOS jump vectors ($0000–$015B), inter-slot execution mechanisms, and system variable work areas ($F380–$FFFF)."
+                "Definitive technical specification of standard MSX-BIOS jump vectors ($0000–$015B), inter-slot execution mechanisms, system variable work areas ($F380–$FFFF), and deterministic B-MSX C99 cleanroom kernel integration."
             </span>
         </div>
     </div>
@@ -46,96 +46,472 @@
         <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
 
         <div class="tagline-card">
-            <strong>BIOS ジャンプ表の不変性</strong> — MSX-BIOS は、全ハードウェアメーカーに対して同一のアドレス番地に同一のサブルーチンエントリ（`JP xxxx`）を配置することを義務付けました。これにより、カートリッジやアプリケーションは VDP の型番や基板配線の違いを意識することなく、標準ベクタ（`CALSLT` や `CHPUT`）をコールするだけで安全に画面表示や音響制御を行うことができます。
+            <strong>BIOS ジャンプ表の絶対不変性とハードウェア抽象化</strong> — MSX-BIOS は、全ハードウェアメーカーに対して同一のアドレス番地に同一のサブルーチンエントリ（<code>JP xxxx</code>）を配置することを義務付けました。これにより、カートリッジやアプリケーションは VDP の型番や基板配線の違いを意識することなく、標準ベクタ（<code>CALSLT</code> や <code>CHPUT</code>）をコールするだけで安全に画面表示や音響制御を行うことができます。B-System の <strong>B-MSX</strong> では、この仕様を忠実に反映し、クリーンルーム C-BIOS、Hitachi HD64180 / ASCII R800 / Z80 CPU パイプライン、漢字ROM、および 60Hz 確定同期駆動と完全統合しています。<br>
             <span class="tagline-en">
-                "The MSX-BIOS established a strict contract requiring identical three-byte JP instructions across fixed addresses ($0000–$015B). This invariant jump table allowed software to invoke screen changes, slot switching, and console I/O across all certified manufacturer models."
+                "The MSX-BIOS established a strict contract requiring identical three-byte JP instructions across fixed addresses ($0000–$015B). This invariant jump table allowed software to invoke screen changes, slot switching, and console I/O across all certified manufacturer models. Within B-System, the B-MSX C99 core honors this exact abstraction layer, coupling C-BIOS dispatch, HD64180/R800/Z80 execution pipelines, Kanji ROM banking, and deterministic 60 Hz frame synchronization."
             </span>
         </div>
 
+        <!-- 01 / Reset & RST Vectors -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">01 / Vectors</span>
-                <h2 class="jp-title">1. 主要ジャンプベクタ表 (Core Jump Vectors)</h2>
-                <p class="band-eyebrow">Slot Switching · Character I/O · VDP Subsystem</p>
+                <span class="band-index">01 / Reset &amp; RST</span>
+                <h2 class="jp-title">1. リセットおよび RST 再開ベクタ (Reset &amp; RST Vectors)</h2>
+                <p class="band-eyebrow">Z80 Restart Instructions · Slot 0 Entry Points · Interrupt Vectors</p>
             </div>
             <div class="doc-summary">
-                MSX-BIOS における代表的なエントリベクタのアドレスと引数仕様です。<br>
-                <span class="summary-en">"Fundamental entry points governing slot traversal, console character output, and VRAM memory block transfers."</span>
+                Z80 の 1 バイト再開命令（<code>RST 00H–38H</code>）に呼応する、MSX-BIOS 最重要低レベルエントリ群です。<br>
+                <span class="summary-en">"Core single-byte restart primitives governing hardware cold/warm initialization, syntax parsing, inter-slot dispatch, and VBLANK interrupt handling."</span>
             </div>
 
             <div class="market-table-wrap">
                 <table class="market-table">
                     <thead>
                         <tr>
-                            <th>アドレス (Address)</th>
-                            <th>ベクタ名 (Name)</th>
-                            <th>引数・レジスタ (Parameters)</th>
-                            <th>機能仕様 (Functional Specification)</th>
+                            <th>番地 (Address)</th>
+                            <th>命令 / ベクタ名</th>
+                            <th>引数・レジスタ (Registers)</th>
+                            <th>機能仕様とハードウェア動作 (Functional Specification)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>$001C</code></td>
-                            <td><code>CALSLT</code></td>
-                            <td><code>IY</code>: スロット番号, <code>IX</code>: 呼出アドレス</td>
-                            <td>指定スロットのサブルーチンを呼び出し、完了後元のスロットへ安全復帰</td>
+                            <td><code>$0000</code></td>
+                            <td><code>RST 00H (CHKRAM)</code></td>
+                            <td>なし</td>
+                            <td>コールドリセット。メモリ整合性チェック、VDP初期化、スロット構成走査、ワークエリア構築後に BASIC またはカートリッジを起動。</td>
                         </tr>
                         <tr>
-                            <td><code>$0024</code></td>
-                            <td><code>ENASLT</code></td>
-                            <td><code>A</code>: スロット番号, <code>HL</code>: アドレス空間</td>
-                            <td>指定メモリページに指定スロットのメモリを恒久的に接続切替</td>
+                            <td><code>$0008</code></td>
+                            <td><code>RST 08H (SYNCHR)</code></td>
+                            <td><code>HL</code>: テキストポインタ</td>
+                            <td>BASIC 構文解析。<code>HL</code> が指す文字と命令直後の 1 バイトを比較し、一致すれば <code>HL</code> を進めて復帰。不一致時は Syntax error。</td>
                         </tr>
                         <tr>
-                            <td><code>$000C</code></td>
-                            <td><code>RDSLT</code></td>
-                            <td><code>A</code>: スロット番号, <code>HL</code>: 読出アドレス</td>
-                            <td>他スロットの 1 バイトを読み出し、<code>A</code> レジスタに格納</td>
+                            <td><code>$0010</code></td>
+                            <td><code>RST 10H (RDSLT)</code></td>
+                            <td><code>A</code>: スロット, <code>HL</code>: アドレス</td>
+                            <td>スロット間 1 バイト読み出し。指定スロットの <code>HL</code> 番地から 1 バイトを <code>A</code> に読み出し、スロット状態を復元。</td>
                         </tr>
                         <tr>
-                            <td><code>$0014</code></td>
-                            <td><code>WRSLT</code></td>
-                            <td><code>A</code>: スロット番号, <code>HL</code>: 書込アドレス, <code>E</code>: データ</td>
-                            <td>他スロットの指定アドレスに 1 バイトを書き込み</td>
+                            <td><code>$0018</code></td>
+                            <td><code>RST 18H (CALSLT)</code></td>
+                            <td><code>IY</code>: スロット, <code>IX</code>: 呼出先</td>
+                            <td>スロット間サブルーチン呼出。スロットを動的切替して <code>IX</code> を実行し、終了後に呼出元スロット環境へ安全復帰。</td>
                         </tr>
                         <tr>
-                            <td><code>$005C</code></td>
-                            <td><code>LDIRVM</code></td>
-                            <td><code>HL</code>: RAM アドレス, <code>DE</code>: VRAM アドレス, <code>BC</code>: 長さ</td>
-                            <td>メイン RAM から VRAM への高速ブロック転送</td>
+                            <td><code>$0020</code></td>
+                            <td><code>RST 20H (DCOMPR)</code></td>
+                            <td><code>DE</code>, <code>HL</code>: 比較値</td>
+                            <td>16ビット符号なし数値比較。<code>HL - DE</code> を行い、Zero フラグ (一致) および Carry フラグ (HL &lt; DE) をセット。</td>
                         </tr>
                         <tr>
-                            <td><code>$005F</code></td>
-                            <td><code>CHGMOD</code></td>
-                            <td><code>A</code>: 画面モード番号 (0–8)</td>
-                            <td>VDP 画面モードの切り替え (Screen 0–8)</td>
+                            <td><code>$0028</code></td>
+                            <td><code>RST 28H (GETYPR)</code></td>
+                            <td><code>DAC</code> / 記述子</td>
+                            <td>BASIC 引数型評価。式の型（文字列、整数、単精度実数、倍精度実数）を判別し DAC レジスタへフラグを設定。</td>
                         </tr>
                         <tr>
-                            <td><code>$00A2</code></td>
-                            <td><code>CHPUT</code></td>
-                            <td><code>A</code>: 文字コード</td>
-                            <td>現在の画面カーソル位置へ 1 文字を表示</td>
+                            <td><code>$0030</code></td>
+                            <td><code>RST 30H (CALLF)</code></td>
+                            <td>直後: スロット (1B) + 番地 (2B)</td>
+                            <td>インラインスロット呼出。呼出命令に続く 3 バイトのメタデータを解釈してスロット間コールを実行。</td>
                         </tr>
                         <tr>
-                            <td><code>$009F</code></td>
-                            <td><code>CHGET</code></td>
-                            <td>戻り値: <code>A</code> = 入力文字</td>
-                            <td>キーボードバッファから 1 文字取得 (入力待機)</td>
+                            <td><code>$0038</code></td>
+                            <td><code>RST 38H (H.TIMI)</code></td>
+                            <td>割込みコンテキスト</td>
+                            <td>垂直同期マスク可能割込み（VDP VBLANK / IM1）。フレーム毎に JIFFY カウンタ更新、キーボード走査、<code>H.TIMI</code> フックを実行。</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
+        <!-- 02 / Slot Management -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">02 / Workarea</span>
-                <h2 class="jp-title">2. システム作業領域 (Work Area Variables)</h2>
-                <p class="band-eyebrow">System Memory $F380–$FFFF · VDP Register Mirrors</p>
+                <span class="band-index">02 / Slots</span>
+                <h2 class="jp-title">2. スロット間メモリ切替機構 (Inter-Slot Memory Management)</h2>
+                <p class="band-eyebrow">PPI 8255 Port A · Subslots at $FFFF · Dynamic Bank Dispatch</p>
             </div>
             <div class="doc-summary">
-                Z80 アドレス <code>$F380–$FFFF</code> に割り当てられた重要なシステム変数です。<br>
-                <span class="summary-en">"Dictionary of essential system variables stored in upper RAM, including VDP mirror bytes and keyboard buffers."</span>
+                MSX の最大 4 MiB 空間を管理する基本スロットおよび拡張サブスロットの制御ベクタです。<br>
+                <span class="summary-en">"Low-level memory paging vectors managing Primary Slot PPI 8255 ($A8) and Secondary Subslot registers ($FFFF inverted)."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>番地 (Address)</th>
+                            <th>ベクタ名 (Identifier)</th>
+                            <th>引数・レジスタ (Registers)</th>
+                            <th>機能仕様とスロット切替プロトコル (Paging Logic)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$000C</code></td>
+                            <td><code>RDSLT</code></td>
+                            <td><code>A</code>: スロット ID, <code>HL</code>: 番地</td>
+                            <td>対象スロットの一時選択、<code>(HL)</code> からの 1 バイト読出、元スロットの復元。戻り値: <code>A</code> = 読出データ。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0014</code></td>
+                            <td><code>WRSLT</code></td>
+                            <td><code>A</code>: スロット ID, <code>HL</code>: 番地, <code>E</code>: 値</td>
+                            <td>対象スロットの一時選択、<code>E</code> の内容を <code>(HL)</code> へ書き込み、元スロットの復元。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$001C</code></td>
+                            <td><code>CALSLT</code></td>
+                            <td><code>IY</code>: スロット ID, <code>IX</code>: 呼出番地</td>
+                            <td>スタック上に復帰スロット番号を退避し、指定スロットへ切り替えて <code>IX</code> を実行。復帰時にスロットを再構成。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0024</code></td>
+                            <td><code>ENASLT</code></td>
+                            <td><code>A</code>: スロット ID, <code>HL</code>: 対象ページ</td>
+                            <td><code>HL</code> の上位 2 ビットが示すメモリページ（0〜3）に対し、指定スロットを恒久的に接続。スロットテーブル <code>SLTTBL</code> を更新。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0030</code></td>
+                            <td><code>CALLF</code></td>
+                            <td>リターンアドレス直後のパラメータ</td>
+                            <td>呼び出し側コードブロック直後に埋め込まれたスロット ID (1 バイト) とアドレス (2 バイト) を参照してスロット間分岐。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="doc-summary" style="margin-top: 1.5rem;">
+                <strong>スロット ID 表現規約 (Slot Identifier Format):</strong><br>
+                レジスタ <code>A</code> または <code>IYH</code> に渡すスロット ID は以下の 8 ビット構造を持ちます：
+                <ul style="margin: 0.5rem 0 0 1.25rem; line-height: 1.75; font-size: 0.88rem;">
+                    <li><b>Bit 0–1 (PS):</b> 基本スロット番号 (0〜3)。PPI 8255 ポート A (<code>$A8</code>) に対応。</li>
+                    <li><b>Bit 2–3 (SS):</b> 拡張サブスロット番号 (0〜3)。各基本スロット空間の <code>$FFFF</code>（反転値）に対応。</li>
+                    <li><b>Bit 7 (EX):</b> 拡張スロット指定フラグ (0 = 基本スロットのみ, 1 = 拡張サブスロット有効)。</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 03 / VDP & Display Control -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / Display &amp; VDP</span>
+                <h2 class="jp-title">3. 画面制御および VRAM 転送ベクタ (VDP &amp; Graphics Subsystem)</h2>
+                <p class="band-eyebrow">TMS9918A / V9938 / V9958 · Block Transfers · Screen Mode Dispatch</p>
+            </div>
+            <div class="doc-summary">
+                VDP レジスタ書き込み、VRAM ダイレクトリード/ライト、および高速ブロック転送を抽象化するベクタ群です。<br>
+                <span class="summary-en">"Hardware abstraction vectors for video display processors, handling VRAM burst copying, screen transitions, and register mutations."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>番地 (Address)</th>
+                            <th>ベクタ名 (Name)</th>
+                            <th>引数・レジスタ (Parameters)</th>
+                            <th>機能仕様とハードウェア動作 (Functional Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$0041</code></td>
+                            <td><code>DISSCR</code></td>
+                            <td>なし</td>
+                            <td>画面ブランキング（表示無効化）。VDP レジスタ 1 の Bit 6 をリセットし、画面を非表示にして VRAM アクセスを高速化。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0044</code></td>
+                            <td><code>ENASCR</code></td>
+                            <td>なし</td>
+                            <td>画面表示許可。VDP レジスタ 1 の Bit 6 をセットし、画面表示を再開。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0047</code></td>
+                            <td><code>WRTVDP</code></td>
+                            <td><code>B</code>: データ, <code>C</code>: レジスタ番号</td>
+                            <td>VDP コントロールレジスタ <code>C</code> にデータ <code>B</code> を書き込み、システムワークエリア <code>RGnSAV</code> を同期更新。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$004A</code></td>
+                            <td><code>RDVDP</code></td>
+                            <td>戻り値: <code>A</code> = ステータス値</td>
+                            <td>VDP ステータスレジスタ 0 の内容を読み出し、<code>A</code> に格納。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$004D</code></td>
+                            <td><code>SETRD</code></td>
+                            <td><code>HL</code>: VRAM アドレス</td>
+                            <td>VDP の VRAM 読み出しポインタを <code>HL</code> に設定し、ポート <code>$98</code>（または <code>$88</code>）経由の連続読み出しを準備。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0050</code></td>
+                            <td><code>SETWRT</code></td>
+                            <td><code>HL</code>: VRAM アドレス</td>
+                            <td>VDP の VRAM 書き込みポインタを <code>HL</code> に設定し、ポート <code>$98</code>（または <code>$88</code>）経由の連続書き込みを準備。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0053</code></td>
+                            <td><code>FILVRM</code></td>
+                            <td><code>HL</code>: 開始番地, <code>BC</code>: 長さ, <code>A</code>: 書込値</td>
+                            <td>VRAM 領域の高速フィル。開始番地 <code>HL</code> から <code>BC</code> バイト分を <code>A</code> の値で埋め尽くす。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0056</code></td>
+                            <td><code>LDIRMV</code></td>
+                            <td><code>HL</code>: VRAM, <code>DE</code>: RAM, <code>BC</code>: 長さ</td>
+                            <td>ブロック転送（VRAM → RAM）。VRAM の <code>HL</code> からメイン RAM の <code>DE</code> へ <code>BC</code> バイトを一括転送。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$005C</code></td>
+                            <td><code>LDIRVM</code></td>
+                            <td><code>HL</code>: RAM, <code>DE</code>: VRAM, <code>BC</code>: 長さ</td>
+                            <td>ブロック転送（RAM → VRAM）。メイン RAM の <code>HL</code> から VRAM の <code>DE</code> へ <code>BC</code> バイトを一括高速転送。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$005F</code></td>
+                            <td><code>CHGMOD</code></td>
+                            <td><code>A</code>: 画面モード番号 (0〜8)</td>
+                            <td>画面モード切り替え。モードに応じた VRAM 配置テーブル（名前・色・パターン・スプライト）および VDP レジスタを初期化。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0062</code></td>
+                            <td><code>CHGCLR</code></td>
+                            <td><code>FORGND</code>, <code>BAKCLR</code>, <code>BDRCLR</code></td>
+                            <td>前景色、背景色、ボーダー色を一括適用。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0069</code></td>
+                            <td><code>CLRSPR</code></td>
+                            <td><code>A</code>: 画面モード</td>
+                            <td>全スプライトアトリビュートテーブルを初期化し、スプライトを非表示化。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$006C</code></td>
+                            <td><code>INITXT</code></td>
+                            <td>なし</td>
+                            <td>SCREEN 0 (40×24 テキストモード) の初期化。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$006F</code></td>
+                            <td><code>INIT32</code></td>
+                            <td>なし</td>
+                            <td>SCREEN 1 (32×24 グラフィックテキストモード) の初期化。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0072</code></td>
+                            <td><code>INIGRP</code></td>
+                            <td>なし</td>
+                            <td>SCREEN 2 (256×192 高解像度グラフィックモード) の初期化。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0075</code></td>
+                            <td><code>INIMLT</code></td>
+                            <td>なし</td>
+                            <td>SCREEN 3 (64×48 マルチカラーモード) の初期化。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$007E</code></td>
+                            <td><code>SETGRP</code></td>
+                            <td>なし</td>
+                            <td>VDP をグラフィックモード（SCREEN 2）のアドレスマッピングに設定。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 04 / Character & Console I/O -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">04 / Console I/O</span>
+                <h2 class="jp-title">4. コンソール入出力および文字制御 (Console &amp; Peripheral I/O)</h2>
+                <p class="band-eyebrow">Keyboard Buffer · Screen Formatting · Line Input</p>
+            </div>
+            <div class="doc-summary">
+                標準文字出力、キーボードスキャン、ライン入力、およびファンクションキー制御ベクタです。<br>
+                <span class="summary-en">"Interactive I/O vectors for terminal emulation, ASCII printing, cyclic keyboard matrix sampling, and function key rendering."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>番地 (Address)</th>
+                            <th>ベクタ名 (Name)</th>
+                            <th>引数・戻り値 (Registers)</th>
+                            <th>機能仕様 (Functional Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$009C</code></td>
+                            <td><code>CHSNS</code></td>
+                            <td>戻り値: Zero フラグ (0 = バッファ有)</td>
+                            <td>キーボードバッファの検査。キー入力が存在するか判定（ノンブロッキング）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$009F</code></td>
+                            <td><code>CHGET</code></td>
+                            <td>戻り値: <code>A</code> = 文字コード</td>
+                            <td>キーボードから 1 文字取得。バッファが空の場合はキーが押されるまで待機。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00A2</code></td>
+                            <td><code>CHPUT</code></td>
+                            <td><code>A</code>: 出力文字コード</td>
+                            <td>現在のカーソル位置へ 1 文字を表示し、カーソルを進める。制御文字（改行、CLS、ベル等）を適切に解釈。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00A5</code></td>
+                            <td><code>LPTOUT</code></td>
+                            <td><code>A</code>: 送信データ</td>
+                            <td>プリンタポートへ 1 バイトを出力。ハンドシェイクがタイムアウトした場合は Carry フラグをセット。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00A8</code></td>
+                            <td><code>LPTSTT</code></td>
+                            <td>戻り値: <code>A</code> (0xFF = 準備完了, 0 = ビジー)</td>
+                            <td>プリンタのステータス取得。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00B1</code></td>
+                            <td><code>INLIN</code></td>
+                            <td>戻り値: <code>HL</code> = 入力バッファポインタ</td>
+                            <td>1 行入力ルーチン。オートリピート、カーソル編集、BS キー処理を伴うフルラインエディタ。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00B7</code></td>
+                            <td><code>BREAKX</code></td>
+                            <td>戻り値: Carry フラグ (1 = 押下)</td>
+                            <td>Ctrl+STOP キーが押されているかを検査。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00C0</code></td>
+                            <td><code>BEEP</code></td>
+                            <td>なし</td>
+                            <td>標準ビープ音の発音。PSG を用いて短時間の矩形波警報音を出力。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00C3</code></td>
+                            <td><code>CLS</code></td>
+                            <td>なし</td>
+                            <td>画面消去。テキスト画面全体を空白文字で埋め、カーソルを左上隅 <code>(1, 1)</code> に移動。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00C6</code></td>
+                            <td><code>POSIT</code></td>
+                            <td><code>H</code>: 行番号 (Y), <code>L</code>: 桁番号 (X)</td>
+                            <td>テキストカーソルの物理座標を <code>(L, H)</code> に移動。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00CF</code></td>
+                            <td><code>DSPFNK</code></td>
+                            <td>なし</td>
+                            <td>画面最下行へのファンクションキーガイド（F1〜F5 / F6〜F10）の描画。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00D2</code></td>
+                            <td><code>TOTEXT</code></td>
+                            <td>なし</td>
+                            <td>グラフィックモードから直前のテキスト画面モードへの復帰。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00D5</code></td>
+                            <td><code>GTSTCK</code></td>
+                            <td><code>A</code>: ポート (0=カーソル, 1=Joy1, 2=Joy2)</td>
+                            <td>ジョイスティックの方向取得。戻り値 <code>A</code> = 0 (停止) または 1〜8 (上・右上・右・右下・下・左下・左・左上)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00D8</code></td>
+                            <td><code>GTTRIG</code></td>
+                            <td><code>A</code>: トリガ (0=Space, 1=Joy1-A, 2=Joy2-A, ...)</td>
+                            <td>トリガボタン検査。戻り値 <code>A</code> = 0xFF (押下中) または 0x00 (非押下)。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 05 / Audio & Synthesis -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">05 / Sound</span>
+                <h2 class="jp-title">5. 音源サブシステムおよび PSG ベクタ (Sound &amp; Synthesizers)</h2>
+                <p class="band-eyebrow">AY-3-8910 / YM2149 · YM2413 · Rigour vs Subtle Models</p>
+            </div>
+            <div class="doc-summary">
+                PSG 音源制御ベクタおよび B-System B-MSX が定義する音源合成コントラクトです。<br>
+                <span class="summary-en">"Hardware register manipulation for the AY-3-8910 programmable sound generator, coupled with B-MSX dual-synthesis contracts."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>番地 (Address)</th>
+                            <th>ベクタ名 (Name)</th>
+                            <th>引数・レジスタ (Parameters)</th>
+                            <th>機能仕様とハードウェア動作 (Functional Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$0090</code></td>
+                            <td><code>GICINI</code></td>
+                            <td>なし</td>
+                            <td>PSG (AY-3-8910) のハードウェア初期化。全 16 レジスタをクリアし、音声出力を遮断。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0093</code></td>
+                            <td><code>WRTPSG</code></td>
+                            <td><code>A</code>: PSG レジスタ番号 (0〜15), <code>E</code>: データ</td>
+                            <td>PSG レジスタへのデータ書き込み。音程、ノイズ、ミキサー、音量エンベロープを直接制御。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0096</code></td>
+                            <td><code>RDPSG</code></td>
+                            <td><code>A</code>: レジスタ番号, 戻り値: <code>A</code> = データ</td>
+                            <td>PSG レジスタ値（ジョイスティックポート A/B 入力を含む）の読み出し。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0099</code></td>
+                            <td><code>STRTMS</code></td>
+                            <td>なし</td>
+                            <td>バックグラウンド PLAY 文音楽演奏ドライバの実行開始（タイマー割込み駆動）。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="doc-summary" style="margin-top: 1.5rem;">
+                <strong>B-MSX 音響合成規約（Rigour と Subtle の分離設計）:</strong><br>
+                B-System <code>MSX.html</code> および <code>MSX-SOUND.txt</code> に定義された音源モデルは、確定論的エミュレーション（Rigour）と譜面生成（Subtle）を厳密に分離しています：
+                <ul style="margin: 0.5rem 0 0 1.25rem; line-height: 1.75; font-size: 0.88rem;">
+                    <li><b>Rigour（再生中の物理チップ）:</b> PSG 基本周波数 1,789,772 Hz（<code>f = 1789772 / (16·TP)</code>）。16段階対数減衰（0, 51, 57, 64, 71, 80, 90, 101, 113, 127, 143, 160, 180, 202, 227, 255 を左5ビットシフト、最大 8160）。エンベロープ 0x0B は最大保持、0x0F は無音保持。スピーカ直流遮断ハイパスフィルタは約 14 Hz。</li>
+                    <li><b>Subtle（B-Sound 譜面用）:</b> 44,100 Hz ステレオ S16、<code>master_soft_clamp</code>、パン 0。矩形波 <code>PULSE</code>、振幅 0.22、減衰 0.18 秒。</li>
+                    <li><b>Konami SCC:</b> <code>f = 3579545 / (32·period)</code>。周期 9 未満は無音。5 本の波形テーブルメモリ。</li>
+                    <li><b>Yamaha YM2413 (OPLL):</b> 128 段 × 0.375 dB。ビブラート 6.1 Hz（約 14 cent）、トレモロ 3.7 Hz（4.8 dB）、リズム +6 dB。</li>
+                    <li><b>MSX turbo R PCM:</b> 15,700 Hz。ポート 03H は次刻み出力、02H は即時（最大 48 段スルー）。0xFF 出力時は +8128。</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 06 / System Work Area Dictionary -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">06 / Work Area</span>
+                <h2 class="jp-title">6. システム作業領域辞書 (System Work Area Variables)</h2>
+                <p class="band-eyebrow">Upper Memory $F380–$FFFF · Hardware Save States · Interrupt Hooks</p>
+            </div>
+            <div class="doc-summary">
+                Z80 アドレス空間最上位 <code>$F380–$FFFF</code> に配置された、システムカーネル制御変数群の完全定義です。<br>
+                <span class="summary-en">"Definitive dictionary of system variables residing in upper RAM, mapping display tables, keyboard rings, and hardware interrupt hooks."</span>
             </div>
 
             <div class="market-table-wrap">
@@ -145,55 +521,274 @@
                             <th>アドレス (Address)</th>
                             <th>シンボル名 (Symbol)</th>
                             <th>サイズ</th>
-                            <th>機能仕様と役割 (Role &amp; Definition)</th>
+                            <th>機能仕様とハードウェア連携 (Functional Role &amp; Layout)</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
+                            <td><code>$F380</code></td>
+                            <td><code>LINL40</code></td>
+                            <td>1 バイト</td>
+                            <td>SCREEN 0 (40桁テキストモード) における 1 行の最大文字幅 (デフォルト: 40)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F381</code></td>
+                            <td><code>LINL32</code></td>
+                            <td>1 バイト</td>
+                            <td>SCREEN 1 (32桁テキストモード) における 1 行の最大文字幅 (デフォルト: 29)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F384</code></td>
+                            <td><code>TXTNAM</code></td>
+                            <td>2 バイト</td>
+                            <td>SCREEN 0 パターンネームテーブルの VRAM ベースアドレス。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F386</code></td>
+                            <td><code>TXTCOL</code></td>
+                            <td>2 バイト</td>
+                            <td>SCREEN 0 カラーテーブルの VRAM ベースアドレス。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F388</code></td>
+                            <td><code>TXTCGP</code></td>
+                            <td>2 バイト</td>
+                            <td>SCREEN 0 パターングラフィックジェネレータテーブルの VRAM ベースアドレス。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F38E</code></td>
+                            <td><code>T32NAM</code></td>
+                            <td>2 バイト</td>
+                            <td>SCREEN 1 パターンネームテーブルの VRAM ベースアドレス。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F394</code></td>
+                            <td><code>GRPNAM</code></td>
+                            <td>2 バイト</td>
+                            <td>SCREEN 2 パターンネームテーブルの VRAM ベースアドレス。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F39A</code></td>
+                            <td><code>MLTNAM</code></td>
+                            <td>2 バイト</td>
+                            <td>SCREEN 3 パターンネームテーブルの VRAM ベースアドレス。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F3D4</code></td>
+                            <td><code>CLIKSW</code></td>
+                            <td>1 バイト</td>
+                            <td>キークリック音スイッチ (0 = 無効, 1 = 有効)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F3DC</code></td>
+                            <td><code>CSRY</code></td>
+                            <td>1 バイト</td>
+                            <td>テキスト画面の現在のカーソル Y 座標 (1〜24)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F3DD</code></td>
+                            <td><code>CSRX</code></td>
+                            <td>1 バイト</td>
+                            <td>テキスト画面の現在のカーソル X 座標 (1〜40 / 1〜32)。</td>
+                        </tr>
+                        <tr>
                             <td><code>$F3E0–$F3E7</code></td>
                             <td><code>RG0SAV–RG7SAV</code></td>
                             <td>8 バイト</td>
-                            <td>VDP レジスタ 0–7 の書き込み値退避ミラー（VDP レジスタは読出不可のため）</td>
+                            <td>VDP レジスタ 0〜7 の書き込み値退避ミラー（VDP レジスタは書込専用のため、現在値をここに保持）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$FFE7–$FFF6</code></td>
+                            <td><code>RG8SAV–RG23SAV</code></td>
+                            <td>16 バイト</td>
+                            <td>MSX2/V9938 拡張 VDP レジスタ 8〜23 の書き込み値退避ミラー。</td>
                         </tr>
                         <tr>
                             <td><code>$F3E9</code></td>
                             <td><code>BAKCLR</code></td>
                             <td>1 バイト</td>
-                            <td>テキスト画面の背景色番号</td>
+                            <td>現在のテキスト画面背景色コード。</td>
                         </tr>
                         <tr>
                             <td><code>$F3EA</code></td>
                             <td><code>BDRCLR</code></td>
                             <td>1 バイト</td>
-                            <td>画面周辺ボーダー色番号</td>
+                            <td>現在の画面外周ボーダー色コード。</td>
                         </tr>
                         <tr>
-                            <td><code>$F380</code></td>
-                            <td><code>LINL40</code></td>
-                            <td>1 バイト</td>
-                            <td>SCREEN 0 の 1 行文字幅設定値</td>
+                            <td><code>$F3F8</code></td>
+                            <td><code>GETPNT</code></td>
+                            <td>2 バイト</td>
+                            <td>キーボードリングバッファの読出ポインタ番地。</td>
                         </tr>
                         <tr>
-                            <td><code>$FCC1</code></td>
+                            <td><code>$F3FA</code></td>
+                            <td><code>PUTPNT</code></td>
+                            <td>2 バイト</td>
+                            <td>キーボードリングバッファの書込ポインタ番地。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$FBF0–$FC17</code></td>
+                            <td><code>KEYBUF</code></td>
+                            <td>40 バイト</td>
+                            <td>キーボード入力リングバッファ本体。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$FC9E</code></td>
+                            <td><code>JIFFY</code></td>
+                            <td>2 バイト</td>
+                            <td>垂直同期割込みごとにインクリメントされる 16 ビットフレームカウンタ (60Hz)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$FCC1–$FCC4</code></td>
                             <td><code>EXPTBL</code></td>
                             <td>4 バイト</td>
-                            <td>スロット 0–3 が拡張スロット（Subslot）か否かの識別テーブル</td>
+                            <td>基本スロット 0〜3 が拡張スロット（サブスロット構成）を持つかを示すフラグ配列 (0x80 = 拡張)。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$FCC5–$FCD4</code></td>
+                            <td><code>SLTTBL</code></td>
+                            <td>16 バイト</td>
+                            <td>各スロットおよびサブスロットの現在のメモリページ接続状態キャッシュ。</td>
                         </tr>
                         <tr>
                             <td><code>$FD9A</code></td>
                             <td><code>H.KEYI</code></td>
                             <td>5 バイト</td>
-                            <td>タイマー割り込みフックルーチンジャンプ領域</td>
+                            <td>キーボード割込みルーチン先頭フック領域（デフォルトは 5 バイトの <code>RET</code> / <code>NOP</code>）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>$FD9F</code></td>
+                            <td><code>H.TIMI</code></td>
+                            <td>5 バイト</td>
+                            <td>タイマー割込み（VBLANK）フック領域。ユーザー定義 60Hz 処理の注入点。</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </section>
+
+        <!-- 07 / B-MSX & C-BIOS Cleanroom Architecture -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">07 / B-MSX C99 Integration</span>
+                <h2 class="jp-title">7. B-MSX C99 コアおよびクリーンルーム設計 (B-MSX &amp; C-BIOS Architecture)</h2>
+                <p class="band-eyebrow">NASA/JPL Power of Ten · Fast-Forward · HD64180 / R800 Multi-CPU</p>
+            </div>
+            <div class="doc-summary">
+                B-System ワークベンチ空間に統合された C99 純実装エミュレーションエンジンにおける BIOS 実行アーキテクチャです。<br>
+                <span class="summary-en">"Deterministic C99 implementation details under NASA/JPL Power of Ten coding rules, integrating C-BIOS, fast-forwarding, and heterogeneous multi-CPU execution."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>コンポーネント</th>
+                            <th>対象規格 / 仕様</th>
+                            <th>B-MSX C99 実装詳細 (Implementation Details)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>C-BIOS 統合</b></td>
+                            <td>オープンソース クリーンルームファームウェア</td>
+                            <td>商用 MSX-BASIC ROM を必要とせず、カートリッジヘッダ（<code>$4000</code> の <code>"AB"</code> シグネチャ、<code>$4002</code> 初期化ベクタ、<code>$4004</code> 実行ベクタ）を自動解析して即時実行。Hitachi HC-90/95 向け日本語 MSX2 C-BIOS (<code>cbios_main_msx2_jp.rom</code>) を標準搭載。</td>
+                        </tr>
+                        <tr>
+                            <td><b>早送り (Fast-Forward)</b></td>
+                            <td><code>msx_app_fast_forward(int frames)</code></td>
+                            <td>描画遅延を伴うことなく CPU 命令サイクルおよび VDP 内部カウンタのみを任意のフレーム数（450〜900 フレーム）高速進捗。BIOS ハードウェア診断およびメモリクリアをスキップし、瞬時にタイトル画面へ到達。</td>
+                        </tr>
+                        <tr>
+                            <td><b>μITRON 確定同期</b></td>
+                            <td>独立 μITRON タスク (<code>msx_task</code>)</td>
+                            <td>組込みタスクスケジューラ（<code>cre_tsk</code> / <code>sta_tsk</code>）直結の 60Hz 確定同期駆動。ウィンドウメッセージキューをブロックすることなく、PSG リアルタイム音声合成と 60fps スプライト走査をジッターなしで遂行。</td>
+                        </tr>
+                        <tr>
+                            <td><b>マルチ CPU コア</b></td>
+                            <td>Z80A / R800 / HD64180</td>
+                            <td>Z80A（3.58 MHz）の全非公開命令・フラグ計算・IM1/IM2、ASCII R800（28.6 MHz）の 16 ビット乗算命令（<code>MULUB</code>, <code>MULUW</code>）、および Hitachi HD64180（6.144 MHz）の 8 ビット乗算（<code>MLT</code>）、内部 I/O レジスタ（<code>IN0</code>/<code>OUT0</code>）、非破壊論理積（<code>TST</code>/<code>TSTIO</code>）、スリープ（<code>SLP</code>）、プログラマブル・リロードタイマ（PRT ch0/1）を完全エミュレート。</td>
+                        </tr>
+                        <tr>
+                            <td><b>漢字 ROM &amp; FDD</b></td>
+                            <td>JIS X 0208 Level 1 / 2 · WD2793</td>
+                            <td>I/O ポート <code>$D8–$DB</code> 経由の 16×16 ドット漢字 ROM バンキング。HC-95 FDD ではフロッピーディスクドライブ ROM (720KB) および WD2793/MB89311 ディスクコントローラをシミュレート。</td>
+                        </tr>
+                        <tr>
+                            <td><b>ゼロコピー描画</b></td>
+                            <td>VDP 256×212 → GDEV バッファ</td>
+                            <td>V9938/TMS9918A のラスタライズ出力を B-System ワークベンチの GDEV ウィンドウバッファへダイレクトスケーリング転送。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
     </main>
 
-    <footer>
-        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
-            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro MSX-BIOS
+    <footer class="app-footer">
+        <div class="wrap">
+            <div class="footer-columns">
+                <div>
+                    <h4>Computers</h4>
+                    <ul>
+                        <li><a href="../../computers/sony-hb-f900/index.html">Sony HB-F900</a></li>
+                        <li><a href="../../computers/sony-hb-g900ap/index.html">Sony HB-G900AP</a></li>
+                        <li><a href="../../computers/victor-hc-95/index.html">Victor HC-95 AB</a></li>
+                        <li><a href="../../computers/yamaha-yis-805/index.html">Yamaha YIS-805 256</a></li>
+                        <li><a href="../../computers/panasonic-fs-a1fm/index.html">Panasonic FS-A1FM</a></li>
+                        <li><a href="../../computers/hitachi-mb-h70/index.html">Hitachi MB-H70</a></li>
+                        <li><a href="../../computers/index.html">全13機種一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Systems</h4>
+                    <ul>
+                        <li><a href="../../systems/btron/index.html">8-bit BTRON</a></li>
+                        <li><a href="../../systems/msx-bios/index.html" class="active">MSX-BIOS</a></li>
+                        <li><a href="../../systems/msx-dos/index.html">MSX-DOS 2</a></li>
+                        <li><a href="../../systems/c-bios/index.html">C-BIOS</a></li>
+                        <li><a href="../../systems/uzix/index.html">UZIX (Unix V7)</a></li>
+                        <li><a href="../../systems/index.html">基本ソフト一覧 &rarr;</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Development</h4>
+                    <ul>
+                        <li><a href="../../development/sdcc/index.html">SDCC Compiler</a></li>
+                        <li><a href="../../development/pasmo/index.html">Pasmo Assembler</a></li>
+                        <li><a href="../../development/index.html">Toolchain Overview</a></li>
+                        <li><a href="https://btron.pro/btron/doc/txt/MSX-SOUND.txt" target="_blank">MSX Sound Spec</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Emulators</h4>
+                    <ul>
+                        <li><a href="../../emulators/openMSX/index.html">openMSX</a></li>
+                        <li><a href="../../emulators/blueMSX/index.html">blueMSX</a></li>
+                        <li><a href="../../emulators/tronMSX/index.html">tronMSX (B-MSX)</a></li>
+                        <li><a href="https://btron.pro/b-system/apps/MSX.html" target="_blank">B-System MSX App</a></li>
+                        <li><a href="https://btron.pro/btron/b-media/msx.html" target="_blank">B-MSX Book Spec</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom" style="text-align: center; margin-top: 4.5rem; padding-top: 3.5rem; border-top: 1px solid rgba(255, 255, 255, 0.12); font-size: 0.84rem; color: var(--ink-3); display: flex; flex-direction: column; align-items: center; gap: 1.6rem;">
+                <a href="../../sakazaki.svg" title="Sakazaki Clan Kamon — 二蓋笠 (Nigai-gasa)" style="display: inline-block; text-decoration: none; margin-bottom: 0.2rem;">
+                    <img src="../../sakazaki.svg" alt="Sakazaki Order Logo" style="width: 108px; height: auto; display: block; opacity: 0.88; transition: opacity 0.25s ease, transform 0.25s ease;">
+                </a>
+                <div class="footer-legal">
+                    <p style="margin: 0 0 0.85rem; font-weight: 500; letter-spacing: 0.04em; color: #b8c0c8; font-size: 0.81rem;">
+                        &copy; 2026 Cryptographics Telesystems, LLC. Ukraine. All rights reserved.
+                    </p>
+                    <p style="margin: 0 0 0.9rem; line-height: 1.75;">
+                        <b>TRADEMARK &amp; COMPLIANCE DISCLOSURE:</b> MSX&trade; is a registered trademark of MSX Licensing Corporation and ASCII Corporation. SONY&reg;, HitBit&trade;, and G-ZERO&trade; are trademarks or registered trademarks of Sony Group Corporation / Sony Corporation. Panasonic&reg; (Panasonic Holdings Corporation), Victor / JVC&reg; (JVCKENWOOD Corporation), Yamaha&reg; (Yamaha Corporation), and Hitachi&reg; (Hitachi, Ltd.) are trademarks of their respective proprietors. All manufacturer designations, hardware component identifiers, and registered software titles cited within this repository are the property of their respective trademark holders and are reproduced strictly under statutory fair use doctrine for non-commercial historical preservation, register-level hardware documentation, and cleanroom interoperability engineering.
+                    </p>
+                    <p style="margin: 0; line-height: 1.75; color: #69747e; font-size: 0.74rem;">
+                        msx.btron.pro &nbsp;·&nbsp; MSX Archival &amp; Technical Portal &nbsp;·&nbsp; Under ISC / MIT Licence &nbsp;·&nbsp; Conforming to DOCOPS &amp; PUBLISH Standards
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 
