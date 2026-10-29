@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSX-DOS — ディスクオペレーティングシステムとNextor | msx.btron.pro</title>
+    <meta name="description" content="MSX-DOS 1/2 および Nextor の完全技術仕様。INT 21h BDOS 呼出、FCB 制御、ファイルハンドル、FAT12/FAT16 クラスタ構造、および SD カードドライバインターフェース。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html" class="active">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../systems/index.html">Systems</a>
+        <span class="sep">/</span>
+        <span class="current">MSX-DOS</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Tim Paterson · ASCII &amp; Microsoft · CP/M 2.2 ABI · Nextor FAT16 Evolution</div>
+        <h1>MSX-DOS (Systems)</h1>
+        <div class="subtitle">
+            CP/M 互換 BDOS 呼出規約と MS-DOS FAT ファイルシステムの完全統合、および現代の Nextor 拡張。
+            <span class="subtitle-en">
+                "Complete technical specification of MSX-DOS 1/2 and Nextor, detailing INT 21h system calls, FCB/handle file management, FAT12/FAT16 disk structures, and modern storage drivers."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
+
+        <div class="tagline-card">
+            <strong>Tim Paterson による架け橋</strong> — MSX-DOS は、MS-DOS の原作者であるティム・パターソン氏らによって開発されました。8 ビット Z80 空間で CP/M 2.2 と完全なシステムコール互換性を保ちながら、ディスクフォーマットには PC/AT 互換機と直接交換可能な FAT12 を採用。さらに MSX-DOS 2 では階層ディレクトリとメモリマッパー環境変数が導入され、現代のオープンソース Nextor によって FAT16 大容量 SD カード運用へと進化しました。
+            <span class="tagline-en">
+                "Engineered by MS-DOS author Tim Paterson, MSX-DOS bridged the 8-bit CP/M software ecosystem with the IBM PC FAT filesystem standard. Running out of address $0100 in transient program areas, it progressed from FAT12 floppy disks to MSX-DOS 2 directory trees and Albert Beevendorp's FAT16 Nextor kernel."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / BDOS</span>
+                <h2 class="jp-title">1. BDOS システムコール規約 (INT 21h API)</h2>
+                <p class="band-eyebrow">Entry Point $0005 · C Register Functions</p>
+            </div>
+            <div class="doc-summary">
+                MSX-DOS プログラムは、アドレス <code>$0005</code> へ <code>CALL</code> することで BDOS 機能を呼び出します。<br>
+                <span class="summary-en">"Primary disk operating system routines invoked by loading function code into register C and calling address $0005."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>機能番号 (C Reg)</th>
+                            <th>機能名 (Function Name)</th>
+                            <th>入力引数 (Input)</th>
+                            <th>戻り値 (Output)</th>
+                            <th>仕様概要 (Functional Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>0x02</code></td>
+                            <td>Console Output</td>
+                            <td><code>E</code> = 文字コード</td>
+                            <td>なし</td>
+                            <td>コンソール画面へ 1 文字出力</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x09</code></td>
+                            <td>Output String</td>
+                            <td><code>DE</code> = '$' 終端文字列</td>
+                            <td>なし</td>
+                            <td>'$' で終わる文字列を画面に出力</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x0F</code></td>
+                            <td>Open File (FCB)</td>
+                            <td><code>DE</code> = FCB ポインタ</td>
+                            <td><code>A</code> = 0 (成功) / 0xFF (失敗)</td>
+                            <td>ファイルコントロールブロックによるファイルオープン</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x43</code></td>
+                            <td>Open File Handle</td>
+                            <td><code>DE</code> = パス文字列, <code>A</code> = モード</td>
+                            <td><code>B</code> = ハンドル, <code>A</code> = エラー</td>
+                            <td>MSX-DOS 2: ハンドルによるファイルオープン</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x48</code></td>
+                            <td>Read File Handle</td>
+                            <td><code>B</code> = ハンドル, <code>DE</code> = バッファ, <code>HL</code> = 長さ</td>
+                            <td><code>HL</code> = 読込バイト数</td>
+                            <td>MSX-DOS 2: ハンドルからの指定バイト数読出</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro MSX-DOS
+        </div>
+    </footer>
+
+</body>
+</html>

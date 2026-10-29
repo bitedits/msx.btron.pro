@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDCC — C99コンパイラとMSXビルド規約 | msx.btron.pro</title>
+    <meta name="description" content="SDCC (Small Device C Compiler) を用いた MSX 向け C99/C89 開発の完全手引き。__sdcccall(1) 呼出規約、独自 crt0 による ROM ヘッダ生成、メモリ配置、VDP 直接叩きマクロ、および実機カートリッジ化。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html" class="active">Development</a></li>
+                <li><a href="../../emulators/index.html">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../development/index.html">Development</a>
+        <span class="sep">/</span>
+        <span class="current">SDCC</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">SDCC 4.2+ · Z80 Architecture · __sdcccall(1) ABI · Free-Standing C99</div>
+        <h1>SDCC (Compiler)</h1>
+        <div class="subtitle">
+            Small Device C Compiler による MSX 向け最適化 C99 コード生成、呼出規約、およびカートリッジヘッダ統合。
+            <span class="subtitle-en">
+                "Definitive technical guide to compiling ANSI C99 code for the Zilog Z80 on MSX platforms using SDCC, covering calling conventions, custom CRT initialization, and memory mapping."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../development/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 開発目録へ戻る (Development Index)</a>
+
+        <div class="tagline-card">
+            <strong>SDCC MSX 開発の基本指針</strong> — 組み込み Z80 向けの SDCC は、PC 向けの汎用コンパイラとは異なり、ホストの標準ライブラリ（stdio, malloc 等）を前提としません。標準の crt0 を排除（<code>--no-std-crt0</code>）し、スタックポインタを MSX システム変数安全域（<code>$F380</code> 等）に設定。関数呼び出しには引数をレジスタ渡しする <code>__sdcccall(1)</code> を指定することで、アセンブラに匹敵する超軽量・高効率なマシン語を生成します。
+            <span class="tagline-en">
+                "SDCC development on MSX relies on a freestanding C subset without hosted runtime dependencies. By overriding standard CRT routines with a bespoke ROM header and enforcing __sdcccall(1) register passing, C99 routines compile into tight machine code rivaling hand-written assembly."
+            </span>
+        </div>
+
+        <!-- 1. Compiler Invocations -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Invocation</span>
+                <h2 class="jp-title">1. コンパイラ・リンカ起動規約 (Compiler Invocations)</h2>
+                <p class="band-eyebrow">Command Line Flags · Code &amp; Data Segment Placement</p>
+            </div>
+            <div class="doc-summary">
+                32 KiB フラット ROM カートリッジ（<code>0x4000–0xBFFF</code>）を生成するための標準ビルドコマンドです。<br>
+                <span class="summary-en">"Standard compilation and linking commands configuring code origin at 0x4020, cartridge header at 0x4000, and initialized RAM at 0xC000."</span>
+            </div>
+
+            <pre class="code-block"><code><span class="code-comment"># 1. 独自 crt0 のアセンブル (Pasmo または sdasz80)</span>
+sdasz80 -o crt0_msx.rel crt0_msx.s
+
+<span class="code-comment"># 2. C99 ソースのコンパイル (最適化 &amp; レジスタ呼出規約)</span>
+sdcc -mz80 -c --std-c99 --opt-code-size      --fomit-frame-pointer      main.c -o main.rel
+
+<span class="code-comment"># 3. リンク (ROM ヘッダ 0x4000, コード 0x4020, データ RAM 0xC000)</span>
+sdcc -mz80 --no-std-crt0      --code-loc 0x4020      --data-loc 0xC000      -Wl-b_HEADER=0x4000      crt0_msx.rel main.rel -o game.ihx
+
+<span class="code-comment"># 4. Intel HEX から生バイナリ ROM へ変換</span>
+hex2bin -e rom -l 0x8000 game.ihx</code></pre>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>コンパイル引数 (Flag)</th>
+                            <th>機能仕様 (Function)</th>
+                            <th>技術的効果 (Technical Impact)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>-mz80</code></td>
+                            <td>Zilog Z80 ターゲット指定</td>
+                            <td>Z80 命令セット（IX/IY レジスタ、EXX、LDIR 等）をフル活用</td>
+                        </tr>
+                        <tr>
+                            <td><code>--no-std-crt0</code></td>
+                            <td>標準 C ランタイム初期化の除外</td>
+                            <td>余計なホスト初期化を排除し、独自の MSX ROM ヘッダをリンク可能にする</td>
+                        </tr>
+                        <tr>
+                            <td><code>--opt-code-size</code></td>
+                            <td>コードサイズ最優先最適化</td>
+                            <td>ループ展開を抑止し、インライン化よりもサブルーチン化を優先</td>
+                        </tr>
+                        <tr>
+                            <td><code>--fomit-frame-pointer</code></td>
+                            <td>フレームポインタ (IX) の省略</td>
+                            <td>関数呼び出し時の push ix / ld ix,sp オーバヘッドを排除</td>
+                        </tr>
+                        <tr>
+                            <td><code>--code-loc 0x4020</code></td>
+                            <td>実行コード開始アドレス</td>
+                            <td>ROM ヘッダ領域（0x4000–0x401F）の直後に C 関数を配置</td>
+                        </tr>
+                        <tr>
+                            <td><code>--data-loc 0xC000</code></td>
+                            <td>変数領域開始アドレス</td>
+                            <td>メイン RAM 領域（ページ 3: 0xC000）に変数を割り当て</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 2. Calling Convention -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / ABI</span>
+                <h2 class="jp-title">2. レジスタ呼出規約 (__sdcccall(1) ABI)</h2>
+                <p class="band-eyebrow">Parameter Passing via Registers · Stack Minimization</p>
+            </div>
+            <div class="doc-summary">
+                SDCC 4.2 以降で標準となった <code>__sdcccall(1)</code> は、関数の引数をスタックではなく Z80 のレジスタ群へ直接割り振ります。<br>
+                <span class="summary-en">"The __sdcccall(1) application binary interface passes up to three function arguments through HL, DE, and BC registers, eliminating stack frame manipulation."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>引数位置 (Parameter)</th>
+                            <th>8-bit 引数 (char, uint8_t)</th>
+                            <th>16-bit 引数 (int, uint16_t, pointer)</th>
+                            <th>32-bit 引数 (long, uint32_t)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>第 1 引数</b></td>
+                            <td><code>L</code> レジスタ</td>
+                            <td><code>HL</code> レジスタペア</td>
+                            <td><code>HL</code> (下位) + <code>DE</code> (上位)</td>
+                        </tr>
+                        <tr>
+                            <td><b>第 2 引数</b></td>
+                            <td><code>E</code> レジスタ</td>
+                            <td><code>DE</code> レジスタペア</td>
+                            <td>スタック渡し</td>
+                        </tr>
+                        <tr>
+                            <td><b>第 3 引数</b></td>
+                            <td><code>C</code> レジスタ</td>
+                            <td><code>BC</code> レジスタペア</td>
+                            <td>スタック渡し</td>
+                        </tr>
+                        <tr>
+                            <td><b>戻り値 (Return)</b></td>
+                            <td><code>L</code> レジスタ</td>
+                            <td><code>HL</code> レジスタペア</td>
+                            <td><code>HL</code> (下位) + <code>DE</code> (上位)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 3. crt0 Implementation -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / crt0</span>
+                <h2 class="jp-title">3. MSX カートリッジ crt0 原典 (crt0_msx.s)</h2>
+                <p class="band-eyebrow">ROM Header · Segment Zeroing · Main Execution</p>
+            </div>
+            <div class="doc-summary">
+                実機およびエミュレータが起動時に認識する 16 バイトのカートリッジヘッダと初期化アセンブラです。<br>
+                <span class="summary-en">"Minimalist crt0 routine embedding the mandatory 0x4142 cartridge signature, initializing stack pointer, copying initialized data from ROM to RAM, and entering main()."</span>
+            </div>
+
+            <pre class="code-block"><code><span class="code-comment">;; ══════════════════════════════════════════════════════════════════════
+;; crt0_msx.s — Minimal MSX Cartridge CRT for SDCC
+;; ══════════════════════════════════════════════════════════════════════</span>
+        .area   _HEADER (ABS)
+        .org    0x4000
+
+        .db     0x41, 0x42      <span class="code-comment">; "AB" マーカー (MSX カートリッジ識別子)</span>
+        .dw     init_entry      <span class="code-comment">; 実行開始アドレス</span>
+        .dw     0x0000          <span class="code-comment">; CALL 文フック (未使用)</span>
+        .dw     0x0000          <span class="code-comment">; デバイス拡張 (未使用)</span>
+        .dw     0x0000          <span class="code-comment">; BASIC テキスト (未使用)</span>
+        .dw     0x0000, 0x0000  <span class="code-comment">; 予約領域</span>
+
+        .area   _CODE
+init_entry:
+        di
+        ld      sp, #0xF380     <span class="code-comment">; スタックポインタをワークエリア直下に初期化</span>
+
+        <span class="code-comment">; 初期化済みデータセクション (_INITIALIZED) を ROM から RAM へ転送</span>
+        ld      hl, #s__INITIALIZER
+        ld      de, #s__INITIALIZED
+        ld      bc, #l__INITIALIZED
+        ld      a, b
+        or      c
+        jr      z, skip_copy
+        ldir
+skip_copy:
+
+        <span class="code-comment">; 未初期化データセクション (_DATA) のゼロクリア</span>
+        ld      hl, #s__DATA
+        ld      de, #s__DATA + 1
+        ld      bc, #l__DATA - 1
+        ld      (hl), #0
+        ldir
+
+        ei
+        call    _main           <span class="code-comment">; C 言語の main() 関数へ突入</span>
+
+halt_loop:
+        halt
+        jr      halt_loop</code></pre>
+        </section>
+
+        <!-- 4. Fast VDP Macros -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">04 / VDP</span>
+                <h2 class="jp-title">4. インラインアセンブラと高速 VDP 制御</h2>
+                <p class="band-eyebrow">Direct Port Access · Zero Overhead</p>
+            </div>
+            <div class="doc-summary">
+                V9938 / TMS9918A のレジスタを最速で直接叩くための C99 インラインマクロです。<br>
+                <span class="summary-en">"C inline assembly macros interfacing with hardware ports 0x98 and 0x99, avoiding function call overhead."</span>
+            </div>
+
+            <pre class="code-block"><code><span class="code-comment">// VDP レジスタ書き込みマクロ (Port 0x99)</span>
+<span class="code-keyword">static inline void</span> vdp_set_reg(<span class="code-keyword">uint8_t</span> reg, <span class="code-keyword">uint8_t</span> val) {
+    __asm
+        ld  a, l        <span class="code-comment">; __sdcccall(1) により reg は L</span>
+        ld  c, #0x99
+        out (c), a      <span class="code-comment">; 値を出力</span>
+        ld  a, e        <span class="code-comment">; val は E</span>
+        or  #0x80       <span class="code-comment">; レジスタ書き込みフラグ (Bit 7 = 1)</span>
+        out (c), a      <span class="code-comment">; レジスタ番号を出力</span>
+    __endasm;
+}
+
+<span class="code-comment">// VRAM 書き込みアドレス設定 (14-bit VRAM Address)</span>
+<span class="code-keyword">static inline void</span> vdp_set_write_addr(<span class="code-keyword">uint16_t</span> addr) {
+    __asm
+        ld  a, l        <span class="code-comment">; addr 下位バイト (L)</span>
+        out (#0x99), a
+        ld  a, h        <span class="code-comment">; addr 上位バイト (H)</span>
+        and #0x3F       <span class="code-comment">; 14-bit マスク</span>
+        or  #0x40       <span class="code-comment">; VRAM 書込フラグ (Bit 6 = 1)</span>
+        out (#0x99), a
+    __endasm;
+}</code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../development/index.html" style="color:var(--tron-teal); text-decoration:none;">← 開発目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro SDCC Guide
+        </div>
+    </footer>
+
+</body>
+</html>

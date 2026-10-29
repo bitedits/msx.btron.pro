@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSX-BIOS — ベクタジャンプ表とシステム領域 | msx.btron.pro</title>
+    <meta name="description" content="MSX-BIOS の完全仕様。$0000–$015B ベクタジャンプテーブル (CALSLT, ENASLT, RDSLT, WRSLT, CHGET, CHPUT)、システム作業領域ワークエリア ($F380–$FFFF)、および VDP レジスタ退避領域。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html" class="active">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../systems/index.html">Systems</a>
+        <span class="sep">/</span>
+        <span class="current">MSX-BIOS</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">MSX Standards Technical Data Book · Jump Vector Table · System Variables</div>
+        <h1>MSX-BIOS (Systems)</h1>
+        <div class="subtitle">
+            ハードウェア抽象化の根幹を成すジャンプベクタ群、スロット間呼出機構、およびシステム作業領域辞書。
+            <span class="subtitle-en">
+                "Definitive technical specification of standard MSX-BIOS jump vectors ($0000–$015B), inter-slot execution mechanisms, and system variable work areas ($F380–$FFFF)."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
+
+        <div class="tagline-card">
+            <strong>BIOS ジャンプ表の不変性</strong> — MSX-BIOS は、全ハードウェアメーカーに対して同一のアドレス番地に同一のサブルーチンエントリ（`JP xxxx`）を配置することを義務付けました。これにより、カートリッジやアプリケーションは VDP の型番や基板配線の違いを意識することなく、標準ベクタ（`CALSLT` や `CHPUT`）をコールするだけで安全に画面表示や音響制御を行うことができます。
+            <span class="tagline-en">
+                "The MSX-BIOS established a strict contract requiring identical three-byte JP instructions across fixed addresses ($0000–$015B). This invariant jump table allowed software to invoke screen changes, slot switching, and console I/O across all certified manufacturer models."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Vectors</span>
+                <h2 class="jp-title">1. 主要ジャンプベクタ表 (Core Jump Vectors)</h2>
+                <p class="band-eyebrow">Slot Switching · Character I/O · VDP Subsystem</p>
+            </div>
+            <div class="doc-summary">
+                MSX-BIOS における代表的なエントリベクタのアドレスと引数仕様です。<br>
+                <span class="summary-en">"Fundamental entry points governing slot traversal, console character output, and VRAM memory block transfers."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>アドレス (Address)</th>
+                            <th>ベクタ名 (Name)</th>
+                            <th>引数・レジスタ (Parameters)</th>
+                            <th>機能仕様 (Functional Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$001C</code></td>
+                            <td><code>CALSLT</code></td>
+                            <td><code>IY</code>: スロット番号, <code>IX</code>: 呼出アドレス</td>
+                            <td>指定スロットのサブルーチンを呼び出し、完了後元のスロットへ安全復帰</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0024</code></td>
+                            <td><code>ENASLT</code></td>
+                            <td><code>A</code>: スロット番号, <code>HL</code>: アドレス空間</td>
+                            <td>指定メモリページに指定スロットのメモリを恒久的に接続切替</td>
+                        </tr>
+                        <tr>
+                            <td><code>$000C</code></td>
+                            <td><code>RDSLT</code></td>
+                            <td><code>A</code>: スロット番号, <code>HL</code>: 読出アドレス</td>
+                            <td>他スロットの 1 バイトを読み出し、<code>A</code> レジスタに格納</td>
+                        </tr>
+                        <tr>
+                            <td><code>$0014</code></td>
+                            <td><code>WRSLT</code></td>
+                            <td><code>A</code>: スロット番号, <code>HL</code>: 書込アドレス, <code>E</code>: データ</td>
+                            <td>他スロットの指定アドレスに 1 バイトを書き込み</td>
+                        </tr>
+                        <tr>
+                            <td><code>$005C</code></td>
+                            <td><code>LDIRVM</code></td>
+                            <td><code>HL</code>: RAM アドレス, <code>DE</code>: VRAM アドレス, <code>BC</code>: 長さ</td>
+                            <td>メイン RAM から VRAM への高速ブロック転送</td>
+                        </tr>
+                        <tr>
+                            <td><code>$005F</code></td>
+                            <td><code>CHGMOD</code></td>
+                            <td><code>A</code>: 画面モード番号 (0–8)</td>
+                            <td>VDP 画面モードの切り替え (Screen 0–8)</td>
+                        </tr>
+                        <tr>
+                            <td><code>$00A2</code></td>
+                            <td><code>CHPUT</code></td>
+                            <td><code>A</code>: 文字コード</td>
+                            <td>現在の画面カーソル位置へ 1 文字を表示</td>
+                        </tr>
+                        <tr>
+                            <td><code>$009F</code></td>
+                            <td><code>CHGET</code></td>
+                            <td>戻り値: <code>A</code> = 入力文字</td>
+                            <td>キーボードバッファから 1 文字取得 (入力待機)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Workarea</span>
+                <h2 class="jp-title">2. システム作業領域 (Work Area Variables)</h2>
+                <p class="band-eyebrow">System Memory $F380–$FFFF · VDP Register Mirrors</p>
+            </div>
+            <div class="doc-summary">
+                Z80 アドレス <code>$F380–$FFFF</code> に割り当てられた重要なシステム変数です。<br>
+                <span class="summary-en">"Dictionary of essential system variables stored in upper RAM, including VDP mirror bytes and keyboard buffers."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>アドレス (Address)</th>
+                            <th>シンボル名 (Symbol)</th>
+                            <th>サイズ</th>
+                            <th>機能仕様と役割 (Role &amp; Definition)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>$F3E0–$F3E7</code></td>
+                            <td><code>RG0SAV–RG7SAV</code></td>
+                            <td>8 バイト</td>
+                            <td>VDP レジスタ 0–7 の書き込み値退避ミラー（VDP レジスタは読出不可のため）</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F3E9</code></td>
+                            <td><code>BAKCLR</code></td>
+                            <td>1 バイト</td>
+                            <td>テキスト画面の背景色番号</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F3EA</code></td>
+                            <td><code>BDRCLR</code></td>
+                            <td>1 バイト</td>
+                            <td>画面周辺ボーダー色番号</td>
+                        </tr>
+                        <tr>
+                            <td><code>$F380</code></td>
+                            <td><code>LINL40</code></td>
+                            <td>1 バイト</td>
+                            <td>SCREEN 0 の 1 行文字幅設定値</td>
+                        </tr>
+                        <tr>
+                            <td><code>$FCC1</code></td>
+                            <td><code>EXPTBL</code></td>
+                            <td>4 バイト</td>
+                            <td>スロット 0–3 が拡張スロット（Subslot）か否かの識別テーブル</td>
+                        </tr>
+                        <tr>
+                            <td><code>$FD9A</code></td>
+                            <td><code>H.KEYI</code></td>
+                            <td>5 バイト</td>
+                            <td>タイマー割り込みフックルーチンジャンプ領域</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro MSX-BIOS
+        </div>
+    </footer>
+
+</body>
+</html>

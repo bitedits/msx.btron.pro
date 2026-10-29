@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-BIOS — オープンソース互換ファームウェア | msx.btron.pro</title>
+    <meta name="description" content="C-BIOS の完全技術仕様。GPL/BSD ライセンス、完全クリーンルーム設計、MSX1/MSX2/MSX2+/turboR 向けバイナリ変種、およびエミュレータ自動同梱アーキテクチャ。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html" class="active">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../systems/index.html">Systems</a>
+        <span class="sep">/</span>
+        <span class="current">C-BIOS</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">C-BIOS 0.29+ · Cleanroom Re-implementation · Open-Source Firmware · Zero-Copyright Encumbrance</div>
+        <h1>C-BIOS (Systems)</h1>
+        <div class="subtitle">
+            BouKiCHi 氏らによってゼロから開発された、自由なライセンスを持つ MSX 互換ファームウェア。
+            <span class="subtitle-en">
+                "Comprehensive technical specification of C-BIOS, a 100% cleanroom open-source MSX BIOS enabling legal emulator bundling and direct cartridge execution."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
+
+        <div class="tagline-card">
+            <strong>クリーンルーム設計の意義</strong> — 原典の MSX-BIOS はマイクロソフトおよび各メーカーの著作権下にあるため、オープンソースエミュレータに同梱して再配布することが法的に困難でした。C-BIOS は、公式仕様書の関数シグネチャのみを参照して完全に新規書き起こされたクリーンルーム実装であり、BASIC インタープリタを省きカートリッジの自動認識と即時起動に特化しています。
+            <span class="tagline-en">
+                "C-BIOS eliminates copyright barriers by providing a pristine, cleanroom replacement for proprietary MSX ROMs. Designed specifically for gaming and emulator distribution, it implements the official BIOS jump table while omitting the proprietary MSX-BASIC interpreter."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Variants</span>
+                <h2 class="jp-title">1. ビルド変種とファイル構成 (Target Variants)</h2>
+                <p class="band-eyebrow">MSX1 · MSX2 · MSX2+ · turbo R Builds</p>
+            </div>
+            <div class="doc-summary">
+                世代および地域（日本、欧州、ブラジル）に応じた C-BIOS のバイナリ構成です。<br>
+                <span class="summary-en">"Target matrix detailing generation-specific ROM files and regional keyboard/video configurations."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>ROM ファイル名</th>
+                            <th>対象世代</th>
+                            <th>地域・キーボード</th>
+                            <th>サイズ</th>
+                            <th>特徴と搭載機能</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>cbios_main_msx1_jp.rom</code></td>
+                            <td>MSX1</td>
+                            <td>日本 (JIS)</td>
+                            <td>16 KiB</td>
+                            <td>TMS9918A VDP 制御、PSG サウンド、カートリッジ直接起動</td>
+                        </tr>
+                        <tr>
+                            <td><code>cbios_main_msx2_jp.rom</code></td>
+                            <td>MSX2</td>
+                            <td>日本 (JIS)</td>
+                            <td>32 KiB</td>
+                            <td>V9938 グラフィックコマンド、パレット設定、RTC サポート</td>
+                        </tr>
+                        <tr>
+                            <td><code>cbios_main_msx2+_jp.rom</code></td>
+                            <td>MSX2+</td>
+                            <td>日本 (JIS)</td>
+                            <td>32 KiB</td>
+                            <td>V9958 自然画モード、横スムーズスクロール</td>
+                        </tr>
+                        <tr>
+                            <td><code>cbios_main_msxtr.rom</code></td>
+                            <td>turbo R</td>
+                            <td>共通</td>
+                            <td>32 KiB</td>
+                            <td>R800 CPU 検出、高速 PCM サポート</td>
+                        </tr>
+                        <tr>
+                            <td><code>cbios_logo_msx2.rom</code></td>
+                            <td>ブートロゴ</td>
+                            <td>共通</td>
+                            <td>16 KiB</td>
+                            <td>起動時のグラフィカル C-BIOS ロゴ表示サブシステム</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro C-BIOS
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+<svg xmlns="http://w3.org" viewBox="-100 -100 200 200" width="100%" height="100%">
+  <style>
+    .bg { fill: #ffffff; }
+    .mon { fill: #000000; }
+  </style>
+  <rect class="bg" x="-100" y="-100" width="200" height="200" />
+  <g class="mon">
+    <!-- Outer Ring -->
+    <path d="M 0,-85 A 85,85 0 1,0 0,85 A 85,85 0 1,0 0,-85 Z m 0,10 A 75,75 0 1,1 0,75 A 75,75 0 1,1 0,-75 Z" />
+
+    <!-- Left/Underneath Feather (Slanted Right-Down to Left-Up) -->
+    <g transform="rotate(-25)">
+      <path d="M -12,65 C -12,50 -20,10 -20,-35 C -20,-55 -10,-65 0,-72 C 10,-65 20,-55 20,-35 C 20,10 12,50 12,65 Z" />
+      <!-- Quill line -->
+      <line x1="0" y1="65" x2="0" y2="-68" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+      <!-- Rib segments -->
+      <path d="M -20,-20 L -3,-25 M -20,0 L -3,-5 M -18,20 L -2,15 M 20,-20 L 3,-25 M 20,0 L 3,-5 M 18,20 L 2,15" stroke="#ffffff" stroke-width="2" />
+    </g>
+
+    <!-- Right/Overlapping Feather (Slanted Left-Down to Right-Up) -->
+    <g transform="rotate(25)">
+      <!-- Border outline to separate overlapping elements -->
+      <path d="M -12,65 C -12,50 -20,10 -20,-35 C -20,-55 -10,-65 0,-72 C 10,-65 20,-55 20,-35 C 20,10 12,50 12,65 Z" stroke="#ffffff" stroke-width="5" fill="#000000" />
+      <!-- Quill line -->
+      <line x1="0" y1="65" x2="0" y2="-68" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+      <!-- Rib segments -->
+      <path d="M -20,-20 L -3,-25 M -20,0 L -3,-5 M -18,20 L -2,15 M 20,-20 L 3,-25 M 20,0 L 3,-5 M 18,20 L 2,15" stroke="#ffffff" stroke-width="2" />
+    </g>
+  </g>
+</svg>
+

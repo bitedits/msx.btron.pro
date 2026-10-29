@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>開発 — 開発環境とクロスコンパイラ | msx.btron.pro</title>
+    <meta name="description" content="MSX 向け現代開発環境の総合手引き。SDCC (Small Device C Compiler) による C99/C89 開発、Pasmo による Z80 アセンブラ、ROM ヘッダ生成、および openMSX/blueMSX 連携デバッグ手法。">
+    <link rel="stylesheet" href="../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../computers/index.html">Computers</a></li>
+                <li><a href="../development/index.html" class="active">Development</a></li>
+                <li><a href="../emulators/index.html">Emulators</a></li>
+                <li><a href="../games/index.html">Games</a></li>
+                <li><a href="../systems/index.html">Systems</a></li>
+                <li><a href="../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../index.html">MSX</a>
+        <span class="sep">/</span>
+        <span class="current">Development</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Toolchains · Modern C99 / Assembly Cross-Development · Zero-Stdlib Embedded SDK</div>
+        <h1>開発 (Development)</h1>
+        <div class="subtitle">
+            現代のホスト PC から MSX 実機およびエミュレータへ向けた、堅牢なクロス開発環境とツールチェーン体系。
+            <span class="subtitle-en">
+                "Comprehensive cross-development guide for the MSX architecture, detailing the SDCC C99 compiler, Pasmo Z80 assembler, custom crt0 routines, and binary packaging workflows."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <div class="tagline-card">
+            <strong>MSX クロス開発の近代化</strong> — 現代の MSX ソフトウェア開発は、実機上のインタープリタ環境から、Linux/macOS/Windows ホスト上での高速なクロスコンパイル環境へと完全に移行しました。中核となる SDCC による高度なレジスタ渡し規約と、Pasmo による確定的アセンブリを組み合わせることで、32 KiB フラット ROM、MegaROM、および MSX-DOS .COM バイナリを瞬時に生成・検証できます。
+            <span class="tagline-en">
+                "Modern MSX development leverages host-side cross-compilation toolchains. Coupling SDCC's optimizing register conventions with Pasmo's deterministic fixed-address assembly enables instant compilation of flat ROM cartridges, banked MegaROMs, and MSX-DOS binaries."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Toolchains</span>
+                <h2 class="jp-title">1. 中核ツールチェーン (Core Toolchains)</h2>
+                <p class="band-eyebrow">SDCC Compiler · Pasmo Assembler · Debugger Linkage</p>
+            </div>
+            <div class="doc-summary">
+                MSX 開発で推奨される二大ツールチェーンの概要です。<br>
+                <span class="summary-en">"Primary toolchain components providing optimizing C compilation and precise Z80 machine code assembly."</span>
+            </div>
+
+            <div class="strip">
+                <div class="card">
+                    <span class="card-num">01</span>
+                    <h4>SDCC (Small Device C Compiler)</h4>
+                    <p class="role">C99 / C89 Optimizing Compiler</p>
+                    <p>Z80 ターゲット向け最適化コード生成。<code>__sdcccall(1)</code> によるレジスタ引数渡し、不要な標準ライブラリの排除（<code>--no-std-crt0</code>）、およびインラインアセンブラによる VDP 最速制御。</p>
+                    <a class="entry" href="sdcc/index.html">SDCC 詳解とビルド規約 →</a>
+                </div>
+                <div class="card">
+                    <span class="card-num">02</span>
+                    <h4>Pasmo</h4>
+                    <p class="role">Multi-Platform Z80 Assembler</p>
+                    <p>固定アドレス割り付けアセンブラ。ROM カートリッジ（<code>--bin</code>）、MSX-DOS（<code>.com</code>）、および BLOAD（<code>--msx</code>）形式を単一コマンドで出力し、デバッガシンボルを生成。</p>
+                    <a class="entry" href="pasmo/index.html">Pasmo 仕様と使用法 →</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Workflow</span>
+                <h2 class="jp-title">2. ビルドターゲットと出力形式 (Target Formats)</h2>
+                <p class="band-eyebrow">ROM Cartridges · MSX-DOS Binaries · Cassette &amp; Disks</p>
+            </div>
+            <div class="doc-summary">
+                MSX 実行バイナリの主要な配信形式とアドレス規約です。<br>
+                <span class="summary-en">"Classification of execution formats across the MSX memory plane, defining entry addresses and loader headers."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>ターゲット形式 (Target)</th>
+                            <th>配置アドレス (Base Address)</th>
+                            <th>ヘッダ構造 (Header Structure)</th>
+                            <th>用途・配信形態 (Usage &amp; Distribution)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>ROM カートリッジ</b></td>
+                            <td><code>0x4000</code></td>
+                            <td>16 バイト ROM ヘッダ (<code>$4142</code> "AB" マーカー)</td>
+                            <td>エミュレータ ROM、フラッシュカートリッジ、実機スロット</td>
+                        </tr>
+                        <tr>
+                            <td><b>MSX-DOS 実行ファイル</b></td>
+                            <td><code>0x0100</code></td>
+                            <td>ヘッダなし (CP/M 準拠 TPA 領域展開)</td>
+                            <td>フロッピーディスク / SD カード上の <code>.COM</code> コマンド</td>
+                        </tr>
+                        <tr>
+                            <td><b>BLOAD バイナリ</b></td>
+                            <td>任意 (通常 <code>0x8000</code> / <code>0xC000</code>)</td>
+                            <td>7 バイト MSX-BASIC BLOAD ヘッダ (<code>$FE</code> 開始)</td>
+                            <td>BASIC から <code>BLOAD "FILE",R</code> で直接起動するツール</td>
+                        </tr>
+                        <tr>
+                            <td><b>MegaROM</b></td>
+                            <td><code>0x4000</code> / <code>0x8000</code></td>
+                            <td>ASCII 8K/16K, Konami, SCC 等のマッパーヘッダ</td>
+                            <td>大容量ゲーム (128 KiB ～ 4 MiB) のバンク切替</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / Links</span>
+                <h2 class="jp-title">3. 外部仕様とエミュレータ連携 (External References)</h2>
+                <p class="band-eyebrow">B-System B-MSX Implementation · Rigour Core</p>
+            </div>
+            <div class="related-grid">
+                <a href="sdcc/index.html" class="related-card">
+                    <h4>SDCC 実装詳解 <span>→</span></h4>
+                    <p>C99 コードから 32KB カートリッジを生成する完全なビルド手順と crt0。</p>
+                </a>
+                <a href="pasmo/index.html" class="related-card">
+                    <h4>Pasmo 仕様書 <span>→</span></h4>
+                    <p>Z80 命令アセンブル、ディレクティブ、シンボルテーブル出力。</p>
+                </a>
+                <a href="../../btron/b-system/apps/MSX.html" target="_blank" class="related-card">
+                    <h4>B-System B-MSX 仕様 <span>↗</span></h4>
+                    <p>B-System の C99 MSX2+ コアおよび音源 PCM 合成規約。</p>
+                </a>
+                <a href="../emulators/openMSX/index.html" class="related-card">
+                    <h4>openMSX デバッグ連携 <span>→</span></h4>
+                    <p>Tcl ソケット制御とシンボル読み込みによる実機デバッグ。</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../index.html" style="color:var(--tron-teal); text-decoration:none;">← MSX アーカイブ本拠へ戻る</a> &nbsp;·&nbsp; msx.btron.pro Development
+        </div>
+    </footer>
+
+</body>
+</html>

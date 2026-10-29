@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasmo — Z80マルチプラットフォームアセンブラ | msx.btron.pro</title>
+    <meta name="description" content="Marc Leuba 作 Pasmo Z80 クロスアセンブラの技術仕様と MSX ターゲット出力。--bin、--msx、--tap オプション、ディレクティブ、マクロ構文、およびデバッガシンボルファイル出力。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html" class="active">Development</a></li>
+                <li><a href="../../emulators/index.html">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../development/index.html">Development</a>
+        <span class="sep">/</span>
+        <span class="current">Pasmo</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Pasmo 0.5.4+ · Fixed-Address Z80 Assembler · Multi-Target Binary Emitter</div>
+        <h1>Pasmo (Assembler)</h1>
+        <div class="subtitle">
+            確定的固定アドレス Z80 クロスアセンブラ Pasmo による MSX カートリッジ、MSX-DOS、および BLOAD 生成仕様。
+            <span class="subtitle-en">
+                "Technical guide for Pasmo, a portable multi-platform Z80 cross-assembler generating raw ROM images, MSX-DOS .COM files, and BLOAD binaries with symbol export."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../development/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 開発目録へ戻る (Development Index)</a>
+
+        <div class="tagline-card">
+            <strong>Pasmo アセンブラの特長</strong> — Pasmo はリンカを介さず、ソースコード内の <code>ORG</code> 指示語に基づいて直接単一バイナリを出力する固定アドレスアセンブラです。MSX 向けに特化した <code>--msx</code> オプションを備え、7 バイトの BLOAD ヘッダ（開始アドレス、終了アドレス、実行アドレス）を自動付与して出力可能。また、openMSX や blueMSX にロード可能なシンボルファイルを生成します。
+            <span class="tagline-en">
+                "Pasmo is a self-contained fixed-address assembler emitting monolithic binaries directly from single-pass assembly sources. Its native --msx switch prepends the 7-byte MSX BLOAD header, while the symbol output flags produce map files loadable by openMSX and blueMSX debuggers."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Command</span>
+                <h2 class="jp-title">1. コマンドライン実行規則 (Command Line Options)</h2>
+                <p class="band-eyebrow">Binary Emission Modes · Debug Symbol Generation</p>
+            </div>
+            <div class="doc-summary">
+                Pasmo の主要な出力モードとオプション一覧です。<br>
+                <span class="summary-en">"Command line arguments configuring target binary format, listing generation, and debug symbol exports."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>コマンド引数 (Flag)</th>
+                            <th>出力形式 (Format)</th>
+                            <th>機能仕様と使用例 (Usage Example)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>--bin</code></td>
+                            <td>生バイナリ (Raw Binary)</td>
+                            <td><code>pasmo --bin cart.asm cart.rom</code> (ROM カートリッジ用)</td>
+                        </tr>
+                        <tr>
+                            <td><code>--msx</code></td>
+                            <td>MSX BLOAD 形式</td>
+                            <td><code>pasmo --msx prog.asm prog.bin</code> (7バイト BLOAD ヘッダを自動付与)</td>
+                        </tr>
+                        <tr>
+                            <td><code>--tap</code></td>
+                            <td>カセットテープ形式</td>
+                            <td><code>pasmo --tap tape.asm tape.cas</code> (カセットテープイメージ用)</td>
+                        </tr>
+                        <tr>
+                            <td><code>--symbol</code></td>
+                            <td>シンボルテーブル出力</td>
+                            <td><code>pasmo --symbol cart.asm cart.rom cart.sym</code> (openMSX 用シンボル)</td>
+                        </tr>
+                        <tr>
+                            <td><code>-d</code></td>
+                            <td>デバッグリスティング</td>
+                            <td>機械語コードとソース行を対照表示するリスティングを出力</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Example</span>
+                <h2 class="jp-title">2. 実践的 MSX カートリッジコード例 (Cartridge Example)</h2>
+                <p class="band-eyebrow">Screen Mode Initialization · PSG Beep</p>
+            </div>
+            <div class="doc-summary">
+                Pasmo でアセンブル可能な、画面初期化と PSG ビープ音を鳴らす最小カートリッジコードです。<br>
+                <span class="summary-en">"Self-contained assembly example initializing screen mode, setting background palette, and emitting a test tone via the AY-3-8910 PSG."</span>
+            </div>
+
+            <pre class="code-block"><code><span class="code-comment">; ══════════════════════════════════════════════════════════════════════
+; hello_msx.asm — Pasmo Minimal MSX Cartridge
+; Build: pasmo --bin hello_msx.asm hello_msx.rom
+; ══════════════════════════════════════════════════════════════════════</span>
+        org     4000h
+
+        db      "AB"            <span class="code-comment">; MSX ROM Cartridge ID</span>
+        dw      start           <span class="code-comment">; Start Execution Vector</span>
+        dw      0               <span class="code-comment">; CALL statement</span>
+        dw      0               <span class="code-comment">; Device expansion</span>
+        dw      0               <span class="code-comment">; Basic text</span>
+        dw      0, 0            <span class="code-comment">; Reserved</span>
+
+start:
+        di
+        ld      sp, 0F380h      <span class="code-comment">; Set stack pointer</span>
+
+        <span class="code-comment">; Screen 1 に設定 (BIOS CALL)</span>
+        ld      a, 1
+        call    005Fh           <span class="code-comment">; CHGMOD (Change Screen Mode BIOS vector)</span>
+
+        <span class="code-comment">; 背景色を Teal (#008080) に近いシアンに設定</span>
+        ld      a, 7            <span class="code-comment">; Color Cyan</span>
+        ld      (0F3E9h), a     <span class="code-comment">; BAKCLR system variable</span>
+        call    0062h           <span class="code-comment">; CHGCLR BIOS vector</span>
+
+        <span class="code-comment">; PSG チャンネル A でトーン出力 (440 Hz)</span>
+        ld      a, 0
+        ld      e, 0FEh         <span class="code-comment">; Fine Tune</span>
+        call    write_psg
+        ld      a, 1
+        ld      e, 00h          <span class="code-comment">; Coarse Tune</span>
+        call    write_psg
+        ld      a, 7
+        ld      e, 0FEh         <span class="code-comment">; Mixer: Enable Tone on Channel A</span>
+        call    write_psg
+        ld      a, 8
+        ld      e, 0Fh          <span class="code-comment">; Volume: Maximum</span>
+        call    write_psg
+
+loop:
+        ei
+        halt
+        jr      loop
+
+<span class="code-comment">; PSG レジスタ書込ルーチン (A = Reg, E = Data)</span>
+write_psg:
+        out     (0A0h), a       <span class="code-comment">; Latch Register</span>
+        ld      a, e
+        out     (0A1h), a       <span class="code-comment">; Write Value</span>
+        ret
+
+        <span class="code-comment">; 32KB カートリッジを満たすパディング</span>
+        ds      8000h - ($ - 4000h), 0FFh</code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../development/index.html" style="color:var(--tron-teal); text-decoration:none;">← 開発目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro Pasmo Guide
+        </div>
+    </footer>
+
+</body>
+</html>

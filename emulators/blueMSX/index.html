@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>blueMSX — スロットエディタとデバッグフック | msx.btron.pro</title>
+    <meta name="description" content="blueMSX の完全技術仕様。マシン構成エディタ、内蔵逆アセンブラ、メモリウォッチポイント、および BiFi デバッグフック (ld b,b ブレークポイント / ld d,d トレース文字列)。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html" class="active">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../emulators/index.html">Emulators</a>
+        <span class="sep">/</span>
+        <span class="current">blueMSX</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Daniel Vik Architecture · Machine Sandbox · BiFi Debug Hooks · Rapid Iteration</div>
+        <h1>blueMSX (Emulators)</h1>
+        <div class="subtitle">
+            直感的なスロット構成エディタとアセンブラ直接埋め込みデバッグフックを備えた開発環境。
+            <span class="subtitle-en">
+                "Technical architecture of blueMSX: dynamic slot-editor sandbox, built-in memory viewers, and BiFi assembly-level trace hooks (ld b,b / ld d,d)."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../emulators/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 摸擬目録へ戻る (Emulators Index)</a>
+
+        <div class="tagline-card">
+            <strong>素早い試行錯誤の友</strong> — blueMSX は、Daniel Vik 氏らによって開発された極めて軽快かつ使い勝手の良い MSX エミュレータです。GUI 上でスロット配置を即座に変更できるマシンエディタを備え、アセンブラソース内に <code>ld b,b</code> を記述するだけでデバッガをブレーク停止させる BiFi フックに対応。開発中のコードを瞬時に検証できます。
+            <span class="tagline-en">
+                "blueMSX excels in rapid developer iteration. Its graphical slot editor allows instant reconfiguration of mappers and subslots, while its support for BiFi assembly idioms provides seamless code-level debugging without manual address calculation."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / BiFi</span>
+                <h2 class="jp-title">1. BiFi デバッグフック仕様 (BiFi Debug Hooks)</h2>
+                <p class="band-eyebrow">Assembler Idioms · Breakpoint &amp; Trace Strings</p>
+            </div>
+            <div class="doc-summary">
+                Z80 アセンブラソースに直接埋め込むことで機能する、blueMSX 特有のデバッグ命令です。<br>
+                <span class="summary-en">"Assembly-level debug idioms recognized by blueMSX trace engine without requiring external symbol managers."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>命令列 (Opcode Sequence)</th>
+                            <th>機能仕様 (Function)</th>
+                            <th>使用例・技術的詳細 (Technical Details)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ld b, b</code> (<code>0x40</code>)</td>
+                            <td>ソフトウェアブレークポイント</td>
+                            <td>CPU がこの命令を実行すると、エミュレータが即時一時停止しデバッガを表示</td>
+                        </tr>
+                        <tr>
+                            <td><code>ld d, d</code> (<code>0x52</code>)</td>
+                            <td>デバッグトレース文字列出力</td>
+                            <td>直後に配置された長さプレフィックス付き文字列をログウィンドウに出力</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <pre class="code-block"><code><span class="code-comment">; blueMSX デバッグフックの実装例</span>
+DEBUG_BREAK  <span class="code-keyword">macro</span>
+             ld b, b
+             <span class="code-keyword">endm</span>
+
+DEBUG_PRINT  <span class="code-keyword">macro</span> str
+             ld d, d
+             jr $+3 + len(str)
+             db len(str), str
+             <span class="code-keyword">endm</span></code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../emulators/index.html" style="color:var(--tron-teal); text-decoration:none;">← 摸擬目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro blueMSX
+        </div>
+    </footer>
+
+</body>
+</html>

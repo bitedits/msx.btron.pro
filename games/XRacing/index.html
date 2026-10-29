@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xレーシング (XRacing) — カートリッジ技術解体 | msx.btron.pro</title>
+    <meta name="description" content="Xレーシング (XRacing) の技術解体。MSX1、32 KiB Flat ROM、Screen 2 (256×192 / キャラクタグラフィック)、音響仕様、および描画アルゴリズム詳解。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html">Emulators</a></li>
+                <li><a href="../../games/index.html" class="active">Games</a></li>
+                <li><a href="../../systems/index.html">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../games/index.html">Games</a>
+        <span class="sep">/</span>
+        <span class="current">XRacing</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">MSX1 · 32 KiB Flat ROM · Screen 2 (256×192 / キャラクタグラフィック) · PSG (AY-3-8910)</div>
+        <h1>Xレーシング</h1>
+        <div class="subtitle">
+            TMS9918A 上で擬似 3D ラスタースクロールを実現した驚異のレースゲーム。走査線ごとのカラーテーブル変更とハードウェアスプライト多重化により、滑らかなカーブと奥行き感を表現。
+            <span class="subtitle-en">
+                "Tour-de-force pseudo-3D racer running on base MSX1 TMS9918A hardware. Utilizes scanline color splits and dynamic sprite multiplexing to render high-speed curving road perspective lines without hardware scaling."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../games/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 遊戯目録へ戻る (Games Index)</a>
+
+        <div class="tagline-card">
+            <strong>Xレーシング (XRacing) ソフトウェア工学要約</strong> — 本タイトルは MSX1 向けに開発された 32 KiB 容量のカートリッジです。マッパーには 32 KiB Flat ROM を採用し、描画モードには Screen 2 (256×192 / キャラクタグラフィック)、音響には PSG (AY-3-8910) を駆使してハードウェア限界性能を追求しています。
+            <span class="tagline-en">
+                "Technical profile for XRacing. Engineered on MSX1 with 32 KiB storage using 32 KiB Flat ROM, rendering in Screen 2 (256×192 / キャラクタグラフィック) and voiced by PSG (AY-3-8910)."
+            </span>
+        </div>
+
+        <!-- 1. Authentic Screen Capture -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Capture</span>
+                <h2 class="jp-title">1. 実機描画フレームバッファ (Authentic Frame Preview)</h2>
+                <p class="band-eyebrow">PUBLISH Standard · Unadorned RGBA Framebuffer Extraction</p>
+            </div>
+            <div class="doc-summary">
+                実機描画フレームバッファより抽出された真正な画面です。CSS の人工的な影や角丸を排除し、原本のピクセルアートを忠実に提示します。<br>
+                <span class="summary-en">"Native pixel frame captured directly from the display framebuffer without artificial CSS alterations, preserving retro resolution."</span>
+            </div>
+
+            <div class="screen-preview">
+                <img src="../../assets/screens/MSX_XRacing.png" class="authentic-frame" alt="Xレーシング 実機実行画面">
+                <p class="frame-caption">Xレーシング (XRacing) — 実行窓フレームバッファ自動抽出 (538 × 543 / RGBA)</p>
+            </div>
+        </section>
+
+        <!-- 2. Technical Specs Table -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Architecture</span>
+                <h2 class="jp-title">2. ソフトウェア構造諸元 (Technical Specifications)</h2>
+                <p class="band-eyebrow">ROM Layout · VDP Allocation · Sound Engine</p>
+            </div>
+            <div class="doc-summary">
+                本タイトルのシステム構造およびシリコン制御諸元です。<br>
+                <span class="summary-en">"Structural parameters defining memory mapper geometry, VDP tile/bitmap allocations, and audio synthesizer channels."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>項目 (Subsystem)</th>
+                            <th>諸元・仕様 (Functional Specification)</th>
+                            <th>技術定義 (Technical Definition)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>対象世代 (Target)</b></td>
+                            <td>MSX1</td>
+                            <td>標準 MSX アーキテクチャ準拠</td>
+                        </tr>
+                        <tr>
+                            <td><b>ROM 容量 / 形式</b></td>
+                            <td>32 KiB (32 KiB Flat ROM)</td>
+                            <td>16 バイト ROM カートリッジヘッダ ($4000)</td>
+                        </tr>
+                        <tr>
+                            <td><b>VDP 画面モード</b></td>
+                            <td>Screen 2 (256×192 / キャラクタグラフィック)</td>
+                            <td>ハードウェアプレーン制御およびパレット割当</td>
+                        </tr>
+                        <tr>
+                            <td><b>音源チップ (Audio)</b></td>
+                            <td>PSG (AY-3-8910)</td>
+                            <td>PSG 3ch 矩形波 / FM 音源音色テーブル</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 3. Engine Mechanics Table -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / Mechanics</span>
+                <h2 class="jp-title">3. ゲームエンジンと描画論理 (Engine Mechanics)</h2>
+                <p class="band-eyebrow">Algorithms · Collision Detection · State Machines</p>
+            </div>
+            <div class="doc-summary">
+                本タイトルに実装されている主要なゲームエンジンアルゴリズムの解説です。<br>
+                <span class="summary-en">"Core algorithms powering world updates, collision matrices, rasterization routines, and sprite multiplexing."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>機能アルゴリズム (Mechanism)</th>
+                            <th>実装仕様・動作解説 (Functional Implementation)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+        <tr>
+            <td><b>ラスタースクロール</b></td>
+            <td>H-Blank 割込と連動した走査線ごとの水平オフセットテーブル参照</td>
+        </tr>
+        
+        <tr>
+            <td><b>スプライト分散</b></td>
+            <td>1 ライン 4 枚制限を回避するため、先行車スプライトの走査線を動的シフト</td>
+        </tr>
+        
+        <tr>
+            <td><b>路面描画</b></td>
+            <td>Screen 2 パターンジェネレータの赤白ゼブラゾーンの高速回転</td>
+        </tr>
+        
+        <tr>
+            <td><b>エンジン音</b></td>
+            <td>PSG チャンネル A の矩形波周波数をアクセル開度に応じてリニア変調</td>
+        </tr>
+        
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 4. Cross Links -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">04 / Links</span>
+                <h2 class="jp-title">4. 関連資料とエミュレータ接続 (Related Documentation)</h2>
+                <p class="band-eyebrow">B-System B-MSX Implementation &amp; Emulators</p>
+            </div>
+            <div class="related-grid">
+                <a href="../../../btron/b-system/apps/MSX.html" target="_blank" class="related-card">
+                    <h4>B-System B-MSX アプリ仕様 <span>↗</span></h4>
+                    <p>B-System 上での本カートリッジ実行環境および Fast-Forward 仕様。</p>
+                </a>
+                <a href="../../emulators/openMSX/index.html" class="related-card">
+                    <h4>openMSX で起動 <span>→</span></h4>
+                    <p>openMSX によるサイクル正確な本カートリッジの検証。</p>
+                </a>
+                <a href="../../development/sdcc/index.html" class="related-card">
+                    <h4>SDCC でゲーム開発 <span>→</span></h4>
+                    <p>C99 によるカートリッジ ROM のプログラミング手引き。</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../games/index.html" style="color:var(--tron-teal); text-decoration:none;">← 遊戯目録へ戻る</a> &nbsp;·&nbsp; Xレーシング (XRacing) &nbsp;·&nbsp; msx.btron.pro
+        </div>
+    </footer>
+
+</body>
+</html>

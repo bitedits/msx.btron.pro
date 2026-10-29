@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摸擬 — エミュレータ基盤とデバッガ | msx.btron.pro</title>
+    <meta name="description" content="MSX エミュレータ技術の総合比較と解体。openMSX (サイクル正確・XML構成・Tcl遠隔操作)、blueMSX (マシンエディタ・BiFiデバッグフック)、および B-System 内蔵の確定性 C99 コア tronMSX。">
+    <link rel="stylesheet" href="../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../computers/index.html">Computers</a></li>
+                <li><a href="../development/index.html">Development</a></li>
+                <li><a href="../emulators/index.html" class="active">Emulators</a></li>
+                <li><a href="../games/index.html">Games</a></li>
+                <li><a href="../systems/index.html">Systems</a></li>
+                <li><a href="../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../index.html">MSX</a>
+        <span class="sep">/</span>
+        <span class="current">Emulators</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Virtual Hardware Laboratories · Cycle Accuracy · C99 Cleanroom Embedded Core</div>
+        <h1>摸擬 (Emulators)</h1>
+        <div class="subtitle">
+            過去のシリコンを現代に蘇らせる三大多重化エミュレーション環境の技術構造とデバッグ機構。
+            <span class="subtitle-en">
+                "Comparative architectural analysis of primary MSX emulation environments: openMSX (cycle accuracy &amp; XML scripting), blueMSX (slot editor &amp; debug hooks), and tronMSX (B-System's deterministic C99 core)."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <div class="tagline-card">
+            <strong>エミュレーションの工学的意義</strong> — MSX エミュレータは、単なる懐旧のゲーム再生機ではありません。半導体チップの挙動（クロック単位のスキャンライン描画、スロット調停、ウェイトステート、音響ミキシング）を数学的にモデル化し、現代のソフトウェア開発者がミリ秒単位でバグを特定するための仮想実験室です。
+            <span class="tagline-en">
+                "MSX emulators function as precision hardware laboratories. By modeling silicon timings, bus arbitration, and audio synthesis, they allow developers to inspect registers, intercept memory mutations, and automate regression tests via host sockets."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Labs</span>
+                <h2 class="jp-title">1. 三大エミュレータ比較 (Emulation Laboratories)</h2>
+                <p class="band-eyebrow">openMSX · blueMSX · tronMSX</p>
+            </div>
+            <div class="doc-summary">
+                アーカイブされている三つの主要な仮想化基盤の特性比較です。<br>
+                <span class="summary-en">"Comparison matrix evaluating emulation accuracy, host automation interfaces, debugger features, and embedded runtime integration."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>エミュレータ (Engine)</th>
+                            <th>設計思想とアーキテクチャ</th>
+                            <th>デバッガ・計測機能 (Debugging)</th>
+                            <th>ホスト自動化 (Automation)</th>
+                            <th>仕様書</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>openMSX</b></td>
+                            <td>サイクル正確・XML 機体構成・C++ モジュール設計</td>
+                            <td>Qt デバッガ、タイムトラベル逆再生、シンボル読込</td>
+                            <td>Tcl ソケット制御、パイプ自動化、dir-as-disk</td>
+                            <td><a href="openMSX/index.html" class="entry" style="font-size:0.8rem; margin:0;">openMSX 詳解 →</a></td>
+                        </tr>
+                        <tr>
+                            <td><b>blueMSX</b></td>
+                            <td>軽快 GUI・スロット構成エディタ・Windows/libretro</td>
+                            <td>内蔵逆アセンブラ、メモリウォッチ、BiFi デバッグフック</td>
+                            <td>プラグイン SDK、F12 リロード</td>
+                            <td><a href="blueMSX/index.html" class="entry" style="font-size:0.8rem; margin:0;">blueMSX 詳解 →</a></td>
+                        </tr>
+                        <tr>
+                            <td><b>tronMSX (B-MSX)</b></td>
+                            <td>B-System 内蔵 C99 クリーンルームコア・動的確保ゼロ</td>
+                            <td>決定性コア、zexall 命令検証、リアルタイム Geo3D</td>
+                            <td>BTRON ウィンドウ直結、VirtIO-Sound / SDL2</td>
+                            <td><a href="tronMSX/index.html" class="entry" style="font-size:0.8rem; margin:0;">tronMSX 詳解 →</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="strip" style="margin-top: 2rem;">
+                <div class="card">
+                    <span class="card-num">01</span>
+                    <h4>openMSX</h4>
+                    <p class="role">The Cycle-Accurate Standard</p>
+                    <p>ハードウェア定義を XML で完全に分離。Tcl スクリプトによって起動、リセット、メモリダンプを完全に自動化可能な開発基盤。</p>
+                    <a class="entry" href="openMSX/index.html">技術構造と XML 構成 →</a>
+                </div>
+                <div class="card">
+                    <span class="card-num">02</span>
+                    <h4>blueMSX</h4>
+                    <p class="role">Hardware Sandbox &amp; Debugger</p>
+                    <p>直感的なスロットエディタにより、実在しない仮想マシンのスロット・マッパー構成を即座に実験可能。</p>
+                    <a class="entry" href="blueMSX/index.html">デバッガフックと設定 →</a>
+                </div>
+                <div class="card">
+                    <span class="card-num">03</span>
+                    <h4>tronMSX</h4>
+                    <p class="role">B-System Cleanroom C99 Core</p>
+                    <p>NASA/JPL Power of Ten に従い、静的メモリのみで動作する BTRON 3.20 組み込みエミュレータ。</p>
+                    <a class="entry" href="tronMSX/index.html">C99 API と音響規約 →</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../index.html" style="color:var(--tron-teal); text-decoration:none;">← MSX アーカイブ本拠へ戻る</a> &nbsp;·&nbsp; msx.btron.pro Emulators
+        </div>
+    </footer>
+
+</body>
+</html>

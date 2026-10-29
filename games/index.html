@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遊戯 — カートリッジ目録と描画エンジン | msx.btron.pro</title>
+    <meta name="description" content="MSX カートリッジタイトルの技術解体目録。Bullrush、Lode Runner、Lode Runner II、Neon Ravenant、Night Raven、XRacing、Yazzier、c0man のマッパー構造、VRAM 描画論理、PSG 音響設計。">
+    <link rel="stylesheet" href="../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../computers/index.html">Computers</a></li>
+                <li><a href="../development/index.html">Development</a></li>
+                <li><a href="../emulators/index.html">Emulators</a></li>
+                <li><a href="../games/index.html" class="active">Games</a></li>
+                <li><a href="../systems/index.html">Systems</a></li>
+                <li><a href="../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../index.html">MSX</a>
+        <span class="sep">/</span>
+        <span class="current">Games</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Cartridge Engineering · PUBLISH Unadorned Frames · 8 Major Titles · Geo3D Pipeline</div>
+        <h1>遊戯 (Games)</h1>
+        <div class="subtitle">
+            ハードウェアの限界に挑んだ 8 大カートリッジの描画エンジン、マッパー構造、および音響ドライバ技術解体。
+            <span class="subtitle-en">
+                "Technical dossiers dissecting eight prominent MSX cartridge engines, analyzing MegaROM mappers, raster scroll algorithms, Geo3D vector pipelines, and PSG audio drivers."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <div class="tagline-card">
+            <strong>シリコンの極限を引き出す技巧</strong> — MSX の遊戯ソフトウェアは、制約（64 KiB メモリ、走査線スプライト制限、カラークラッシュ）を回避するための巧妙なアルゴリズムの宝庫です。実機フレームバッファより抽出された真正な画面とともに、各タイトルの工学的知見を記録します。
+            <span class="tagline-en">
+                "Game software on MSX represents a masterclass in constrained engineering. By inventing dynamic sprite multiplexing, MegaROM banking, and fixed-point 3D pipelines, developers squeezed astonishing graphical feats from 3.58 MHz silicon."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Library</span>
+                <h2 class="jp-title">1. カートリッジ技術解体目録 (Cartridge Library)</h2>
+                <p class="band-eyebrow">Authentic Framebuffer Captures · PUBLISH Standard</p>
+            </div>
+            <div class="doc-summary">
+                アーカイブされている 8 作品の個別技術仕様書への目録です。<br>
+                <span class="summary-en">"Index of individual technical dossiers detailing ROM mapping, VDP display parameters, and sound generation."</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:1.5rem; margin-top:2rem;">
+                
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div style="text-align:center; margin-bottom:1rem; background:#000; border-radius:4px; overflow:hidden;">
+                <img src="../assets/screens/MSX_Bullrush.png" class="authentic-frame" style="width:100%; max-width:320px; display:inline-block;" alt="ブルラッシュ">
+            </div>
+            <h4>ブルラッシュ</h4>
+            <p class="role">Bullrush · MSX2 / turboR · MegaROM (ASCII 8K Mapper)</p>
+            <p>ASCII 8K バンク切り替えマッパーを採用した高速アクションゲーム。V9938 のハードウェア高速転送（HMMV / LDIRVM）を駆使し、滑らかなスクロールとスプライトアニメーションを実現。C-BIOS 上でも軽快に動作。</p>
+            <a class="entry" href="Bullrush/index.html">技術解体・仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div style="text-align:center; margin-bottom:1rem; background:#000; border-radius:4px; overflow:hidden;">
+                <img src="../assets/screens/MSX_LodeRunner.png" class="authentic-frame" style="width:100%; max-width:320px; display:inline-block;" alt="ロードランナー">
+            </div>
+            <h4>ロードランナー</h4>
+            <p class="role">Lode Runner · MSX1 · 16 KiB Flat ROM</p>
+            <p>ブローダーバンド社原作、コンパイル移植による名作パズルアクション。TMS9918A の Screen 2 キャラクタジェネレータを駆使し、16 KiB の極小 ROM 空間に 150 面の迷路データと緊密な敵追跡 AI を凝縮。</p>
+            <a class="entry" href="Lode Runner/index.html">技術解体・仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div style="text-align:center; margin-bottom:1rem; background:#000; border-radius:4px; overflow:hidden;">
+                <img src="../assets/screens/MSX_LodeRunner2.png" class="authentic-frame" style="width:100%; max-width:320px; display:inline-block;" alt="ロードランナー II">
+            </div>
+            <h4>ロードランナー II</h4>
+            <p class="role">Lode Runner II · MSX1 · 32 KiB Flat ROM</p>
+            <p>ロードランナーの正統続編。ROM 容量を 32 KiB に拡張し、より緻密なパズルギミックと高度な敵ルーチンを導入。TMS9918A のアトリビュートカラー衝突を巧みに回避した美しい画面構成。</p>
+            <a class="entry" href="Lode Runner II/index.html">技術解体・仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div style="text-align:center; margin-bottom:1rem; background:#000; border-radius:4px; overflow:hidden;">
+                <img src="../assets/screens/MSX_NeonRevenant.png" class="authentic-frame" style="width:100%; max-width:320px; display:inline-block;" alt="ネオン・レヴナント">
+            </div>
+            <h4>ネオン・レヴナント</h4>
+            <p class="role">Neon Ravenant · MSX2 · 256 KiB MegaROM</p>
+            <p>B-System が誇るリアルタイム 3 次元幾何学エンジン『Geo3D』の真価を体現する 3D ベクタータイトル。Z80 の 16 ビット固定小数点演算による同次座標変換と、V9938 による高速ポリゴン描画を融合。</p>
+            <a class="entry" href="Neon Ravenant/index.html">技術解体・仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div style="text-align:center; margin-bottom:1rem; background:#000; border-radius:4px; overflow:hidden;">
+                <img src="../assets/screens/MSX_NightRaven.png" class="authentic-frame" style="width:100%; max-width:320px; display:inline-block;" alt="ナイト・レイブン">
+            </div>
+            <h4>ナイト・レイブン</h4>
+            <p class="role">Night Raven · MSX2 · 128 KiB MegaROM</p>
+            <p>Geo3D ハードウェアパイプラインの限界性能を検証するワイヤーフレーム 3D シューティング。暗黒の宇宙空間を高速で飛び交うベクター敵機群を 60 fps でリアルタイムレンダリング。</p>
+            <a class="entry" href="Night Raven/index.html">技術解体・仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div style="text-align:center; margin-bottom:1rem; background:#000; border-radius:4px; overflow:hidden;">
+                <img src="../assets/screens/MSX_XRacing.png" class="authentic-frame" style="width:100%; max-width:320px; display:inline-block;" alt="Xレーシング">
+            </div>
+            <h4>Xレーシング</h4>
+            <p class="role">XRacing · MSX1 · 32 KiB Flat ROM</p>
+            <p>TMS9918A 上で擬似 3D ラスタースクロールを実現した驚異のレースゲーム。走査線ごとのカラーテーブル変更とハードウェアスプライト多重化により、滑らかなカーブと奥行き感を表現。</p>
+            <a class="entry" href="XRacing/index.html">技術解体・仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div style="text-align:center; margin-bottom:1rem; background:#000; border-radius:4px; overflow:hidden;">
+                <img src="../assets/screens/MSX_Yazzier.png" class="authentic-frame" style="width:100%; max-width:320px; display:inline-block;" alt="ヤジアー">
+            </div>
+            <h4>ヤジアー</h4>
+            <p class="role">Yazzier · MSX1 · 16 KiB Flat ROM</p>
+            <p>MSX1 の極限色彩美を追求したアーケードライクアクション。8×1 ドット内の 2 色制限（アトリビュートクラッシュ）を設計段階で巧みに排し、洗練されたタイトルカードと軽快な PSG メロディを響かせる。</p>
+            <a class="entry" href="Yazzier/index.html">技術解体・仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div style="text-align:center; margin-bottom:1rem; background:#000; border-radius:4px; overflow:hidden;">
+                <img src="../assets/screens/MSX_C0man.png" class="authentic-frame" style="width:100%; max-width:320px; display:inline-block;" alt="c0man">
+            </div>
+            <h4>c0man</h4>
+            <p class="role">c0man · MSX1 · 16 KiB Flat ROM</p>
+            <p>パックマンのアーケード論理を忠実に再現したクリーンルーム実装。4 体のゴーストそれぞれに異なる AI 状態機械（追跡、待ち伏せ、気まぐれ、逃走）を与え、ドット単位のスムーズ移動を実現。</p>
+            <a class="entry" href="c0man/index.html">技術解体・仕様書を見る →</a>
+        </div>
+        
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../index.html" style="color:var(--tron-teal); text-decoration:none;">← MSX アーカイブ本拠へ戻る</a> &nbsp;·&nbsp; msx.btron.pro Games
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tronMSX — B-System内蔵確定性C99コア | msx.btron.pro</title>
+    <meta name="description" content="tronMSX (B-MSX) の完全技術仕様。NASA/JPL Power of Ten 準拠 C99 クリーンルーム実装、BTRON ウィンドウマネージャ直接描画、44.1 kHz PCM 直流阻止音響合成、および zexall による確定性検証。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html" class="active">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../emulators/index.html">Emulators</a>
+        <span class="sep">/</span>
+        <span class="current">tronMSX</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">tronmsx.h · Cleanroom ANSI C99 · NASA/JPL Power of Ten · Zero Dynamic Allocation</div>
+        <h1>tronMSX (Emulators)</h1>
+        <div class="subtitle">
+            B-System に組み込まれた、確定性実行・ゼロコピー描画・44.1 kHz PCM 合成を備えた純 C99 MSX2+ コア。
+            <span class="subtitle-en">
+                "Technical specification of tronMSX, the embedded cleanroom C99 MSX2+ core within B-System. Built under strict NASA/JPL rules with zero dynamic allocation and deterministic frame execution."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../emulators/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 摸擬目録へ戻る (Emulators Index)</a>
+
+        <div class="tagline-card">
+            <strong>確定性とクリーンルームの結晶</strong> — tronMSX は、BTRON 3.20（B-System）のウィンドウ空間上で直接動作する MSX2+ エミュレーションコアです。NASA/JPL「Power of Ten」規則に厳格に従い、ブート後の動的ヒープ確保（malloc）を完全に禁止し、全ループを有界（Bounded）に抑え、静的メモリ空間のみで稼働します。描画フレームバッファは BTRON ウィンドウマネージャのプレーンへゼロコピーで転送され、音響は VirtIO-Sound / SDL2 へ 44.1 kHz 16-bit PCM として送出されます。
+            <span class="tagline-en">
+                "tronMSX is an uncompromising cleanroom C99 MSX2+ engine embedded inside B-System. Adhering strictly to NASA/JPL Power of Ten rules, it forbids post-boot heap allocations and enforces bounded execution times. Frames are rendered directly into BTRON window planes without intermediate blitting."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Silicon</span>
+                <h2 class="jp-title">1. C99 コア構造とチップ分割 (Silicon Core Units)</h2>
+                <p class="band-eyebrow">Modular Chip Emulation · Static Struct Allocation</p>
+            </div>
+            <div class="doc-summary">
+                tronMSX のシリコンチップ分割構成とソースモジュール一覧です。<br>
+                <span class="summary-en">"Modular organization of C99 chip emulation cores, isolating CPU, VDP, sound chips, and bus logic into testable units."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>ソースファイル (Source)</th>
+                            <th>エミュレーション対象 (Target)</th>
+                            <th>技術的仕様と役割 (Technical Role)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>z80.c</code> / <code>r800.c</code></td>
+                            <td>Zilog Z80 / ASCII R800</td>
+                            <td>命令デコード、M1 サイクル加算、有界割り込み応答</td>
+                        </tr>
+                        <tr>
+                            <td><code>v9938.c</code> / <code>vdp.c</code></td>
+                            <td>Yamaha V9938 / V9958</td>
+                            <td>VRAM 128 KiB アクセス、パレット、スキャンライン描画、HMMV/LDIR コマンド</td>
+                        </tr>
+                        <tr>
+                            <td><code>psg.c</code></td>
+                            <td>AY-3-8910 / YM2149</td>
+                            <td>3ch 矩形波・ノイズ・エンベロープ合成、44.1 kHz PCM サンプル化</td>
+                        </tr>
+                        <tr>
+                            <td><code>opll.c</code> / <code>y8950.c</code></td>
+                            <td>YM2413 (MSX-MUSIC) / Y8950</td>
+                            <td>FM 音源周波数変調合成、インストゥルメントテーブル</td>
+                        </tr>
+                        <tr>
+                            <td><code>slots.c</code> / <code>ppi.c</code></td>
+                            <td>8255 PPI / スロット多重化</td>
+                            <td>基本スロット・サブスロット切り替え、メモリマッパーセグメント制御</td>
+                        </tr>
+                        <tr>
+                            <td><code>geo3d.c</code></td>
+                            <td>Geo3D リアルタイム演算</td>
+                            <td>16-bit 固定小数点 3 次元行列変換、ポリゴンクリッピングパイプライン</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Links</span>
+                <h2 class="jp-title">2. B-System 実装への接続 (B-System B-MSX Connection)</h2>
+                <p class="band-eyebrow">Reference Implementations &amp; Book Specs</p>
+            </div>
+            <div class="related-grid">
+                <a href="../../../btron/b-system/apps/MSX.html" target="_blank" class="related-card">
+                    <h4>B-System B-MSX アプリ仕様 <span>↗</span></h4>
+                    <p>B-System 上で動作する公式仕様書。早送りエンジン、Geo3D、実機画面キャプチャ。</p>
+                </a>
+                <a href="../../../btron/b-media/msx.html" target="_blank" class="related-card">
+                    <h4>B-Book B-MSX 規範仕様 (Rev 1.05) <span>↗</span></h4>
+                    <p>Z80 タイミング、V9958 レンダラ、PSG-PCM 統合、NASA/JPL 信頼性基準。</p>
+                </a>
+                <a href="../../../btron/doc/txt/MSX-SOUND.txt" target="_blank" class="related-card">
+                    <h4>MSX-SOUND 音響仕様 <span>↗</span></h4>
+                    <p>直流阻止 14 Hz ハイパス、VirtIO-Sound 735 サンプル/フレーム送出規約。</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../emulators/index.html" style="color:var(--tron-teal); text-decoration:none;">← 摸擬目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro tronMSX
+        </div>
+    </footer>
+
+</body>
+</html>

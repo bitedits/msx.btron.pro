@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>openMSX — サイクル正確エミュレータとXML構成 | msx.btron.pro</title>
+    <meta name="description" content="openMSX の完全技術仕様。サイクル正確 V9938/V9958 レンダリング、XML による機体構成ツリー定義、Tcl コマンドソケット制御、およびタイムトラベル逆再生デバッグ機構。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html" class="active">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../emulators/index.html">Emulators</a>
+        <span class="sep">/</span>
+        <span class="current">openMSX</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Cycle-Accurate Timing · XML Machine Schema · Tcl Socket Protocol · Time-Travel Debugger</div>
+        <h1>openMSX (Emulators)</h1>
+        <div class="subtitle">
+            世界で最も厳密なサイクル精度を誇るリファレンスエミュレータの技術構造と自動化インターフェース。
+            <span class="subtitle-en">
+                "In-depth technical specification of openMSX: cycle-accurate video timing, XML machine declarative schemas, Tcl automation sockets, and reverse execution debugger integration."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../emulators/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 摸擬目録へ戻る (Emulators Index)</a>
+
+        <div class="tagline-card">
+            <strong>究極の精度への到達</strong> — openMSX は、単にソフトウェアを動かすことではなく、実機シリコンの物理的挙動を忠実に再現することを目指して設計されています。VDP のラスタースキャン走査、スプライト走査線ドロップアウト、および Z80 の M1 サイクル・ウェイトステートがサイクル単位で同期。外部プロセスから Tcl ソケットを通じてマシン状態を完全制御できるため、CI（継続的インテグレーション）テストに不可欠です。
+            <span class="tagline-en">
+                "openMSX establishes the global gold standard for cycle-accurate MSX virtualization. By synchronizing scanline raster progression, waitstates, and slot switching, it ensures absolute fidelity. Its Tcl control socket permits external build harnesses to run headless regression tests."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / XML</span>
+                <h2 class="jp-title">1. XML 機体構成スキーマ (XML Machine Definition)</h2>
+                <p class="band-eyebrow">Declarative Silicon Topologies · Slot Nesting</p>
+            </div>
+            <div class="doc-summary">
+                openMSX において機体を定義する宣言的 XML の構造です。<br>
+                <span class="summary-en">"Structure of declarative openMSX machine XML files organizing devices, quartz crystal frequencies, and nested slot structures."</span>
+            </div>
+
+            <pre class="code-block"><code><span class="code-comment">&lt;!-- openMSX マシン構成宣言例 (Sony HB-F900 抜粋) --&gt;</span>
+&lt;msxconfig&gt;
+  &lt;info&gt;
+    &lt;manufacturer&gt;Sony&lt;/manufacturer&gt;
+    &lt;code&gt;HB-F900&lt;/code&gt;
+    &lt;type&gt;MSX2&lt;/type&gt;
+    &lt;region&gt;jp&lt;/region&gt;
+  &lt;/info&gt;
+
+  &lt;devices&gt;
+    &lt;PPI id="ppi"&gt;
+      &lt;io base="0xA8" num="4"/&gt;
+      &lt;keyboard_type&gt;jp_ansi&lt;/keyboard_type&gt;
+    &lt;/PPI&gt;
+
+    &lt;VDP id="VDP"&gt;
+      &lt;version&gt;V9938&lt;/version&gt;
+      &lt;vram&gt;128&lt;/vram&gt;
+      &lt;io base="0x98" num="4" type="O"/&gt;
+      &lt;io base="0x98" num="2" type="I"/&gt;
+    &lt;/VDP&gt;
+
+    &lt;primary slot="3"&gt;
+      &lt;secondary slot="1"&gt;
+        &lt;MemoryMapper id="Main RAM"&gt;
+          &lt;size&gt;256&lt;/size&gt;
+        &lt;/MemoryMapper&gt;
+      &lt;/secondary&gt;
+    &lt;/primary&gt;
+  &lt;/devices&gt;
+&lt;/msxconfig&gt;</code></pre>
+        </section>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Tcl</span>
+                <h2 class="jp-title">2. Tcl 制御ソケットと自動化 (Tcl Automation)</h2>
+                <p class="band-eyebrow">Headless Testing · Symbol Inspection</p>
+            </div>
+            <div class="doc-summary">
+                Unix ドメインソケットまたはパイプ経由で openMSX を遠隔操作する主要コマンドです。<br>
+                <span class="summary-en">"Key Tcl commands controlling headless execution, symbol loading, and frame capture via control sockets."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>Tcl コマンド (Command)</th>
+                            <th>引数 (Arguments)</th>
+                            <th>機能仕様と自動化における用途</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>carta &lt;file&gt;</code></td>
+                            <td>ROM パス</td>
+                            <td>カートリッジスロット A に指定 ROM を即座に挿入</td>
+                        </tr>
+                        <tr>
+                            <td><code>reset</code></td>
+                            <td>なし</td>
+                            <td>仮想マシンをハードウェアリセット</td>
+                        </tr>
+                        <tr>
+                            <td><code>debug set_bp &lt;addr&gt;</code></td>
+                            <td>アドレス (0x0000–0xFFFF)</td>
+                            <td>指定アドレスへの実行到達時にブレークポイント停止</td>
+                        </tr>
+                        <tr>
+                            <td><code>reverse::go_back &lt;t&gt;</code></td>
+                            <td>秒数 (例: 5)</td>
+                            <td>指定秒数だけ過去の実行状態へ巻き戻し (タイムトラベル)</td>
+                        </tr>
+                        <tr>
+                            <td><code>screenshot &lt;file&gt;</code></td>
+                            <td>出力 PNG パス</td>
+                            <td>現在の VDP フレームバッファをピクセル完全な画像として保存</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../emulators/index.html" style="color:var(--tron-teal); text-decoration:none;">← 摸擬目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro openMSX
+        </div>
+    </footer>
+
+</body>
+</html>

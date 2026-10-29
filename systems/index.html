@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統 — 基本ソフトウェアとファームウェア | msx.btron.pro</title>
+    <meta name="description" content="MSX アーキテクチャを駆動する基本ソフトウェア群の総合目録。MSX-BIOS、MSX-DOS 1/2、Nextor、オープンソース C-BIOS、Unix V7 クローン UZIX、そして 8-bit BTRON for MSX。">
+    <link rel="stylesheet" href="../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../computers/index.html">Computers</a></li>
+                <li><a href="../development/index.html">Development</a></li>
+                <li><a href="../emulators/index.html">Emulators</a></li>
+                <li><a href="../games/index.html">Games</a></li>
+                <li><a href="../systems/index.html" class="active">Systems</a></li>
+                <li><a href="../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../index.html">MSX</a>
+        <span class="sep">/</span>
+        <span class="current">Systems</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Operating Systems &amp; BIOSes · 5 Major Software Architectures · 8-bit BTRON</div>
+        <h1>系統 (Systems)</h1>
+        <div class="subtitle">
+            標準 BIOS からディスクオペレーティングシステム、UNIX クローン、そして 8-bit BTRON に至る基本ソフトウェア体系。
+            <span class="subtitle-en">
+                "Comprehensive registry of operating systems and firmware powering the MSX platform, spanning standard MSX-BIOS vectors, MSX-DOS / Nextor, cleanroom C-BIOS, UZIX Unix V7, and the 8-bit BTRON hypermedia runtime."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <div class="tagline-card">
+            <strong>基盤ソフトウェアの多様性</strong> — MSX の 64 KiB バンク空間は、単一の静的 BIOS に制約されることはありませんでした。スロット多重化とメモリマッパーを駆使することにより、DOS、UNIX、そして坂村健氏が提唱した BTRON（超漢字・実身仮身ハイパーメディアモデル）の 8 ビット実装まで、高度なオペレーティングシステムが Z80 上で実稼働しました。
+            <span class="tagline-en">
+                "The banked MSX addressing architecture liberated software developers from static firmware limitations. Through dynamic slot switching and memory mappers, the platform hosted CP/M-compatible disk operating systems, preemptive Unix kernels, and an 8-bit BTRON hypermedia engine."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Spectrum</span>
+                <h2 class="jp-title">1. 基本ソフトウェア目録 (Systems Spectrum)</h2>
+                <p class="band-eyebrow">Firmware · DOS · UNIX · BTRON</p>
+            </div>
+            <div class="doc-summary">
+                アーカイブされている 5 つの主要な基本ソフトウェア・ファームウェアの仕様一覧です。<br>
+                <span class="summary-en">"Overview of five major system software implementations running on native MSX hardware."</span>
+            </div>
+
+            <div class="strip">
+                <div class="card">
+                    <span class="card-num">01</span>
+                    <h4>8-bit BTRON (for MSX)</h4>
+                    <p class="role">Hypermedia &amp; Tasking Subsystem</p>
+                    <p>BTRON 3.20 の実身仮身（リアル／バーチャルボディ）レコードと TAD を 8 ビット Z80 空間に移植した確定性ランタイム。B-System の B-MSX と直結。</p>
+                    <a class="entry" href="btron/index.html">8-bit BTRON 仕様書 →</a>
+                </div>
+                <div class="card">
+                    <span class="card-num">02</span>
+                    <h4>MSX-BIOS</h4>
+                    <p class="role">Hardware Abstraction Jump Table</p>
+                    <p><code>$0000–$015B</code> の標準ベクタジャンプ表。スロット間呼出 <code>CALSLT</code>、スロット切替 <code>ENASLT</code>、およびワークエリア（<code>$F380–$FFFF</code>）辞書。</p>
+                    <a class="entry" href="msx-bios/index.html">BIOS ベクタ仕様書 →</a>
+                </div>
+                <div class="card">
+                    <span class="card-num">03</span>
+                    <h4>MSX-DOS 2 &amp; Nextor</h4>
+                    <p class="role">Disk Operating System &amp; FAT16</p>
+                    <p>CP/M 互換 <code>INT 21h</code> BDOS 呼出、階層ディレクトリ、環境変数、および Nextor による FAT16 大容量ストレージ制御。</p>
+                    <a class="entry" href="msx-dos/index.html">MSX-DOS / Nextor 仕様書 →</a>
+                </div>
+            </div>
+
+            <div class="strip" style="margin-top: 1.5rem;">
+                <div class="card">
+                    <span class="card-num">04</span>
+                    <h4>C-BIOS</h4>
+                    <p class="role">Open-Source Cleanroom Firmware</p>
+                    <p>BouKiCHi 氏率いるチームによって開発された、GPL/BSD 準拠の 100% オープンソース互換 BIOS。BASIC を省きカートリッジ自動起動に特化。</p>
+                    <a class="entry" href="c-bios/index.html">C-BIOS 内部構造 →</a>
+                </div>
+                <div class="card">
+                    <span class="card-num">05</span>
+                    <h4>UZIX</h4>
+                    <p class="role">Unix V7 Clone for MSX</p>
+                    <p>Z80 上で動作するプリエンプティブ Unix クローン。メモリマッパーを活用したプロセス空間分離、fork/exec、パイプ、標準 V7 シェル環境。</p>
+                    <a class="entry" href="uzix/index.html">UZIX カーネル仕様書 →</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../index.html" style="color:var(--tron-teal); text-decoration:none;">← MSX アーカイブ本拠へ戻る</a> &nbsp;·&nbsp; msx.btron.pro Systems
+        </div>
+    </footer>
+
+</body>
+</html>

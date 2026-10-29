@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ヤマハ YIS-805/256 — レジスタ仕様と機体諸元 | msx.btron.pro</title>
+    <meta name="description" content="ヤマハ YIS-805/256 (Yamaha YIS-805 256) のハードウェア諸元、スロット配分、I/O ポート、シリコンレジスタ仕様。S1985 MSX-Engine、SFG-05 音楽モジュール専用サイドスロット、256 KiB RAM。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html" class="active">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../computers/index.html">Computers</a>
+        <span class="sep">/</span>
+        <span class="current">Yamaha YIS-805 256</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">MSX2 · Yamaha (日本楽器製造) · 1986 · openMSX Specification</div>
+        <h1>ヤマハ YIS-805/256</h1>
+        <div class="subtitle">
+            ヤマハが誇る音楽制作 MSX の最高峰。S1985 MSX-Engine ASIC、256 KiB メモリマッパー RAM、および本体側面に 60 ピン専用音楽モジュールスロットを装備。FM 音源ユニット SFG-05（YM2151 OPM 8音FM音源・MIDI）を直結可能。
+            <span class="subtitle-en">
+                "The Yamaha YIS-805/256 is Yamaha's premier music production MSX2 computer, equipped with 256 KiB of memory mapper RAM, the S1985 MSX-Engine ASIC, and a specialized 60-pin side expansion slot designed specifically for the Yamaha SFG-05 Sound Creator FM synthesizer module (YM2151 OPM + MIDI)."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../computers/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 計算機一覧へ戻る (Computers Index)</a>
+
+        <div class="tagline-card">
+            <strong>ヤマハ YIS-805/256 (Yamaha YIS-805 256) 機体工学要約</strong> — 本機は 1986 年に Yamaha (日本楽器製造) より投入された MSX2 規格機です。RAM 容量は 256 KiB、VRAM は 128 KiB を搭載し、VDP には Yamaha V9938 を採用。FDC には TC8566AF 2DD 720 KiB FDD を内蔵します。特筆すべき回路として S1985 MSX-Engine、SFG-05 音楽モジュール専用サイドスロット、256 KiB RAM を集積しています。
+            <span class="tagline-en">
+                "Technical profile for the Yamaha YIS-805 256. Engineered with 256 KiB main RAM, 128 KiB VRAM, Yamaha V9938 display processor, and integrated TC8566AF 2DD 720 KiB FDD. Silicon highlights include S1985 MSX-Engine、SFG-05 音楽モジュール専用サイドスロット、256 KiB RAM."
+            </span>
+        </div>
+
+        <!-- 1. Technical Specs Table -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Silicon</span>
+                <h2 class="jp-title">1. 基本諸元とシリコン構成 (Hardware Parameters)</h2>
+                <p class="band-eyebrow">Microprocessor · Memory Bus · Graphics · Audio</p>
+            </div>
+            <div class="doc-summary">
+                本機の基礎諸元およびハードウェアアーキテクチャの概要です。<br>
+                <span class="summary-en">"Core hardware parameters including CPU clocking, memory banking, video controller architecture, and peripheral storage interfaces."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>項目 (Subsystem)</th>
+                            <th>諸元・仕様 (Functional Specification)</th>
+                            <th>技術定義・集積回路 (Silicon Definition)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>CPU</b></td>
+                            <td>Zilog Z80A 互換 @ 3.58 MHz</td>
+                            <td>主演算装置、8-bit バス、有界割込応答 (INT / NMI)</td>
+                        </tr>
+                        <tr>
+                            <td><b>VDP (映像)</b></td>
+                            <td>Yamaha V9938</td>
+                            <td>VRAM 128 KiB、ハードウェアグラフィックコマンド (HMMV, LDIRVM)</td>
+                        </tr>
+                        <tr>
+                            <td><b>主記憶 (RAM)</b></td>
+                            <td>256 KiB</td>
+                            <td>スロット割当および 16 KiB 単位メモリマッパー</td>
+                        </tr>
+                        <tr>
+                            <td><b>音響 (Audio)</b></td>
+                            <td>AY-3-8910 / YM2149 PSG (3ch)</td>
+                            <td>矩形波 3 重和音 + ノイズ 1 系統 + ハードウェアエンベロープ</td>
+                        </tr>
+                        <tr>
+                            <td><b>フロッピーディスク</b></td>
+                            <td>TC8566AF 2DD 720 KiB FDD</td>
+                            <td>高信頼性ディスクコントローラ、DMA/割込駆動</td>
+                        </tr>
+                        <tr>
+                            <td><b>特殊機能</b></td>
+                            <td>S1985 MSX-Engine、SFG-05 音楽モジュール専用サイドスロット、256 KiB RAM</td>
+                            <td>機種固有拡張 I/O 回路および専用ファームウェア</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 2. Slot Map -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / Slots</span>
+                <h2 class="jp-title">2. スロット・サブスロット配置構成 (Memory &amp; Slot Matrix)</h2>
+                <p class="band-eyebrow">Primary Slots · Secondary Subslots · Memory Mapping</p>
+            </div>
+            <div class="doc-summary">
+                PPI ポート 0xA8 および拡張スロット選択レジスタ（0xFFFF）による論理メモリマッピング構成です。<br>
+                <span class="summary-en">"Exact slot and subslot distribution governing the 64 KiB Z80 addressing plane, derived from the hardware address decoder."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>スロット番号 (Slot Identifier)</th>
+                            <th>割当デバイス・ROM / RAM (Mapped Device)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+        <tr>
+            <td><code>Slot 0-0</code></td>
+            <td>MSX-BIOS & BASIC ROM (32 KiB)</td>
+        </tr>
+        
+        <tr>
+            <td><code>Slot 0-1</code></td>
+            <td>MSX Sub-ROM (16 KiB)</td>
+        </tr>
+        
+        <tr>
+            <td><code>Slot 0-2</code></td>
+            <td>漢字 ROM JIS 第1水準</td>
+        </tr>
+        
+        <tr>
+            <td><code>Slot 1</code></td>
+            <td>前面カートリッジスロット 1</td>
+        </tr>
+        
+        <tr>
+            <td><code>Slot 2</code></td>
+            <td>前面カートリッジスロット 2</td>
+        </tr>
+        
+        <tr>
+            <td><code>Slot 3-0</code></td>
+            <td>メモリマッパー メイン RAM (256 KiB)</td>
+        </tr>
+        
+        <tr>
+            <td><code>Slot 3-1</code></td>
+            <td>TC8566AF Disk ROM (16 KiB)</td>
+        </tr>
+        
+        <tr>
+            <td><code>Slot 3-2</code></td>
+            <td>SFG-05 FM Sound Creator ROM (スロット装着時)</td>
+        </tr>
+        
+        <tr>
+            <td><code>Slot 3-3</code></td>
+            <td>空き / システム拡張</td>
+        </tr>
+        
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 3. Registers Table -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / Registers</span>
+                <h2 class="jp-title">3. I/O ポートおよびシリコンレジスタ仕様 (Register Specification)</h2>
+                <p class="band-eyebrow">Input/Output Port Bitfields &amp; Memory-Mapped Registers</p>
+            </div>
+            <div class="doc-summary">
+                本機における全 I/O ポートおよびメモリマップドレジスタの機能定義です。エミュレータ実装およびアセンブラ直接叩きプログラミングにおける必須の基準値。<br>
+                <span class="summary-en">"Complete enumeration of hardware registers and I/O addresses, detailing bitfields, directionality, and operational semantics."</span>
+            </div>
+
+            <!-- Bitfield example for Primary Slot 0xA8 -->
+            <div class="bitfield-wrap">
+                <div class="bitfield-title">PPI 基本スロット選択レジスタ (Port 0xA8 / Read &amp; Write)</div>
+                <div class="bitfield">
+                    <div class="bitfield-cell"><div class="bitfield-bit">D7</div><div class="bitfield-name">P3-1</div></div>
+                    <div class="bitfield-cell"><div class="bitfield-bit">D6</div><div class="bitfield-name">P3-0</div></div>
+                    <div class="bitfield-cell"><div class="bitfield-bit">D5</div><div class="bitfield-name">P2-1</div></div>
+                    <div class="bitfield-cell"><div class="bitfield-bit">D4</div><div class="bitfield-name">P2-0</div></div>
+                    <div class="bitfield-cell"><div class="bitfield-bit">D3</div><div class="bitfield-name">P1-1</div></div>
+                    <div class="bitfield-cell"><div class="bitfield-bit">D2</div><div class="bitfield-name">P1-0</div></div>
+                    <div class="bitfield-cell"><div class="bitfield-bit">D1</div><div class="bitfield-name">P0-1</div></div>
+                    <div class="bitfield-cell"><div class="bitfield-bit">D0</div><div class="bitfield-name">P0-0</div></div>
+                </div>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>I/O ポート / アドレス</th>
+                            <th>レジスタ名称 (Register Identifier)</th>
+                            <th>機能仕様・ビット割当 (Functional Specification &amp; Bitfields)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+        <tr>
+            <td><code>0x10–0x11</code></td>
+            <td><b>YM2151 OPM (SFG-05)</b></td>
+            <td>0x10: OPM レジスタアドレスラッチ, 0x11: OPM データ書込 (FM 8音ポリフォニック合成)</td>
+        </tr>
+        
+        <tr>
+            <td><code>0x12–0x13</code></td>
+            <td><b>HD6303 / 8251 MIDI UART (SFG-05)</b></td>
+            <td>0x12: MIDI 送受信データ, 0x13: MIDI コマンド/ステータス (31.25 kbps)</td>
+        </tr>
+        
+        <tr>
+            <td><code>0x98–0x9B</code></td>
+            <td><b>V9938 VDP Ports</b></td>
+            <td>画面表示およびパレット制御</td>
+        </tr>
+        
+        <tr>
+            <td><code>0xA0–0xA3</code></td>
+            <td><b>AY-3-8910 PSG</b></td>
+            <td>内蔵 3ch 音響合成</td>
+        </tr>
+        
+        <tr>
+            <td><code>0xA8–0xAB</code></td>
+            <td><b>S1985 PPI Subsystem</b></td>
+            <td>基本スロット・鍵盤マトリクス</td>
+        </tr>
+        
+        <tr>
+            <td><code>0xD8–0xDB</code></td>
+            <td><b>Kanji ROM Level 1 & 2</b></td>
+            <td>JIS 漢字フォント</td>
+        </tr>
+        
+        <tr>
+            <td><code>0xFC–0xFF</code></td>
+            <td><b>Memory Mapper (256K)</b></td>
+            <td>セグメントレジスタ 0–15</td>
+        </tr>
+        
+        <tr>
+            <td><code>0xFFFF</code></td>
+            <td><b>Secondary Slot Select</b></td>
+            <td>スロット 0 / 3 サブスロット選択レジスタ</td>
+        </tr>
+        
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 4. Cross Links -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">04 / Links</span>
+                <h2 class="jp-title">4. 関連資料とエミュレータ接続 (Related Documentation)</h2>
+                <p class="band-eyebrow">openMSX XML · B-System B-MSX Implementation</p>
+            </div>
+            <div class="related-grid">
+                <a href="../../computers/index.html" class="related-card">
+                    <h4>計算機総合目録 <span>→</span></h4>
+                    <p>全 13 機種の仕様比較表およびハードウェアマトリクス。</p>
+                </a>
+                <a href="../../emulators/openMSX/index.html" class="related-card">
+                    <h4>openMSX 機体構成 <span>→</span></h4>
+                    <p>本機の openMSX XML ハードウェア定義とサイクル精度検証。</p>
+                </a>
+                <a href="../../../btron/b-system/apps/MSX.html" target="_blank" class="related-card">
+                    <h4>B-System B-MSX 仕様 <span>↗</span></h4>
+                    <p>B-System 内蔵の確定性 C99 MSX2+ コアおよび Geo3D パイプライン仕様。</p>
+                </a>
+                <a href="../../development/sdcc/index.html" class="related-card">
+                    <h4>SDCC 開発手引き <span>→</span></h4>
+                    <p>本機向け C99/C89 プログラミングと ROM カートリッジビルド手法。</p>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../computers/index.html" style="color:var(--tron-teal); text-decoration:none;">← 計算機目録へ戻る</a> &nbsp;·&nbsp; ヤマハ YIS-805/256 (Yamaha YIS-805 256) &nbsp;·&nbsp; msx.btron.pro
+        </div>
+    </footer>
+
+</body>
+</html>

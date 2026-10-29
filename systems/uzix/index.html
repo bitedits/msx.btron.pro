@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UZIX — MSX上のUnix System 7実装 | msx.btron.pro</title>
+    <meta name="description" content="UZIX の完全技術仕様。Z80 向け Unix System 7 クローン。メモリマッパーを活用したプロセス空間分離、プリエンプティブスケジューラ、fork/exec、および V7 準拠ファイルシステム。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html" class="active">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../systems/index.html">Systems</a>
+        <span class="sep">/</span>
+        <span class="current">UZIX</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Unix Version 7 Architecture · Preemptive Z80 Multitasking · Process Bank Switching</div>
+        <h1>UZIX (Systems)</h1>
+        <div class="subtitle">
+            8 ビット MSX 上で稼働する、プロセス仮想メモリとプリエンプティブマルチタスクを備えた本格 Unix V7 クローン。
+            <span class="subtitle-en">
+                "Complete technical specification of UZIX, a true Unix Seventh Edition clone running on Z80 MSX hardware utilizing memory mappers for per-process memory virtualization."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
+
+        <div class="tagline-card">
+            <strong>Z80 上の真の UNIX</strong> — UZIX は、PC 向け Unix V7 の設計を MSX Z80 へ移植したオペレーティングシステムです。ハードウェア MMU を持たない Z80 において、MSX のメモリマッパー（16 KiB セグメント）をプロセス空間切り替え機構として活用。プロセスごとに独立した 32 KiB のユーザ空間を提供し、タイマー割り込みによるプリエンプティブスケジューリング、fork/exec、Unix パイプ、および標準シェル（sh）を実現しました。
+            <span class="tagline-en">
+                "UZIX demonstrates the surprising sophistication of MSX hardware by deploying a preemptive Unix V7 kernel onto banked Z80 architecture. By multiplexing memory mapper segments to serve as virtual address spaces, it provides true process isolation, pipe IPC, and a standard Unix userland."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Kernel</span>
+                <h2 class="jp-title">1. カーネルアーキテクチャ (Kernel Architecture)</h2>
+                <p class="band-eyebrow">Preemptive Scheduler · Process Memory Layout</p>
+            </div>
+            <div class="doc-summary">
+                UZIX カーネルのメモリ構成とプロセス空間の割り当て仕様です。<br>
+                <span class="summary-en">"Memory plane partitioning isolating the resident kernel from dynamic user process contexts using memory mapper ports."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>メモリ領域 (Z80 Address)</th>
+                            <th>常駐内容 (Resident Content)</th>
+                            <th>マッパー動作 (Mapper Action)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>0x0000–0x7FFF</code> (Page 0–1)</td>
+                            <td>ユーザプロセス空間 (User Process Context)</td>
+                            <td>プロセス切り替え時にマッパーポート 0xFC/0xFD で物理 RAM を切り替え</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x8000–0xBFFF</code> (Page 2)</td>
+                            <td>カーネルコードおよび VFS バッファ</td>
+                            <td>常駐固定セグメント (システム全体で共有)</td>
+                        </tr>
+                        <tr>
+                            <td><code>0xC000–0xFFFF</code> (Page 3)</td>
+                            <td>カーネルデータ、スタック、ハードウェア I/O</td>
+                            <td>常駐固定セグメント (割込ハンドラとシステムワークエリア)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro UZIX
+        </div>
+    </footer>
+
+</body>
+</html>

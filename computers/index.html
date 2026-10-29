@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>計算機 — 機種目録とレジスタ諸元 | msx.btron.pro</title>
+    <meta name="description" content="MSX2 / MSX2+ / turboR を代表する 13 機種のハードウェア諸元、スロット構成、I/O ポート、およびシリコンレジスタ完全仕様目録。ソニー、日本ビクター、ヤマハ、松下電器、日立製作所の名機を網羅。">
+    <link rel="stylesheet" href="../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../computers/index.html" class="active">Computers</a></li>
+                <li><a href="../development/index.html">Development</a></li>
+                <li><a href="../emulators/index.html">Emulators</a></li>
+                <li><a href="../games/index.html">Games</a></li>
+                <li><a href="../systems/index.html">Systems</a></li>
+                <li><a href="../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../index.html">MSX</a>
+        <span class="sep">/</span>
+        <span class="current">Computers</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">Hardware Registry · 13 Representative Systems · openMSX Hardware XML Parity</div>
+        <h1>計算機 (Computers)</h1>
+        <div class="subtitle">
+            MSX2・MSX2+ を代表する名機 13 選の機体構造、スロット多重化、I/O ポートおよびシリコンレジスタ完全目録。
+            <span class="subtitle-en">
+                "Exhaustive hardware catalog and register-level technical specifications for thirteen canonical MSX2 and MSX2+ platforms, verified against openMSX XML architectures."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <div class="tagline-card">
+            <strong>計算機群の工学的地平</strong> — MSX 規格の真価は、厳格なバイナリ互換性を担保しつつ、各電機メーカーが自社の得意技術（放送映像、音楽シンセサイザー、通信、オフィスオートメーション）を凝縮した多様な機体を市場へ送り出した点にあります。本章では、openMSX の機体定義 XML およびサービスマニュアルに基づき、全 13 機種のレジスタ配置を完全開示します。
+            <span class="tagline-en">
+                "The engineering triumph of the MSX standard lay in its ability to enforce universal software interoperability while permitting manufacturers to integrate broadcast genlocks, FM sound synthesizers, and telecommunication modems."
+            </span>
+        </div>
+
+        <section class="doc-section" style="padding: 2rem 0;">
+            <div class="band-head">
+                <span class="band-index">01 / Matrix</span>
+                <h2 class="jp-title">計算機諸元比較一覧 (Hardware Specifications Matrix)</h2>
+                <p class="band-eyebrow">CPU · VDP · RAM · VRAM · Floppy Disk Controller · Specialized Silicon</p>
+            </div>
+            <div class="doc-summary">
+                各機体の基礎諸元および特殊回路の一覧です。機種名を選択することで、レジスタ配置、スロット配分、および openMSX 構成を含む詳細仕様書へ進みます。<br>
+                <span class="summary-en">"Comparative matrix of core microprocessor timings, video display processor variants, memory mapper capacities, and custom ASIC integrations across all archived chassis."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>機種名 (Chassis Model)</th>
+                            <th>規格</th>
+                            <th>発売年</th>
+                            <th>RAM / VRAM</th>
+                            <th>映像素子 (VDP)</th>
+                            <th>特殊集積回路 / 機能 (Special Silicon)</th>
+                            <th>仕様書</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+        <tr>
+            <td><b><a href="Hitachi MB-H70/index.html" style="color:var(--tron-teal); text-decoration:none;">日立 MB-H70</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Hitachi MB-H70</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>64 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>スーパーインポーズ回路 (0x91)、JIS第1水準漢字ROM、外部AV同期</td>
+            <td><a href="Hitachi MB-H70/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Panasonic FS-A1FM/index.html" style="color:var(--tron-teal); text-decoration:none;">松下電器 FS-A1FM</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Panasonic FS-A1FM</span></td>
+            <td><code>MSX2+</code></td>
+            <td>1988</td>
+            <td>64 KiB / 128 KiB</td>
+            <td>Yamaha V9958</td>
+            <td>T9769 ASIC、MSX-MUSIC (YM2413)、内蔵モデム (0x80-0x87)、内蔵ワープロ</td>
+            <td><a href="Panasonic FS-A1FM/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Sony HB-F500/index.html" style="color:var(--tron-teal); text-decoration:none;">ソニー HB-F500</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Sony HB-F500</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>64 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>セパレート型キーボード、デュアルフロッピードライブ、ビジネス仕様</td>
+            <td><a href="Sony HB-F500/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Sony HB-F700P/index.html" style="color:var(--tron-teal); text-decoration:none;">ソニー HB-F700P</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Sony HB-F700P</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>256 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>欧州 PAL 旗艦モデル、256 KiB メモリマッパー標準搭載、RS-232C 拡張対応</td>
+            <td><a href="Sony HB-F700P/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Sony HB-F900/index.html" style="color:var(--tron-teal); text-decoration:none;">ソニー HB-F900</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Sony HB-F900</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>256 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>ゲンロック回路、スーパーインポーズ、映像デジタイザ端子、業務用AV統合</td>
+            <td><a href="Sony HB-F900/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Sony HB-G900AP/index.html" style="color:var(--tron-teal); text-decoration:none;">ソニー HB-G900AP</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Sony HB-G900AP</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>512 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>欧州放送局用 512 KiB RAM、Genlock / PAL AV コントローラ、レーザーディスク連動</td>
+            <td><a href="Sony HB-G900AP/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Sony HB-T600/index.html" style="color:var(--tron-teal); text-decoration:none;">ソニー HB-T600</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Sony HB-T600</span></td>
+            <td><code>MSX2</code></td>
+            <td>1987</td>
+            <td>128 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>キャプテンシステム (Videotex) デコーダ、内蔵高速モデム、証券取引ファームウェア</td>
+            <td><a href="Sony HB-T600/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Victor HC-80/index.html" style="color:var(--tron-teal); text-decoration:none;">日本ビクター HC-80</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Victor HC-80</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>64 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>セパレート型工業意匠、JVC プロ用映像端子、内蔵スーパーインポーズ機能</td>
+            <td><a href="Victor HC-80/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Victor HC-90 AB/index.html" style="color:var(--tron-teal); text-decoration:none;">日本ビクター HC-90 AB</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Victor HC-90 AB</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>64 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>デュアル CPU アーキテクチャ (Z80A + HD64180)、映像テロップ編集機</td>
+            <td><a href="Victor HC-90 AB/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Victor HC-90 VT/index.html" style="color:var(--tron-teal); text-decoration:none;">日本ビクター HC-90 VT</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Victor HC-90 VT</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>64 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>Video Titler 専用機、JIS第1/第2水準漢字ROM、テロップスクロール回路</td>
+            <td><a href="Victor HC-90 VT/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Victor HC-95 AB/index.html" style="color:var(--tron-teal); text-decoration:none;">日本ビクター HC-95 AB</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Victor HC-95 AB</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>64 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>ビクター最上位旗艦機、拡張シャーシ接続バス、デュアルCPU、ゲンロック完全対応</td>
+            <td><a href="Victor HC-95 AB/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Victor HC-95 VT/index.html" style="color:var(--tron-teal); text-decoration:none;">日本ビクター HC-95 VT</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Victor HC-95 VT</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>64 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>業務用最上位ビデオタイトラー、全水準漢字ROM、リアルタイムオーバーレイ</td>
+            <td><a href="Victor HC-95 VT/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+        <tr>
+            <td><b><a href="Yamaha YIS-805 256/index.html" style="color:var(--tron-teal); text-decoration:none;">ヤマハ YIS-805/256</a></b><br><span style="font-size:0.8rem; color:var(--ink-3);">Yamaha YIS-805 256</span></td>
+            <td><code>MSX2</code></td>
+            <td>1986</td>
+            <td>256 KiB / 128 KiB</td>
+            <td>Yamaha V9938</td>
+            <td>S1985 MSX-Engine、SFG-05 音楽モジュール専用サイドスロット、256 KiB RAM</td>
+            <td><a href="Yamaha YIS-805 256/index.html" class="entry" style="font-size:0.82rem; margin:0;">仕様書 →</a></td>
+        </tr>
+        
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="doc-section" style="padding: 2rem 0;">
+            <div class="band-head">
+                <span class="band-index">02 / Dossiers</span>
+                <h2 class="jp-title">機種別技術解体目録 (Machine Dossiers)</h2>
+                <p class="band-eyebrow">Individual Machine Profiles &amp; Silicon Architecture</p>
+            </div>
+            <div class="doc-summary">
+                各機種の個別仕様書へのアクセス目録です。それぞれの詳細ページには、PPI、VDP、PSG、メモリマッパー、FDC、および機種固有回路（ゲンロック、モデム、漢字ROM）のビット単位の機能定義が掲載されています。<br>
+                <span class="summary-en">"Curated index directing to dedicated register breakdowns for each system, covering port arbitrations, PPI assignments, subslot tables, and hardware interrupts."</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:1.5rem; margin-top:2rem;">
+                
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">01</span>
+            <h4>日立 MB-H70</h4>
+            <p class="role">MSX2 · Hitachi (日立製作所) · 1986</p>
+            <p>日立が送り出した高級 AV 指向 MSX2。愛称『ペンギン』。外部カラーテレビ信号とのスーパーインポーズ機能、JIS 第1水準漢字 ROM（128 KiB）、および 3.5 インチ 1DD フロッピーディスクドライブを標準内蔵。映像編集やパーソナルテロッパーとしての先駆的機体。</p>
+            <a class="entry" href="Hitachi MB-H70/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">02</span>
+            <h4>松下電器 FS-A1FM</h4>
+            <p class="role">MSX2+ · Panasonic (松下電器産業) · 1988</p>
+            <p>松下電器が送り出した通信・ワープロ統合型 MSX2+。MSX-Engine T9769 ASIC と V9958 を搭載し自然画 19,268 色表示に対応。内蔵 FM 音源 MSX-MUSIC（YM2413）、1200 bps 電話回線モデム、および漢字変換辞書 SRAM を集積した高集積機。</p>
+            <a class="entry" href="Panasonic FS-A1FM/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">03</span>
+            <h4>ソニー HB-F500</h4>
+            <p class="role">MSX2 · Sony (ソニー) · 1986</p>
+            <p>ソニー初のセパレート型デスクトップ MSX2。本格的な JIS 配列独立キーボードと、標準で 2 基の 3.5 インチ 2DD フロッピーディスクドライブを装備。ワープロや表計算などのビジネス実用用途を志向した堅牢な工業設計。</p>
+            <a class="entry" href="Sony HB-F500/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">04</span>
+            <h4>ソニー HB-F700P</h4>
+            <p class="role">MSX2 · Sony (ソニー) · 1986</p>
+            <p>ソニーが欧州市場向けに投入した最高峰デスクトップ MSX2。256 KiB の大容量メモリマッパー RAM を標準装備し、PAL 50 Hz 出力に対応。堅牢なデスクトップ筐体、セパレート鍵盤、および WD2793 コントローラによる高精度ディスクドライブを統合。</p>
+            <a class="entry" href="Sony HB-F700P/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">05</span>
+            <h4>ソニー HB-F900</h4>
+            <p class="role">MSX2 · Sony (ソニー) · 1986</p>
+            <p>ソニーが業務用映像編集市場に向けて開発した最高峰ワークステーション。白と黒の重厚なセパレート筐体、2基の 720 KiB フロッピードライブ、256 KiB メモリマッパーを搭載。外部ビデオ同期ゲンロックおよび映像デジタイザ制御回路を集積。</p>
+            <a class="entry" href="Sony HB-F900/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">06</span>
+            <h4>ソニー HB-G900AP</h4>
+            <p class="role">MSX2 · Sony (ソニー) · 1986</p>
+            <p>欧州の放送スタジオおよび産業教育向けに設計された HB-G900 シリーズの最上位機。大容量 512 KiB メモリマッパー RAM、高精度 PAL ゲンロック同期ユニット、およびソニー製業務用レーザーディスクプレーヤー制御バスを備えたプロ用機。</p>
+            <a class="entry" href="Sony HB-G900AP/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">07</span>
+            <h4>ソニー HB-T600</h4>
+            <p class="role">MSX2 · Sony (ソニー) · 1987</p>
+            <p>日本電信電話（NTT）のキャプテンシステムおよびオンラインホームバンキング・証券取引専用端末として開発された特異な MSX2。専用モデムとランク 2 キャプテンデコーダ回路、漢字 ROM を内蔵し、常時接続通信端末として稼働。</p>
+            <a class="entry" href="Sony HB-T600/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">08</span>
+            <h4>日本ビクター HC-80</h4>
+            <p class="role">MSX2 · Victor Company of Japan (日本ビクター) · 1986</p>
+            <p>日本ビクターが音響・映像機器開発で培った高密度設計を投入したセパレート型デスクトップ MSX2。プロ用ビデオ入出力端子、内蔵スーパーインポーズ回路、および高品位 JIS キーボードを装備し、スタジオの卓上機として高い評価を獲得。</p>
+            <a class="entry" href="Victor HC-80/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">09</span>
+            <h4>日本ビクター HC-90 AB</h4>
+            <p class="role">MSX2 · Victor Company of Japan (日本ビクター) · 1986</p>
+            <p>ビクターが映像制作プロフェッショナルのために開発した『HD (High Definition)』世代の MSX2。メインの Z80A に加え、映像処理サブプロセッサとして日立 HD64180 をバス結合。ビデオテロッパーおよび編集コントローラとして威力を発揮。</p>
+            <a class="entry" href="Victor HC-90 AB/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">10</span>
+            <h4>日本ビクター HC-90 VT</h4>
+            <p class="role">MSX2 · Victor Company of Japan (日本ビクター) · 1986</p>
+            <p>HC-90 のテロップ・タイトラー機能に特化した専用機（VT = Video Titler）。第 1・第 2 水準漢字 ROM を標準搭載し、放送品質のフォントレンダリングとハードウェアスムーズスクロール制御回路を内蔵。</p>
+            <a class="entry" href="Victor HC-90 VT/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">11</span>
+            <h4>日本ビクター HC-95 AB</h4>
+            <p class="role">MSX2 · Victor Company of Japan (日本ビクター) · 1986</p>
+            <p>日本ビクターが威信を賭けて世に問うた MSX2 の最高峰旗艦ワークステーション。強固な金属製セパレートシャーシ、2基の FDD、背面拡張ユニットバス、およびプロ用映像入出力ボードを装備したスタジオ規格機。</p>
+            <a class="entry" href="Victor HC-95 AB/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">12</span>
+            <h4>日本ビクター HC-95 VT</h4>
+            <p class="role">MSX2 · Victor Company of Japan (日本ビクター) · 1986</p>
+            <p>HC-95 AB の強固なハードウェアをベースに、放送局やポストプロダクションスタジオの文字発生機（テロッパー）として極限までチューニングされた業務用最上位モデル。</p>
+            <a class="entry" href="Victor HC-95 VT/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+        <div class="card" style="margin-bottom:1.5rem;">
+            <span class="card-num">13</span>
+            <h4>ヤマハ YIS-805/256</h4>
+            <p class="role">MSX2 · Yamaha (日本楽器製造) · 1986</p>
+            <p>ヤマハが誇る音楽制作 MSX の最高峰。S1985 MSX-Engine ASIC、256 KiB メモリマッパー RAM、および本体側面に 60 ピン専用音楽モジュールスロットを装備。FM 音源ユニット SFG-05（YM2151 OPM 8音FM音源・MIDI）を直結可能。</p>
+            <a class="entry" href="Yamaha YIS-805 256/index.html">レジスタ・機体仕様書を見る →</a>
+        </div>
+        
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../index.html" style="color:var(--tron-teal); text-decoration:none;">← MSX アーカイブ本拠へ戻る</a> &nbsp;·&nbsp; msx.btron.pro Computers Registry
+        </div>
+    </footer>
+
+</body>
+</html>

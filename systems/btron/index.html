@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8-bit BTRON — MSX向け実身仮身ランタイム | msx.btron.pro</title>
+    <meta name="description" content="8-bit BTRON for MSX の技術仕様。BMSX リアルボディレコード構造、TAD (Tron Application Databus) セグメント配置、µITRON 風軽量イベントキュー、および B-System B-MSX コア連携。">
+    <link rel="stylesheet" href="../../index.css?v=3">
+</head>
+<body>
+
+    <nav class="sticky" aria-label="Site navigation">
+        <div class="nav-container">
+            <a href="../../index.html" class="logo">MSX <span class="logo-tag">btron.pro</span></a>
+            <ul class="nav-links">
+                <li><a href="../../computers/index.html">Computers</a></li>
+                <li><a href="../../development/index.html">Development</a></li>
+                <li><a href="../../emulators/index.html">Emulators</a></li>
+                <li><a href="../../games/index.html">Games</a></li>
+                <li><a href="../../systems/index.html" class="active">Systems</a></li>
+                <li><a href="../../../btron/b-system/apps/MSX.html" target="_blank">B-MSX</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <nav class="setting-nav">
+        <a href="../../index.html">MSX</a>
+        <span class="sep">/</span>
+        <a href="../../systems/index.html">Systems</a>
+        <span class="sep">/</span>
+        <span class="current">BTRON</span>
+    </nav>
+
+    <div class="setting-hero">
+        <div class="setting-hero-badge">BTRON 3.20 Architecture · Real/Virtual Body Model · TAD 8-bit Segments · µITRON Tasking</div>
+        <h1>8-bit BTRON (Systems)</h1>
+        <div class="subtitle">
+            MSX の Z80 バンク空間上に再構成された、超漢字・実身仮身ハイパーメディアモデルと確定性 µITRON ランタイム。
+            <span class="subtitle-en">
+                "Technical specification for the 8-bit BTRON runtime on MSX, implementing Real/Virtual body network records, 8-bit TAD segments, and cooperative event queues inside banked memory."
+            </span>
+        </div>
+    </div>
+
+    <main class="wrap">
+        <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
+
+        <div class="tagline-card">
+            <strong>BTRON と MSX の邂逅</strong> — BTRON（Business TRON）は、坂村健氏が構想した人間中心の統一オペレーティングシステムであり、階層ファイルシステムに代わる実身（Real Object）と仮身（Virtual Object）のネットワーク構造（ハイパーメディア）を根幹に持ちます。8-bit BTRON は、ワークステーション向けの巨大な仕様を 64 KiB の MSX Z80 上に凝縮。16 KiB メモリマッパーをスワップ単位として用い、TAD（TRON Application Databus）テキストとウィンドウ枠を V9938/V9958 上へ直接描画します。
+            <span class="tagline-en">
+                "8-bit BTRON adapts the seminal TRON real/virtual body hypermedia paradigm to the 8-bit Z80 addressing plane. By leveraging 16 KiB memory mapper segments as storage blocks, it hosts TAD variable-length records and cooperative window primitives without requiring workstation-class MMUs."
+            </span>
+        </div>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">01 / Record</span>
+                <h2 class="jp-title">1. BMSX 実身レコード構造 (BMSX Real-Body Record)</h2>
+                <p class="band-eyebrow">Byte Offsets · Header Signatures · Link Chains</p>
+            </div>
+            <div class="doc-summary">
+                MSX メモリマッパーセグメント上に永続化される <code>BMSX</code> 実身レコードのバイナリ構造です。<br>
+                <span class="summary-en">"Binary layout of the BMSX real-body record stored inside 16 KiB mapper pages, defining object ID, parent pointers, and TAD segments."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>バイトオフセット (Offset)</th>
+                            <th>フィールド名 (Field)</th>
+                            <th>型・サイズ (Type)</th>
+                            <th>機能仕様と定義 (Functional Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>+0x00..+0x03</code></td>
+                            <td><code>magic</code></td>
+                            <td><code>char[4]</code></td>
+                            <td>固定シグネチャ <code>"BMSX"</code> (実身レコード識別子)</td>
+                        </tr>
+                        <tr>
+                            <td><code>+0x04..+0x05</code></td>
+                            <td><code>body_id</code></td>
+                            <td><code>uint16_t</code></td>
+                            <td>一意の実身番号 (0x0001–0xFFFF)</td>
+                        </tr>
+                        <tr>
+                            <td><code>+0x06..+0x07</code></td>
+                            <td><code>parent_id</code></td>
+                            <td><code>uint16_t</code></td>
+                            <td>所属仮身（リンク元）の実身番号</td>
+                        </tr>
+                        <tr>
+                            <td><code>+0x08..+0x09</code></td>
+                            <td><code>record_len</code></td>
+                            <td><code>uint16_t</code></td>
+                            <td>後続する TAD セグメントデータの総バイト数</td>
+                        </tr>
+                        <tr>
+                            <td><code>+0x0A..+0x0B</code></td>
+                            <td><code>flags</code></td>
+                            <td><code>uint16_t</code></td>
+                            <td>属性フラグ (Bit 0: 読取専用, Bit 1: 変更済, Bit 2: 暗号化)</td>
+                        </tr>
+                        <tr>
+                            <td><code>+0x0C..+0x0F</code></td>
+                            <td><code>mtime</code></td>
+                            <td><code>uint32_t</code></td>
+                            <td>最終更新日時 (エポック秒)</td>
+                        </tr>
+                        <tr>
+                            <td><code>+0x10..+EOF</code></td>
+                            <td><code>tad_payload</code></td>
+                            <td><code>uint8_t[]</code></td>
+                            <td>8-bit TAD 可変長セグメントストリーム (テキスト・図形)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">02 / TAD</span>
+                <h2 class="jp-title">2. 8-bit TAD セグメント仕様 (TAD Segments)</h2>
+                <p class="band-eyebrow">Variable-Length Segments · TRON Multilingual Character Code</p>
+            </div>
+            <div class="doc-summary">
+                BTRON のデータ交換標準である TAD（TRON Application Databus）の 8 ビットセグメント仕様です。<br>
+                <span class="summary-en">"Specification of 8-bit TAD primitives packing plain text, font changes, and virtual-body link tags into sequential streams."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>セグメント ID</th>
+                            <th>名称 (Segment Name)</th>
+                            <th>構造・引数 (Arguments)</th>
+                            <th>機能仕様 (Functional Specification)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>0x01</code></td>
+                            <td>テキスト (Text Run)</td>
+                            <td><code>len (uint8), chars[]</code></td>
+                            <td>TRON コード JIS 第1/第2水準漢字および ASCII 文字列</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x02</code></td>
+                            <td>仮身タグ (Link Tag)</td>
+                            <td><code>target_body_id (uint16)</code></td>
+                            <td>他の実身を開くためのアイコン（仮身）を文章中に埋め込み</td>
+                        </tr>
+                        <tr>
+                            <td><code>0x03</code></td>
+                            <td>図形描画 (Vector Primitive)</td>
+                            <td><code>cmd (uint8), x0, y0, x1, y1</code></td>
+                            <td>V9938 ハードウェア描画エンジンへの直接線分・矩形描画指示</td>
+                        </tr>
+                        <tr>
+                            <td><code>0xFF</code></td>
+                            <td>終端記号 (Stream End)</td>
+                            <td>なし</td>
+                            <td>TAD ペイロードの終了を示し、パーサを終了</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">03 / Links</span>
+                <h2 class="jp-title">3. B-System 実装との統合 (B-System B-MSX Connection)</h2>
+                <p class="band-eyebrow">Shared C99 Architecture &amp; Links</p>
+            </div>
+            <div class="related-grid">
+                <a href="../../../btron/b-system/apps/MSX.html" target="_blank" class="related-card">
+                    <h4>B-System B-MSX アプリ仕様 <span>↗</span></h4>
+                    <p>B-System ワークベンチ上の MSX2+ コア、カートリッジ実行窓、および Geo3D 規約。</p>
+                </a>
+                <a href="../../../btron/b-media/msx.html" target="_blank" class="related-card">
+                    <h4>B-Book B-MSX 規範仕様 (Rev 1.05) <span>↗</span></h4>
+                    <p>Z80 タイミング、V9958 レンダラ、PSG-PCM 統合、NASA/JPL 信頼性基準。</p>
+                </a>
+                <a href="../msx-bios/index.html" class="related-card">
+                    <h4>MSX-BIOS 仕様書 <span>→</span></h4>
+                    <p>スロット間呼出ベクタとシステム作業領域辞書。</p>
+                </a>
+                <a href="../../emulators/tronMSX/index.html" class="related-card">
+                    <h4>tronMSX C99 コア <span>→</span></h4>
+                    <p>B-System 内部に組み込まれた MSX 実行エミュレータの構造。</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="wrap" style="text-align:center; padding: 3rem 0; border-top: 1px solid var(--rule); font-size:0.86rem; color:var(--ink-3);">
+            <a href="../../systems/index.html" style="color:var(--tron-teal); text-decoration:none;">← 基本ソフト目録へ戻る</a> &nbsp;·&nbsp; msx.btron.pro 8-bit BTRON
+        </div>
+    </footer>
+
+</body>
+</html>
