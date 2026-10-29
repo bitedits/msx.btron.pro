@@ -32,12 +32,12 @@
     </nav>
 
     <div class="setting-hero">
-        <div class="setting-hero-badge">C-BIOS 0.29+ · Cleanroom Re-implementation · Open-Source Firmware · Zero-Copyright Encumbrance · B-MSX Core</div>
+        <div class="setting-hero-badge">Main Official B-MSX Firmware · C-BIOS 0.29+ · Cleanroom Architecture · Zero-Copyright Encumbrance</div>
         <h1>C-BIOS (Systems)</h1>
         <div class="subtitle">
-            BouKiCHi 氏らによってゼロから開発された、自由なライセンスを持つ MSX 互換ファームウェアと B-MSX 瞬時起動規約。
+            B-System B-MSX の公式標準ファームウェアとして全面採用された、自由なライセンスを持つ MSX 互換 BIOS と確定性ブート規約。
             <span class="subtitle-en">
-                "Comprehensive technical specification of C-BIOS, a 100% cleanroom open-source MSX BIOS enabling legal emulator bundling, direct cartridge execution, and instant fast-forwarding."
+                "Official primary firmware for B-System B-MSX: an uncompromising 100% cleanroom open-source MSX BIOS enabling legal distribution, direct cartridge auto-run, and instant fast-forwarding."
             </span>
         </div>
     </div>
@@ -46,9 +46,9 @@
         <a href="../../systems/index.html" class="entry" style="margin-bottom:1.5rem; display:inline-block;">← 基本ソフト目録へ戻る (Systems Index)</a>
 
         <div class="tagline-card">
-            <strong>クリーンルーム設計の意義と著作権フリーの解放</strong> — 原典の MSX-BIOS はマイクロソフトおよび各ハードウェアメーカーの著作権下にあるため、オープンソースエミュレータに同梱して自由に再配布することが法的に困難でした。C-BIOS は、公式仕様書の関数シグネチャと挙動規則のみを参照して完全に新規書き起こされたクリーンルーム実装です。プロプライエタリな BASIC インタープリタを省き、カートリッジの自動認識と即時起動に特化。B-System の <strong>B-MSX</strong> では、この C-BIOS を標準ファームウェアとして採用し、合法的なエミュレーション配布と高速早送り（Fast-Forward）を実現しています。<br>
+            <strong>B-MSX 公式標準ファームウェアとしての C-BIOS</strong> — B-System の <strong>B-MSX</strong> では、自由なオープンソース MSX 互換ファームウェアである <strong>C-BIOS を主たる公式標準 BIOS（Official Primary BIOS）として正式採用</strong>しています。原典の MSX-BIOS につきまとう著作権・再配布の制約を完全に排除し、MSX1、MSX2、MSX2+、turbo R、および日立 HC-90 / HC-95 までの全エミュレーション環境に C-BIOS を標準内蔵。さらに B-MSX C99 コア（<code>dsk.c</code>, <code>slots.c</code>, <code>tronmsx.c</code>）との連携により、ポート <code>$D4</code> BDOS トラップや Page 0 TPA トランポリンを介して MSX-DOS との完全な相互運用性を実現しています。<br>
             <span class="tagline-en">
-                "C-BIOS eliminates copyright barriers by providing a pristine, cleanroom replacement for proprietary MSX ROMs. Designed specifically for gaming and emulator distribution, it implements the official BIOS jump table while omitting the proprietary MSX-BASIC interpreter. Within B-System, B-MSX bundles C-BIOS as its default firmware, pairing it with fast-forward frame skips and heterogeneous CPU emulation."
+                "C-BIOS is officially designated as the primary, authoritative firmware for B-System B-MSX. Eliminating all legal and licensing barriers associated with proprietary MSX ROMs, C-BIOS is bundled by default across MSX1, MSX2, MSX2+, turbo R, and Hitachi HC-90/95 targets. Supported by the B-MSX C99 mapping layer, it delivers out-of-the-box MSX-DOS compatibility via port $D4 BDOS trapping and Page 0 TPA RAM trampolines."
             </span>
         </div>
 
@@ -240,11 +240,110 @@
             </div>
         </section>
 
-        <!-- 04 / B-MSX Integration & Fast-Forwarding -->
+        <!-- 04 / C-BIOS & MSX-DOS Mapping Compatibility Layer -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">04 / B-MSX Integration</span>
-                <h2 class="jp-title">4. B-System B-MSX への統合と高速早送り (B-MSX Integration &amp; Fast-Forward)</h2>
+                <span class="band-index">04 / DOS Compatibility</span>
+                <h2 class="jp-title">4. C-BIOS と MSX-DOS マッピング互換レイヤ (C-BIOS &amp; MSX-DOS Mapping Layer)</h2>
+                <p class="band-eyebrow">dsk.c · slots.c · Port $D4 BDOS Trapping · IM 1 Trampoline · TPA Switching</p>
+            </div>
+            <div class="doc-summary">
+                <code>../btron/src/emulators/msx/</code> の <code>dsk.c</code>, <code>slots.c</code>, <code>tronmsx.c</code> に実装された、プロプライエタリな Disk BASIC / MSX-DOS ROM を介さずに MSX-DOS を直接起動するマッピング互換レイヤ仕様です。<br>
+                <span class="summary-en">"Architectural mapping layer bridging cleanroom C-BIOS with MSX-DOS environments, featuring I/O port $D4 BDOS trapping, Page 0 RAM trampolines, and FAT12 MegaROM banking."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 32%;">互換機構 (Mechanism)</th>
+                            <th style="width: 68%;">技術仕様と C99 / Z80 トランポリン動作 (Technical Specification &amp; Trampoline)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <b>ポート $D4 BDOS トラップ</b><br>
+                                <code>dsk.c / slots.c</code>
+                            </td>
+                            <td>
+                                <b>ハードウェア I/O トラップによる BDOS 実行:</b><br>
+                                <code>slots.c</code> は C-BIOS ディスク ROM パディング領域（<code>$44C0</code>）へ <code>OUT (D4), A / RET</code>（<code>0xD3 0xD4 0xC9</code>）を動的注入。C-BIOS BDOS ベクタ表（<code>0x39D</code>）の機能 <code>0x0F</code>（ファイルオープン）および <code>0x27</code>（ランダムブロック読出）を <code>$44C0</code> へ接続。Z80 が <code>OUT (D4), A</code> を実行すると <code>tronmsx.c</code> が検知し、<code>dsk_bdos()</code> がメモリ内 FAT12 構造を直接参照して DMA 展開。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Page 0 TPA RAM 切替</b><br>
+                                <code>0x0000–0x3FFF</code>
+                            </td>
+                            <td>
+                                <b>全ページメイン RAM 割当 (Slot 3):</b><br>
+                                DOS プログラム（<code>.COM</code>）実行時は Page 0 を C-BIOS ROM からメイン RAM へ切り替え。TPA 先頭 <code>$0100</code> にバイナリを配置し、低位アドレスに以下のジャンプベクタを初期配置：
+                                <ul style="margin: 0.35rem 0 0 1.25rem; font-size: 0.82rem; line-height: 1.6;">
+                                    <li><code>$0000</code>: <code>JP $0000</code> (ウォームブート)</li>
+                                    <li><code>$0005</code>: <code>JP $F200</code> (BDOS 呼出ゲート)</li>
+                                    <li><code>$0030</code>: <code>JP $F230</code> (RST $30 CALLF スロット間呼出トランポリン)</li>
+                                    <li><code>$0038</code>: <code>JP $F210</code> (RST $38 IM 1 垂直同期割込みトランポリン)</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>VBLANK IM 1 トランポリン</b><br>
+                                <code>$F210 (27 バイト機械語)</code>
+                            </td>
+                            <td>
+                                <b>Page 0 RAM 環境での安全な割込み復元:</b><br>
+                                Page 0 が TPA RAM に置き換わっているため、BIOS の割込みルーチンを直接呼べない問題を解決。上位 RAM（<code>$F210</code>）に配置された 27 バイトのトランポリンが作動：
+                                <ol style="margin: 0.35rem 0 0 1.25rem; font-size: 0.82rem; line-height: 1.6;">
+                                    <li><code>PUSH AF</code> 後、サブスロットレジスタ <code>$FFFF</code> および PPI ポート A（<code>$A8</code>）を退避。</li>
+                                    <li>ポート A の Page 0 を Slot 0（C-BIOS ROM）へ一時切替。</li>
+                                    <li>C-BIOS の <code>KEYINT</code>（<code>CALL $0038</code>）を実行。</li>
+                                    <li>ポート A を復元して Page 0 を TPA RAM へ再接続。</li>
+                                    <li><code>POP AF</code> 後、<code>EI / RETI</code> で復帰。</li>
+                                </ol>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>CALLF トランポリン</b><br>
+                                <code>$F230 (22 バイト機械語)</code>
+                            </td>
+                            <td>
+                                <b>インラインスロット呼出の解決:</b><br>
+                                呼出元直後のスロット ID と番地を取得し、Page 0 を一時的に C-BIOS へ切り替えて <code>clprim ($F38C)</code> を実行。復帰時に TPA RAM 状態へ自動復帰。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>MSXDOS.SYS パッチ</b><br>
+                                <code>$50A9 ($10A9)</code>
+                            </td>
+                            <td>
+                                <b>意図せぬ割込みクラッシュの防止:</b><br>
+                                MSXDOS.SYS は Page 0 ベクタ配置後に <code>$50A9</code> を呼び出すが、C-BIOS ディスク ROM ではパディング（<code>0xFF</code> / <code>RST $38</code>）となり無限ループに陥るため、<code>slots.c</code> がオフセット <code>0x10A9</code> を <code>RET (0xC9)</code> へパッチ修正。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>BSAVE ($FE) vs DOS .COM</b><br>
+                                <code>dsk.c 形式判別</code>
+                            </td>
+                            <td>
+                                <b>バイナリ形式の自動嗅知:</b><br>
+                                ディスク内先頭ファイルの先頭バイトが <code>0xFE</code> の場合、7 バイトヘッダ（種別, 開始, 終了, 実行）を持つ Disk BASIC BSAVE 形式と判別し、Page 0 に C-BIOS を維持したまま <code>BLOAD</code> 空間へ展開。それ以外は <code>$0100</code> へ展開し DOS モードを起動。
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 05 / B-MSX Integration & Fast-Forwarding -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">05 / B-MSX Integration</span>
+                <h2 class="jp-title">5. B-System B-MSX への統合と高速早送り (B-MSX Integration &amp; Fast-Forward)</h2>
                 <p class="band-eyebrow">NASA/JPL Power of Ten · Fast-Forward Skip · Zero Copyright Encumbrance</p>
             </div>
             <div class="doc-summary">

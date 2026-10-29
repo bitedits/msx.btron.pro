@@ -344,11 +344,93 @@
             </div>
         </section>
 
-        <!-- 04 / B-MSX Integration -->
+        <!-- 04 / C-BIOS & MSX-DOS Mapping Compatibility Layer -->
         <section class="doc-section">
             <div class="band-head">
-                <span class="band-index">04 / B-MSX Integration</span>
-                <h2 class="jp-title">4. B-System B-MSX におけるフロッピーエミュレーション (FDD Subsystem in B-MSX)</h2>
+                <span class="band-index">04 / C-BIOS &amp; DOS Mapping</span>
+                <h2 class="jp-title">4. C-BIOS / B-MSX マッピング互換トランポリン機構 (C-BIOS &amp; DOS Mapping Layer)</h2>
+                <p class="band-eyebrow">dsk.c · slots.c · Port $D4 Trapping · Upper RAM Trampolines · TPA Switching</p>
+            </div>
+            <div class="doc-summary">
+                B-System B-MSX 公式標準ファームウェアである C-BIOS 環境下で、プロプライエタリな Disk BASIC を介さずに MSX-DOS / TPA を稼働させるマッピングレイヤ仕様です。<br>
+                <span class="summary-en">"Deterministic C99 compatibility layer bridging C-BIOS with MSX-DOS, featuring port $D4 BDOS trapping, Page 0 TPA RAM vector initialization, and upper RAM interrupt trampolines."</span>
+            </div>
+
+            <div class="market-table-wrap">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 32%;">互換機構 (Mechanism)</th>
+                            <th style="width: 68%;">技術仕様と C99 / Z80 トランポリン動作 (Technical Specification &amp; Trampoline)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <b>ポート $D4 BDOS トラップ</b><br>
+                                <code>dsk.c / slots.c</code>
+                            </td>
+                            <td>
+                                <b>FAT12 ダイレクト DMA 展開:</b><br>
+                                <code>slots.c</code> は C-BIOS ディスク ROM パディング領域（<code>$44C0</code>）へ <code>OUT (D4), A / RET</code> を注入。機能 <code>0x0F</code>（オープン）および <code>0x27</code>（ランダム読出）をここへ接続。Z80 がポート <code>$D4</code> を叩くと <code>tronmsx.c</code> がトラップし、<code>dsk_bdos()</code> がメモリ内 FAT12 構造から <code>MSXDOS.SYS</code> や <code>.COM</code> を直接 TPA へ DMA 展開。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Page 0 TPA RAM 切替</b><br>
+                                <code>0x0000–0x3FFF</code>
+                            </td>
+                            <td>
+                                <b>全ページ RAM マッピング (Slot 3):</b><br>
+                                DOS プログラム起動時、Page 0 を C-BIOS ROM からメイン RAM へ切り替え。TPA <code>$0100</code> にプログラムを配置し、低位番地に必須ベクタを構築：
+                                <ul style="margin: 0.35rem 0 0 1.25rem; font-size: 0.82rem; line-height: 1.6;">
+                                    <li><code>$0000</code>: <code>JP $0000</code> (ウォームブート)</li>
+                                    <li><code>$0005</code>: <code>JP $F200</code> (上位 RAM BDOS ゲート)</li>
+                                    <li><code>$0030</code>: <code>JP $F230</code> (RST $30 CALLF トランポリン)</li>
+                                    <li><code>$0038</code>: <code>JP $F210</code> (RST $38 IM 1 VBLANK トランポリン)</li>
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>VBLANK IM 1 トランポリン</b><br>
+                                <code>$F210 (27 バイト)</code>
+                            </td>
+                            <td>
+                                <b>Page 0 RAM 環境での垂直同期割込み解決:</b><br>
+                                Page 0 が TPA RAM になっている間、BIOS 割込みハンドラを直接呼べないため、上位 RAM（<code>$F210</code>）の 27 バイトトランポリンが一時的に PPI ポート A（<code>$A8</code>）を Slot 0（C-BIOS ROM）へ切り替え、ROM の <code>KEYINT</code>（<code>$0038</code>）を実行後に TPA RAM へ復元。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>MSXDOS.SYS パッチ</b><br>
+                                <code>$50A9 ($10A9)</code>
+                            </td>
+                            <td>
+                                <b>未定義パディング命令の修正:</b><br>
+                                <code>MSXDOS.SYS</code> が Page 0 ベクタ構築後に呼ぶ <code>$50A9</code> 番地が C-BIOS ディスク ROM では <code>0xFF</code>（<code>RST $38</code>）となりクラッシュするため、<code>slots.c</code> が <code>0x10A9</code> を <code>RET (0xC9)</code> へ動的パッチ。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>BSAVE ($FE) vs DOS .COM</b><br>
+                                <code>dsk.c 形式判別</code>
+                            </td>
+                            <td>
+                                <b>バイナリ形式の自動嗅知:</b><br>
+                                ディスク内ファイルの先頭バイトが <code>0xFE</code> の場合、Disk BASIC BSAVE 形式と判別し、Page 0 に C-BIOS を維持したまま <code>BLOAD</code> 空間へロード。それ以外は <code>$0100</code> へ配置し DOS モードとして起動。
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 05 / B-MSX Integration -->
+        <section class="doc-section">
+            <div class="band-head">
+                <span class="band-index">05 / B-MSX Integration</span>
+                <h2 class="jp-title">5. B-System B-MSX におけるフロッピーエミュレーション (FDD Subsystem in B-MSX)</h2>
                 <p class="band-eyebrow">WD2793 Silicon Simulation · Raw 720KB Disk Images · HC-95 FDD Support</p>
             </div>
             <div class="doc-summary">
