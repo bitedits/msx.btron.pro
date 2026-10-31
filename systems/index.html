@@ -30,12 +30,12 @@
     </nav>
 
     <div class="setting-hero">
-        <div class="setting-hero-badge">Operating Systems &amp; BIOSes · 5 Major Software Architectures · 8-bit BTRON · C-BIOS · UZIX</div>
+        <div class="setting-hero-badge">Operating Systems &amp; BIOSes · 6 Major Software Architectures · 8-bit BTRON · T-BIOS · C-BIOS · UZIX</div>
         <h1>系統 (Systems)</h1>
         <div class="subtitle">
-            標準 BIOS からディスクオペレーティングシステム、UNIX クローン、そして 8-bit BTRON に至る基本ソフトウェア体系。
+            標準 BIOS からディスクオペレーティングシステム、UNIX クローン、そして 8-bit BTRON やクリーンルーム T-BIOS / T-DOS に至る基本ソフトウェア体系。
             <span class="subtitle-en">
-                "Comprehensive registry of operating systems and firmware powering the MSX platform, spanning standard MSX-BIOS vectors, MSX-DOS / Nextor, cleanroom C-BIOS, UZIX Unix V7, and the 8-bit BTRON hypermedia runtime."
+                "Comprehensive registry of operating systems and firmware powering the MSX platform, spanning standard MSX-BIOS vectors, MSX-DOS / Nextor, cleanroom C-BIOS, UZIX Unix V7, the 8-bit BTRON hypermedia runtime, and cleanroom T-BIOS / T-DOS."
             </span>
         </div>
     </div>
@@ -56,8 +56,8 @@
                 <p class="band-eyebrow">Firmware · DOS &amp; Nextor · UNIX V7 · 8-bit BTRON</p>
             </div>
             <div class="doc-summary">
-                アーカイブされている 5 つの主要な基本ソフトウェア・ファームウェアの仕様一覧です。<br>
-                <span class="summary-en">"Architectural overview of five fundamental system software implementations running natively on MSX hardware."</span>
+                アーカイブされている 6 つの主要な基本ソフトウェア・ファームウェアの仕様一覧です。<br>
+                <span class="summary-en">"Architectural overview of six fundamental system software implementations running natively on MSX hardware."</span>
             </div>
 
             <div class="strip">
@@ -99,6 +99,13 @@
                     <p>Z80 上で動作するプリエンプティブ Unix クローン。メモリマッパーを活用したプロセス空間分離、fork/exec、パイプ IPC、標準 V7 シェル環境。</p>
                     <a class="entry" href="uzix/index.html">UZIX カーネル仕様書 →</a>
                 </div>
+                <div class="card">
+                    <span class="card-num">06</span>
+                    <h4>T-BIOS &amp; T-DOS</h4>
+                    <p class="role">Dual Z80/R800 &amp; Turbo R Cleanroom Suite</p>
+                    <p>B-System 確定論的 C99 規約に準拠した完全クリーンルーム高速ファームウェア群。117 標準 BIOS ベクタ、R800 <code>CHGCPU</code>、Sub-ROM、OPLL / PSG / SCC+ 音源、4 MiB メガ ROM、および MSX-DOS 1/2 BDOS を完備。</p>
+                    <a class="entry" href="t-bios/index.html">T-BIOS / T-DOS 技術仕様書 →</a>
+                </div>
             </div>
         </section>
 
@@ -110,8 +117,8 @@
                 <p class="band-eyebrow">Kernel Model · Memory Footprint · Storage · Process Management</p>
             </div>
             <div class="doc-summary">
-                5 大基本ソフトウェアのメモリ要件、カーネルモデル、ストレージ抽象化、および B-MSX 連携仕様の対照です。<br>
-                <span class="summary-en">"Cross-platform architectural comparison matrix evaluating memory requirements, kernel paradigm, and hardware compatibility."</span>
+                6 大基本ソフトウェアのメモリ要件、カーネルモデル、ストレージ抽象化、および B-MSX 連携仕様の対照です。<br>
+                <span class="summary-en">"Cross-platform architectural comparison matrix evaluating memory requirements, kernel paradigm, and hardware compatibility across six foundational OS environments."</span>
             </div>
 
             <div class="market-table-wrap">
@@ -139,6 +146,20 @@
                         </tr>
                         <tr>
                             <td>
+                                <b>T-BIOS &amp; T-DOS</b><br>
+                                <span style="font-size: 0.82rem; color: var(--ink-3); line-height: 1.5; display: block; margin-top: 0.25rem;">
+                                    完全クリーンルーム Dual Z80/R800 高速ファームウェア ＋ MSX-DOS 1/2 BDOS<br>
+                                    要件: 32 KiB Main ROM + 16 KiB Sub-ROM + 64 KiB–4 MiB RAM
+                                </span>
+                            </td>
+                            <td>
+                                <b>記録形式:</b> FAT12 (2DD 720KB / 1DD 360KB), MegaROM (Konami, ASCII, Zemina, R-Type)<br>
+                                <b>主要ハード:</b> MSX turbo R / MSX2+ (Z80 3.58MHz / R800 28.6MHz, V9958, OPLL, SCC+)<br>
+                                <b>B-MSX 連携:</b> 117 ベクタ確定性呼出、TC8566AF 仮想 FDC、Grauw Page-0 RAM トランポリン
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 <b>MSX-BIOS</b><br>
                                 <span style="font-size: 0.82rem; color: var(--ink-3); line-height: 1.5; display: block; margin-top: 0.25rem;">
                                     ハードウェア抽象化ジャンプテーブル (HAL)<br>
@@ -148,7 +169,7 @@
                             <td>
                                 <b>記録形式:</b> カセット CMT (1200/2400 baud), ROM カートリッジ (ヘッダ "AB")<br>
                                 <b>主要ハード:</b> MSX1 (TMS9918A), PSG (AY-3-8910)<br>
-                                <b>B-MSX 連携:</b> C-BIOS 相互置換、早送り (Fast-Forward 450フレーム)
+                                <b>B-MSX 連携:</b> C-BIOS / T-BIOS 相互置換、早送り (Fast-Forward 450フレーム)
                             </td>
                         </tr>
                         <tr>
@@ -226,6 +247,7 @@
                                 <span style="font-size: 0.8rem; color: var(--ink-3);">16 KiB スロット/マッパー</span>
                             </td>
                             <td>
+                                <b>T-BIOS / T-DOS:</b> クリーンルーム Main BIOS ROM (ベクタ <code>$0000–$0183</code>) または T-DOS Page-0 RAM (BDOS コール <code>0005H</code>, Grauw トランポリン <code>$0000–$00FF</code>)<br>
                                 <b>MSX-BIOS:</b> BIOS ROM (ジャンプテーブル・初期化ベクタ <code>$0000–$015B</code>)<br>
                                 <b>C-BIOS:</b> クリーンルーム BIOS ROM (ジャンプ表・カートリッジ探索)<br>
                                 <b>MSX-DOS 2:</b> RAM (BDOS コール <code>0005H</code>, TPA <code>0100H〜</code>)<br>
@@ -240,6 +262,7 @@
                                 <span style="font-size: 0.8rem; color: var(--ink-3);">16 KiB スロット/マッパー</span>
                             </td>
                             <td>
+                                <b>T-BIOS / T-DOS:</b> Main BIOS 後半 / T-DOS ディスク BIOS (<code>$4010–$401F</code>) / カートリッジ MegaROM バンク空間<br>
                                 <b>MSX-BIOS:</b> BASIC ROM / カートリッジ ROM (ヘッダ <code>"AB"</code> <code>$4000</code>)<br>
                                 <b>C-BIOS:</b> カートリッジ ROM (ヘッダ <code>"AB"</code> <code>$4000</code>) / MSX2 BIOS 拡張<br>
                                 <b>MSX-DOS 2:</b> RAM (TPA アプリケーション実行空間)<br>
@@ -254,6 +277,7 @@
                                 <span style="font-size: 0.8rem; color: var(--ink-3);">16 KiB スロット/マッパー</span>
                             </td>
                             <td>
+                                <b>T-BIOS / T-DOS:</b> Sub-ROM 拡張プリミティブ空間 / MegaROM バンク空間 / RAM マッパー動的バンク<br>
                                 <b>MSX-BIOS:</b> カートリッジ拡張空間 / システムワークエリア<br>
                                 <b>C-BIOS:</b> カートリッジ拡張空間 / Sub-ROM プリミティブ実行空間<br>
                                 <b>MSX-DOS 2:</b> RAM (TPA 拡張 / マッパー動的バンク)<br>
@@ -268,6 +292,7 @@
                                 <span style="font-size: 0.8rem; color: var(--ink-3);">16 KiB スロット/マッパー</span>
                             </td>
                             <td>
+                                <b>T-BIOS / T-DOS:</b> メイン RAM (システム変数 <code>$F380–$FFFF</code>, Grauw RAM トランポリン <code>RDPRIM/WRPRIM/CLPRIM/CALLF/KEYINT</code>, ディスクセクタバッファ)<br>
                                 <b>MSX-BIOS:</b> メイン RAM (システム変数 <code>$F380–$FFFF</code>, スタック)<br>
                                 <b>C-BIOS:</b> メイン RAM (システムワークエリア <code>$F380–$FFFF</code>, スタック)<br>
                                 <b>MSX-DOS 2:</b> RAM (MSX-DOS 2 カーネル作業域, ディスクバッファ)<br>
@@ -300,6 +325,7 @@
                     <h4>Systems</h4>
                     <ul>
                         <li><a href="btron/index.html">8-bit BTRON</a></li>
+                        <li><a href="t-bios/index.html">T-BIOS &amp; T-DOS</a></li>
                         <li><a href="msx-bios/index.html">MSX-BIOS</a></li>
                         <li><a href="msx-dos/index.html">MSX-DOS 2</a></li>
                         <li><a href="c-bios/index.html">C-BIOS</a></li>
