@@ -7,141 +7,333 @@
     <meta name="description" content="T-BIOS 1.05 &amp; T-DOS の完全技術仕様書。ソニー技術資料基準準拠。8バイナリ変種、117基本ベクタ ($0000–$0183)、Sub-ROM V9938/V9958 ジャンプ表 ($0000–$01FF)、OPLL APRLOPLL 音源、R800 / HD64180 デュアルCPU制御、MegaROM スイート、Page-0 RAM 実行環境、TC8566AF 仮想FDC、MSX-DOS 1/2 BDOS コール、blueMSX INI エンジン、および確定性検証データ。">
     <link rel="stylesheet" href="../../index.css?v=3">
     <style>
-        /* ─── T-BIOS / T-DOS Architecture Overrides (Orchestra-Grade Technical Layout) ─── */
-        .tbios-toc {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.35rem 1.6rem;
-            margin: 1.25rem 0 0;
-            padding: 1.15rem 1.4rem;
-            background: rgba(15, 23, 42, 0.75);
-            border: 1px solid rgba(56, 189, 248, 0.28);
-            border-radius: 12px;
-            backdrop-filter: blur(12px);
-        }
-        .tbios-toc a {
-            color: #38bdf8;
-            text-decoration: none;
-            font-size: 0.88rem;
-            line-height: 1.85;
-            border-bottom: 1px dotted rgba(56, 189, 248, 0.35);
-            transition: color 0.2s ease, border-color 0.2s ease;
-        }
-        .tbios-toc a:hover {
-            color: #7dd3fc;
-            border-bottom-color: #7dd3fc;
-        }
-        .tbios-toc .sub {
-            padding-left: 1.35rem;
-            font-size: 0.82rem;
-            color: #94a3b8;
-            line-height: 1.7;
-        }
-        @media (max-width: 720px) {
-            .tbios-toc { grid-template-columns: 1fr; }
+        /* ══════════════════════════════════════════════════════════════════════
+           T-BIOS & T-DOS Editorial Technical Design System
+           Inspired by Red Dot Award & Wwwawards Japanese Rice Paper Aesthetic
+           Primary Palette: Washi Rice Paper, Charcoal Sumi Ink, Celadon Teal,
+                            Kohaku Gold, and Tokiwa Evergreen.
+           ══════════════════════════════════════════════════════════════════════ */
+
+        :root {
+            --tbios-teal: #008080;
+            --tbios-teal-hover: #006666;
+            --tbios-teal-wash: rgba(0, 128, 128, 0.05);
+            --tbios-teal-border: rgba(0, 128, 128, 0.22);
+
+            --tbios-gold: #c59b27;
+            --tbios-gold-deep: #a87f1a;
+            --tbios-gold-wash: rgba(197, 155, 39, 0.08);
+            --tbios-gold-border: rgba(197, 155, 39, 0.28);
+
+            --tbios-vermilion: #b83a2d;
+            --tbios-vermilion-wash: rgba(184, 58, 45, 0.06);
+            --tbios-vermilion-border: rgba(184, 58, 45, 0.25);
+
+            --tbios-pass: #0e8055;
+            --tbios-pass-wash: rgba(14, 128, 85, 0.08);
+            --tbios-pass-border: rgba(14, 128, 85, 0.28);
+
+            --tbios-sumi: #14171a;
+            --tbios-chalk: #e6e8eb;
         }
 
-        /* Metric cards row */
+        /* ── Metric Cards Row (Red Dot Museum Plates) ─────────────────────── */
         .metric-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.9rem;
-            margin: 1.25rem 0 0;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: clamp(0.7rem, 1.5vw, 1rem);
+            margin: 2rem 0;
         }
         .metric-card {
-            flex: 1 1 calc(16.666% - 0.75rem);
-            min-width: 150px;
+            background: var(--plate);
+            border: 1px solid var(--rule);
+            border-radius: 3px;
+            padding: 1.15rem 0.75rem;
             text-align: center;
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            border-radius: 12px;
-            padding: 0.9rem 0.65rem;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 1px 3px rgba(20, 23, 26, 0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+                        box-shadow 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+                        border-color 0.35s ease;
+            position: relative;
         }
-        .metric-card strong {
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--rule);
+            transition: background 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-plate);
+            border-color: var(--tbios-teal);
+        }
+        .metric-card:hover::before {
+            background: var(--tbios-teal);
+        }
+        .metric-card .metric-num {
             display: block;
-            font-family: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', monospace;
+            font-family: var(--mono-font);
             font-size: 1.25rem;
-            color: #38bdf8;
             font-weight: 700;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        .metric-card .metric-label {
+            display: block;
+            font-family: var(--jp-font);
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--tbios-teal);
+            margin-top: 0.45rem;
             letter-spacing: 0.02em;
         }
-        .metric-card span {
+        .metric-card .metric-sub {
             display: block;
-            font-size: 0.76rem;
-            color: #94a3b8;
-            margin-top: 0.3rem;
+            font-family: var(--mono-font);
+            font-size: 0.68rem;
+            color: var(--ink-3);
+            margin-top: 0.25rem;
             line-height: 1.4;
         }
-        @media (max-width: 880px) {
-            .metric-card { flex: 1 1 calc(33.333% - 0.6rem); }
+        @media (max-width: 980px) {
+            .metric-row { grid-template-columns: repeat(3, 1fr); }
         }
-        @media (max-width: 520px) {
-            .metric-card { flex: 1 1 calc(50% - 0.5rem); }
+        @media (max-width: 580px) {
+            .metric-row { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* ASCII diagrams */
-        .tbios-ascii {
-            background: #090d16;
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 10px;
-            padding: 1.1rem 1.25rem;
-            color: #bae6fd;
-            font-family: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', monospace;
-            font-size: 0.79rem;
+        /* ── Table of Contents (Red Dot Editorial Plate) ──────────────────── */
+        .tbios-toc {
+            background: var(--plate);
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--tbios-teal);
+            border-radius: 4px;
+            box-shadow: var(--shadow-plate);
+            margin: 2rem 0 3rem;
+            padding: 1.4rem 1.8rem;
+        }
+        .tbios-toc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--rule);
+            padding-bottom: 0.65rem;
+            margin-bottom: 1.1rem;
+        }
+        .tbios-toc-header h3 {
+            font-family: var(--mincho-font);
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--ink);
+            margin: 0;
+            letter-spacing: 0.02em;
+        }
+        .tbios-toc-badge {
+            font-family: var(--mono-font);
+            font-size: 0.70rem;
+            color: var(--tbios-teal);
+            background: var(--tbios-teal-wash);
+            border: 1px solid var(--tbios-teal-border);
+            padding: 0.15rem 0.55rem;
+            border-radius: 3px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .tbios-toc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.65rem 2.2rem;
+        }
+        .toc-item {
+            display: flex;
+            flex-direction: column;
+            padding: 0.25rem 0;
+            border-bottom: 1px dotted var(--rule);
+        }
+        .toc-item a {
+            color: var(--ink);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            line-height: 1.5;
+            display: flex;
+            align-items: baseline;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+        .toc-item a:hover {
+            color: var(--tbios-teal);
+            transform: translateX(3px);
+        }
+        .toc-item .toc-num {
+            font-family: var(--mono-font);
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--tbios-teal);
+            margin-right: 0.55rem;
+            min-width: 1.4rem;
+        }
+        .toc-item .sub {
+            padding-left: 1.95rem;
+            font-family: var(--mono-font);
+            font-size: 0.72rem;
+            color: var(--ink-3);
+            line-height: 1.5;
+            margin-top: 0.15rem;
+        }
+        @media (max-width: 820px) {
+            .tbios-toc-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ── Museum Blueprint Plates (ASCII Schematics) ───────────────────── */
+        .tbios-blueprint {
+            margin: 1.5rem 0 2rem;
+            background: var(--plate);
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            box-shadow: var(--shadow-plate);
+            overflow: hidden;
+            transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+                        box-shadow 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .tbios-blueprint:hover {
+            box-shadow: var(--shadow-lift);
+            transform: translateY(-3px);
+        }
+        .blueprint-header {
+            background: var(--paper-2);
+            border-bottom: 1px solid var(--rule);
+            padding: 0.65rem 1.15rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--mono-font);
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            color: var(--ink-3);
+            text-transform: uppercase;
+        }
+        .blueprint-tag {
+            color: var(--tbios-teal);
+            font-weight: 600;
+        }
+        .blueprint-title {
+            color: var(--ink-2);
+            font-weight: 500;
+        }
+        .tbios-blueprint pre.tbios-ascii {
+            margin: 0;
+            padding: 1.25rem 1.45rem;
+            background: var(--tbios-sumi);
+            color: var(--tbios-chalk);
+            border: none;
+            border-radius: 0;
+            font-family: var(--mono-font);
+            font-size: 0.80rem;
             line-height: 1.55;
             overflow-x: auto;
-            margin: 1.15rem 0 0;
             white-space: pre;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+        }
+        .tbios-blueprint figcaption {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.4rem 1.4rem;
+            padding: 0.85rem 1.2rem;
+            background: var(--plate);
+            border-top: 1px solid var(--rule);
+            font-family: var(--mono-font);
+            font-size: 0.70rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-3);
+        }
+        .tbios-blueprint figcaption b {
+            color: var(--ink);
+            font-weight: 600;
         }
 
-        /* Formula / Register callouts */
+        /* ── Register & Calling Formula Callouts ──────────────────────────── */
         .tbios-formula {
-            background: rgba(15, 23, 42, 0.65);
-            border-left: 3px solid #38bdf8;
-            border-radius: 0 10px 10px 0;
-            padding: 0.85rem 1.15rem;
-            font-family: ui-monospace, 'Cascadia Mono', monospace;
-            font-size: 0.83rem;
-            color: #e2e8f0;
-            line-height: 1.65;
-            margin: 0.9rem 0 0;
+            background: var(--paper-2);
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--tbios-teal);
+            border-radius: 3px;
+            padding: 0.95rem 1.25rem;
+            font-family: var(--mono-font);
+            font-size: 0.82rem;
+            color: var(--ink);
+            line-height: 1.7;
+            margin: 1.2rem 0 1.8rem;
             overflow-x: auto;
+            box-shadow: 0 1px 2px rgba(20, 23, 26, 0.03);
         }
 
-        /* Note and Warning Alerts */
+        /* ── Architectural Notes & Warnings ───────────────────────────────── */
         .tbios-note {
-            background: rgba(14, 116, 144, 0.15);
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            border-left: 4px solid #0284c7;
-            border-radius: 8px;
-            padding: 0.85rem 1.15rem;
-            font-size: 0.86rem;
-            color: #cbd5e1;
-            line-height: 1.7;
-            margin: 1.1rem 0 0;
+            background: var(--plate);
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--tbios-teal);
+            border-radius: 3px;
+            padding: 1.05rem 1.35rem;
+            font-size: 0.90rem;
+            color: var(--ink-2);
+            line-height: 1.75;
+            margin: 1.4rem 0 2rem;
+            box-shadow: 0 1px 3px rgba(20, 23, 26, 0.04);
+        }
+        .tbios-note strong {
+            color: var(--tbios-teal);
+            font-weight: 600;
         }
         .tbios-warn {
-            background: rgba(180, 83, 9, 0.15);
-            border: 1px solid rgba(245, 158, 11, 0.35);
-            border-left: 4px solid #d97706;
-            border-radius: 8px;
-            padding: 0.85rem 1.15rem;
-            font-size: 0.86rem;
-            color: #fde68a;
-            line-height: 1.7;
-            margin: 1.1rem 0 0;
+            background: var(--plate);
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--tbios-gold);
+            border-radius: 3px;
+            padding: 1.05rem 1.35rem;
+            font-size: 0.90rem;
+            color: var(--ink-2);
+            line-height: 1.75;
+            margin: 1.4rem 0 2rem;
+            box-shadow: 0 1px 3px rgba(20, 23, 26, 0.04);
+        }
+        .tbios-warn strong {
+            color: var(--tbios-gold-deep);
+            font-weight: 600;
         }
 
+        /* ── Inline Code & Test Pass Badges ───────────────────────────────── */
         .tbios-code {
-            background: rgba(56, 189, 248, 0.1);
-            color: #7dd3fc;
-            padding: 0.12em 0.38em;
-            border-radius: 4px;
-            font-family: ui-monospace, 'Cascadia Mono', monospace;
+            background: var(--tbios-teal-wash);
+            color: var(--tbios-teal);
+            padding: 0.15rem 0.42rem;
+            border-radius: 3px;
+            border: 1px solid var(--tbios-teal-border);
+            font-family: var(--mono-font);
             font-size: 0.86em;
             font-weight: 600;
+        }
+        .badge-pass {
+            display: inline-block;
+            font-family: var(--mono-font);
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--tbios-pass);
+            background: var(--tbios-pass-wash);
+            border: 1px solid var(--tbios-pass-border);
+            padding: 0.18rem 0.6rem;
+            border-radius: 3px;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -193,62 +385,98 @@
         <!-- Metric Stat Cards -->
         <div class="metric-row">
             <div class="metric-card">
-                <strong>8 ROMs</strong>
-                <span>Canonical Targets<br>Main, Sub, Music, Disk</span>
+                <span class="metric-num">8 ROMs</span>
+                <span class="metric-label">Canonical Targets</span>
+                <span class="metric-sub">Main · Sub · Music · Disk</span>
             </div>
             <div class="metric-card">
-                <strong>117 Vectors</strong>
-                <span>Standard BIOS Table<br>$0000–$0183 (R800)</span>
+                <span class="metric-num">117 Vectors</span>
+                <span class="metric-label">Standard BIOS Table</span>
+                <span class="metric-sub">$0000–$0183 (R800)</span>
             </div>
             <div class="metric-card">
-                <strong>Dual CPU</strong>
-                <span>Z80 &amp; ASCII R800<br>3.58 / 7.16 MHz + HD64180</span>
+                <span class="metric-num">Dual CPU</span>
+                <span class="metric-label">Z80 &amp; ASCII R800</span>
+                <span class="metric-sub">3.58 / 7.16 MHz + HD64180</span>
             </div>
             <div class="metric-card">
-                <strong>Zero Heap</strong>
-                <span>Bounded Static State<br>JPL Power-of-10 Rules</span>
+                <span class="metric-num">Zero Heap</span>
+                <span class="metric-label">Bounded Static State</span>
+                <span class="metric-sub">JPL Power-of-10 Rules</span>
             </div>
             <div class="metric-card">
-                <strong>4 MiB RAM</strong>
-                <span>Memory Mapper Engine<br>I/O Ports $FC–$FF</span>
+                <span class="metric-num">4 MiB RAM</span>
+                <span class="metric-label">Memory Mapper Engine</span>
+                <span class="metric-sub">I/O Ports $FC–$FF</span>
             </div>
             <div class="metric-card">
-                <strong>54,115 Px</strong>
-                <span>Bit-Perfect Rendering<br>Aurel Vault &amp; 100% Corpus</span>
+                <span class="metric-num">54,115 Px</span>
+                <span class="metric-label">Bit-Perfect Rendering</span>
+                <span class="metric-sub">Aurel Vault &amp; 100% Corpus</span>
             </div>
         </div>
 
         <!-- Table of Contents -->
-        <div class="tbios-toc">
-            <div>
-                <a href="#ch01">01 / クリーンルーム設計思想とデュアルBIOS構成</a>
-                <div class="sub">Dual-BIOS Architecture &amp; Cleanroom Compliance</div>
-                <a href="#ch02">02 / 8種カノニカルROMバイナリ変種一覧</a>
-                <div class="sub">The 8 Canonical T-BIOS &amp; T-DOS ROM Targets</div>
-                <a href="#ch03">03 / メインBIOS ジャンプベクタ表 ($0000–$0183)</a>
-                <div class="sub">Exhaustive Jump Table Specification ($0000–$0183)</div>
-                <a href="#ch04">04 / メモリマップ・スロット体系と多重化トポロジ</a>
-                <div class="sub">Primary &amp; Secondary Slot Matrix, EXPTBL &amp; SLTTBL</div>
-                <a href="#ch05">05 / システム作業領域とRAMトランポリン ($F380–$FFFF)</a>
-                <div class="sub">Work Area Map, RDPRIM/WRPRIM/CLPRIM, Hook Gates</div>
-                <a href="#ch06">06 / 映像サブシステムとSub-ROM拡張プリミティブ</a>
-                <div class="sub">V9938/58 Sub-ROM Table ($0000–$01FF) &amp; Command Engine</div>
+        <nav class="tbios-toc" aria-label="Table of Contents">
+            <div class="tbios-toc-header">
+                <h3>技術目録 (Table of Contents)</h3>
+                <span class="tbios-toc-badge">12 Technical Chapters</span>
             </div>
-            <div>
-                <a href="#ch07">07 / 音響サブシステム: PSG, OPLL, MSX-AUDIO, SCC, PCM</a>
-                <div class="sub">AY-3-8910, YM2413 APRLOPLL ($4018), SCC+, PCM</div>
-                <a href="#ch08">08 / マルチCPU制御: Z80, ASCII R800, Hitachi HD64180</a>
-                <div class="sub">CHGCPU ($0180), Wait-States, HD64180 20-bit MMU</div>
-                <a href="#ch09">09 / MegaROM カートリッジマッパー・スイート</a>
-                <div class="sub">ASCII8/16 SRAM, Konami SCC, GameMaster2, R-Type</div>
-                <a href="#ch10">10 / T-DOS: クリーンルーム Disk BIOS と MSX-DOS 1/2</a>
-                <div class="sub">DSKIO ($4010), TC8566AF FDC, BDOS Calls, TCOMMAND</div>
-                <a href="#ch11">11 / blueMSX INI 構成エンジンとマシン自動認識</a>
-                <div class="sub">msx_cfg.c Engine, Reduced Paths, Video/Board Matrix</div>
-                <a href="#ch12">12 / 確定性検証データと全テストスイート一覧</a>
-                <div class="sub">Differential Harnesses, Aurel Vault 54,115 Px, 100% Pass</div>
+            <div class="tbios-toc-grid">
+                <div>
+                    <div class="toc-item">
+                        <a href="#ch01"><span class="toc-num">01</span> クリーンルーム設計思想とデュアルBIOS構成</a>
+                        <div class="sub">Dual-BIOS Architecture &amp; Cleanroom Compliance</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch02"><span class="toc-num">02</span> 8種カノニカルROMバイナリ変種一覧</a>
+                        <div class="sub">The 8 Canonical T-BIOS &amp; T-DOS ROM Targets</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch03"><span class="toc-num">03</span> メインBIOS ジャンプベクタ表 ($0000–$0183)</a>
+                        <div class="sub">Exhaustive Jump Table Specification ($0000–$0183)</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch04"><span class="toc-num">04</span> メモリマップ・スロット体系と多重化トポロジ</a>
+                        <div class="sub">Primary &amp; Secondary Slot Matrix, EXPTBL &amp; SLTTBL</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch05"><span class="toc-num">05</span> システム作業領域とRAMトランポリン ($F380–$FFFF)</a>
+                        <div class="sub">Work Area Map, RDPRIM/WRPRIM/CLPRIM, Hook Gates</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch06"><span class="toc-num">06</span> 映像サブシステムとSub-ROM拡張プリミティブ</a>
+                        <div class="sub">V9938/58 Sub-ROM Table ($0000–$01FF) &amp; Command Engine</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="toc-item">
+                        <a href="#ch07"><span class="toc-num">07</span> 音響サブシステム: PSG, OPLL, MSX-AUDIO, SCC, PCM</a>
+                        <div class="sub">AY-3-8910, YM2413 APRLOPLL ($4018), SCC+, PCM</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch08"><span class="toc-num">08</span> マルチCPU制御: Z80, ASCII R800, Hitachi HD64180</a>
+                        <div class="sub">CHGCPU ($0180), Wait-States, HD64180 20-bit MMU</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch09"><span class="toc-num">09</span> MegaROM カートリッジマッパー・スイート</a>
+                        <div class="sub">ASCII8/16 SRAM, Konami SCC, GameMaster2, R-Type</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch10"><span class="toc-num">10</span> T-DOS: クリーンルーム Disk BIOS と MSX-DOS 1/2</a>
+                        <div class="sub">DSKIO ($4010), TC8566AF FDC, BDOS Calls, TCOMMAND</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch11"><span class="toc-num">11</span> blueMSX INI 構成エンジンとマシン自動認識</a>
+                        <div class="sub">msx_cfg.c Engine, Reduced Paths, Video/Board Matrix</div>
+                    </div>
+                    <div class="toc-item">
+                        <a href="#ch12"><span class="toc-num">12</span> 確定性検証データと全テストスイート一覧</a>
+                        <div class="sub">Differential Harnesses, Aurel Vault 54,115 Px, 100% Pass</div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </nav>
 
         <!-- 01 / Dual-BIOS Architecture -->
         <section id="ch01" class="doc-section">
@@ -262,7 +490,12 @@
                 <span class="summary-en">"Cleanroom engineering principles eliminating proprietary copyright encumbrance, featuring instant runtime toggling between C-BIOS and T-BIOS under zero-leakage deterministic isolation."</span>
             </div>
 
-            <div class="tbios-ascii">
+            <figure class="tbios-blueprint">
+                <div class="blueprint-header">
+                    <span class="blueprint-tag">ARCHITECTURAL SCHEMATIC · TOPOLOGY 01</span>
+                    <span class="blueprint-title">Dual-BIOS Runtime Switching &amp; Dispatcher Hierarchy</span>
+                </div>
+                <pre class="tbios-ascii">
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                        B-System B-MSX Cleanroom Firmware Core                          │
 │                                                                                        │
@@ -275,13 +508,17 @@
 │                   │                                              │                     │
 │                   ▼                                              ▼                     │
 │   ┌────────────────────────────────────────────────────────────────────────────────┐   │
-│   │                     Unified C99 Memory & Slot Dispatcher                       │   │
+│   │                     Unified C99 Memory &amp; Slot Dispatcher                       │   │
 │   │  • slots.c: Primary PPI $A8 + Secondary $FFFF subslot matrix                   │   │
 │   │  • msx_cfg.c: blueMSX INI table parser (Video, Board, CPU, Slots)              │   │
-│   │  • dsk.c: FAT12/16 disk image mounter & virtual sector translation             │   │
+│   │  • dsk.c: FAT12/16 disk image mounter &amp; virtual sector translation             │   │
 │   └────────────────────────────────────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-            </div>
+└────────────────────────────────────────────────────────────────────────────────────────┘</pre>
+                <figcaption>
+                    <span><b>Figure 1.1</b> — B-MSX Unified Firmware Dispatch Architecture</span>
+                    <span>Zero-Heap C99 Deterministic Core</span>
+                </figcaption>
+            </figure>
 
             <div class="market-table-wrap">
                 <table class="market-table">
@@ -826,7 +1063,12 @@
                 <span class="summary-en">"Architectural mapping governing the 64 KiB address space via PPI Port A ($A8), subslot registers ($FFFF), and system slot tables."</span>
             </div>
 
-            <div class="tbios-ascii">
+            <figure class="tbios-blueprint">
+                <div class="blueprint-header">
+                    <span class="blueprint-tag">MEMORY TOPOLOGY · MATRIX 02</span>
+                    <span class="blueprint-title">Primary &amp; Secondary Slot Layout across 4 Architectural Pages</span>
+                </div>
+                <pre class="tbios-ascii">
    Page 0 ($0000–$3FFF)   Page 1 ($4000–$7FFF)   Page 2 ($8000–$BFFF)   Page 3 ($C000–$FFFF)
   ┌──────────────────────┬──────────────────────┬──────────────────────┬──────────────────────┐
   │ Primary Slot 0:      │ Primary Slot 0:      │ Primary Slot 0:      │ Primary Slot 0:      │
@@ -844,8 +1086,12 @@
   │ • Subslot 1: Sub-ROM │ • Subslot 1: (Empty) │ • Subslot 1: (Empty) │ • Subslot 1: (Empty) │
   │ • Subslot 2: RAM 2+  │ • Subslot 2: RAM 2+  │ • Subslot 2: RAM 2+  │ • Subslot 2: RAM 2+  │
   │ • Subslot 3: Disk ROM│ • Subslot 3: Disk ROM│ • Subslot 3: Disk ROM│ • Subslot 3: (Work)  │
-  └──────────────────────┴──────────────────────┴──────────────────────┴──────────────────────┘
-            </div>
+  └──────────────────────┴──────────────────────┴──────────────────────┴──────────────────────┘</pre>
+                <figcaption>
+                    <span><b>Figure 4.1</b> — MSX turbo R &amp; MSX2+ Slot Mapping Matrix</span>
+                    <span>PPI $A8 &amp; Subslot $FFFF Multiplexing</span>
+                </figcaption>
+            </figure>
 
             <div class="tbios-formula">
 Slot ID Register Format:  E000SSPP
@@ -1048,7 +1294,12 @@ Slot ID Register Format:  E000SSPP
                 <span class="summary-en">"Comprehensive audio synthesis engine supporting AY-3-8910 PSG, YM2413 OPLL ($4018 'APRLOPLL'), Y8950 MSX-AUDIO, Konami SCC/SCC+, and turbo R 8-bit PCM playback."</span>
             </div>
 
-            <div class="tbios-ascii">
+            <figure class="tbios-blueprint">
+                <div class="blueprint-header">
+                    <span class="blueprint-tag">AUDIO ARCHITECTURE · SUBSYSTEM 03</span>
+                    <span class="blueprint-title">Sound Synthesis Engine &amp; 16-bit 44.1kHz Mixer Pipeline</span>
+                </div>
+                <pre class="tbios-ascii">
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                              B-MSX Audio Synthesis Suite                               │
 │                                                                                        │
@@ -1069,8 +1320,12 @@ Slot ID Register Format:  E000SSPP
 │                       │ Unified 16-bit 44.1kHz Mixer     │                             │
 │                       │ msx_audio_render() -> Host VirtIO│                             │
 │                       └──────────────────────────────────┘                             │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-            </div>
+└────────────────────────────────────────────────────────────────────────────────────────┘</pre>
+                <figcaption>
+                    <span><b>Figure 7.1</b> — Multi-Generator Audio Signal Routing</span>
+                    <span>16-bit 44.1 kHz BTRON VirtIO Sound Pipeline</span>
+                </figcaption>
+            </figure>
         </section>
 
         <!-- 08 / Multi-CPU Core -->
@@ -1298,7 +1553,12 @@ Discovery Resolution Hierarchy:
   5. Bare-metal image:       /SYS/msx/configs/&lt;Machine&gt;.ini
             </div>
 
-            <div class="tbios-ascii">
+            <figure class="tbios-blueprint">
+                <div class="blueprint-header">
+                    <span class="blueprint-tag">CONFIGURATION SCHEMA · INI SPECIFICATION</span>
+                    <span class="blueprint-title">blueMSX INI Hardware Descriptor Schema (MSXturboR - T-BIOS.ini)</span>
+                </div>
+                <pre class="tbios-ascii">
 ; Sample MSXturboR - T-BIOS.ini (Clean-Room Parameters)
 [Video]
 version=V9958
@@ -1322,8 +1582,12 @@ type=MSX-T9769C
 0 0 4 2 20  "Machines/MSXturboR - T-BIOS/tbios_logo.rom" ""
 0 2 2 2 78  "Machines/MSXturboR - T-BIOS/tbios_music.rom" ""
 3 1 0 2 20  "Machines/MSXturboR - T-BIOS/tbios_sub.rom" ""
-3 0 0 64 22 "" ""
-            </div>
+3 0 0 64 22 "" ""</pre>
+                <figcaption>
+                    <span><b>Figure 11.1</b> — blueMSX INI Declarative Board Definition</span>
+                    <span>Slot Mapping &amp; Chipset Timings</span>
+                </figcaption>
+            </figure>
         </section>
 
         <!-- 12 / Verification & Conformance -->
@@ -1352,55 +1616,55 @@ type=MSX-T9769C
                         <tr>
                             <td><code>make test-tbios-diff</code></td>
                             <td>11 checks</td>
-                            <td><b style="color:#38bdf8;">100% PASS</b></td>
+                            <td><span class="badge-pass">100% PASS</span></td>
                             <td>C-BIOS と T-BIOS の相互切替、リセットベクタ $0000、フォールバック機構。</td>
                         </tr>
                         <tr>
                             <td><code>make test-tbios-core</code></td>
                             <td>64 checks</td>
-                            <td><b style="color:#38bdf8;">100% PASS</b></td>
+                            <td><span class="badge-pass">100% PASS</span></td>
                             <td>CHKRAM、JIFFY タイマー、RDSLT/WRSLT、SNSMAT/KILBUF、SCREEN 0/1/2。</td>
                         </tr>
                         <tr>
                             <td><code>make test-tbios-video</code></td>
                             <td>42 checks</td>
-                            <td><b style="color:#38bdf8;">100% PASS</b></td>
+                            <td><span class="badge-pass">100% PASS</span></td>
                             <td>V9938/58 Sub-ROM ジャンプ表、HMMV/LMMV/HMMM コマンド、RGB565 パレット。</td>
                         </tr>
                         <tr>
                             <td><code>make test-tbios-audio</code></td>
                             <td>48 checks</td>
-                            <td><b style="color:#38bdf8;">100% PASS</b></td>
+                            <td><span class="badge-pass">100% PASS</span></td>
                             <td>PSG レジスタ書込/読出、OPLL APRLOPLL ヘッダ、SCC+、PCM 再生/録音。</td>
                         </tr>
                         <tr>
                             <td><code>make test-tbios-cpu</code></td>
                             <td>36 checks</td>
-                            <td><b style="color:#38bdf8;">100% PASS</b></td>
+                            <td><span class="badge-pass">100% PASS</span></td>
                             <td>CHGCPU / GETCPU、R800 サイクル調停、HD64180 20-bit MMU アドレス変換。</td>
                         </tr>
                         <tr>
                             <td><code>make test-tbios-megarom</code></td>
                             <td>117 checks</td>
-                            <td><b style="color:#38bdf8;">100% PASS</b></td>
+                            <td><span class="badge-pass">100% PASS</span></td>
                             <td>ASCII8/16 SRAM、Konami SCC、GameMaster2、R-Type、Zemina、全カセット走査。</td>
                         </tr>
                         <tr>
                             <td><code>make test-tbios-disk</code></td>
                             <td>115 checks</td>
-                            <td><b style="color:#38bdf8;">100% PASS</b></td>
+                            <td><span class="badge-pass">100% PASS</span></td>
                             <td>DSKIO/GETDPB、Page-0 RAM トランポリン、MSX-DOS 1/2 BDOS、全7種DSKブート。</td>
                         </tr>
                         <tr>
                             <td><code>make test-bmsx-cfg</code></td>
                             <td>37 checks</td>
-                            <td><b style="color:#38bdf8;">100% PASS</b></td>
+                            <td><span class="badge-pass">100% PASS</span></td>
                             <td>blueMSX INI パラメータパース、短縮パス解決、スロット動的配備。</td>
                         </tr>
                         <tr>
                             <td><code>make test-aurel-vault</code></td>
                             <td>18 checks</td>
-                            <td><b style="color:#38bdf8;">100% PASS</b></td>
+                            <td><span class="badge-pass">100% PASS</span></td>
                             <td><b>Aurel Vault 確定描画:</b> 240フレームでゲーム本編突入、<b>実効インク画素数 54,115 px 完全一致</b>。</td>
                         </tr>
                     </tbody>
